@@ -1,0 +1,164 @@
+/*
+ * AgentNode.css — Styles for the custom AgentScope graph node.
+ *
+ * Three visual states:
+ *   --active:   pulsing cyan/blue border glow (Flow 3, Step 2)
+ *   --complete: solid green border, subtle success glow
+ *   --error:    red border with a red glow pulse
+ *
+ * Design uses a dark-themed glassmorphism card with micro-animations.
+ */
+
+/* ── Base node card ──────────────────────────────────────────────── */
+.agent-node {
+  min-width: 180px;
+  max-width: 240px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(22, 23, 34, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  cursor: pointer;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.15s ease;
+  position: relative;
+  overflow: visible;
+}
+
+.agent-node:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Header row: icon + type + live dot ──────────────────────────── */
+.agent-node__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.agent-node__icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.agent-node__type {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #94a3b8;
+}
+
+/* Live dot — small pulsing circle when node is active */
+.agent-node__live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22d3ee;
+  margin-left: auto;
+  animation: liveDotPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes liveDotPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.5); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 4px rgba(34, 211, 238, 0); }
+}
+
+/* ── Label ───────────────────────────────────────────────────────── */
+.agent-node__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Meta line (duration + tokens) ───────────────────────────────── */
+.agent-node__meta {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.agent-node__tokens {
+  color: #64748b;
+}
+
+/* ── Handles ─────────────────────────────────────────────────────── */
+.agent-node__handle {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #475569 !important;
+  border: 1.5px solid #1e293b !important;
+  transition: background 0.2s ease;
+}
+
+.agent-node:hover .agent-node__handle {
+  background: #94a3b8 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+ *  STATE VARIANTS
+ * ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Active (in-flight) — pulsing cyan glow ──────────────────────── */
+.agent-node--active {
+  border-color: rgba(34, 211, 238, 0.5);
+  animation: activeGlow 2s ease-in-out infinite;
+}
+
+@keyframes activeGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 8px rgba(34, 211, 238, 0.15),
+      0 0 20px rgba(34, 211, 238, 0.05);
+  }
+  50% {
+    box-shadow:
+      0 0 12px rgba(34, 211, 238, 0.3),
+      0 0 32px rgba(34, 211, 238, 0.1);
+  }
+}
+
+/* ── Complete — green accent ─────────────────────────────────────── */
+.agent-node--complete {
+  border-color: rgba(74, 222, 128, 0.35);
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.08);
+}
+
+.agent-node--complete .agent-node__label {
+  color: #bbf7d0;
+}
+
+/* ── Error — red glow ────────────────────────────────────────────── */
+.agent-node--error {
+  border-color: rgba(248, 113, 113, 0.5);
+  animation: errorGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes errorGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 8px rgba(248, 113, 113, 0.15),
+      0 0 20px rgba(248, 113, 113, 0.05);
+  }
+  50% {
+    box-shadow:
+      0 0 14px rgba(248, 113, 113, 0.35),
+      0 0 36px rgba(248, 113, 113, 0.1);
+  }
+}
+
+.agent-node--error .agent-node__label {
+  color: #fca5a5;
+}

@@ -1,0 +1,295 @@
+/*
+ * InspectPanel.css — Styles for the span detail slide-out panel.
+ *
+ * Design: dark glassmorphism panel sliding in from the right.
+ * Consistent with the AgentNode dark theme. Uses smooth
+ * transitions for entry/exit animation.
+ */
+
+/* ── Backdrop ────────────────────────────────────────────────────── */
+.inspect-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: flex-end;
+  animation: panelFadeIn 0.2s ease-out;
+}
+
+.inspect-panel__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+}
+
+@keyframes panelFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Panel body ──────────────────────────────────────────────────── */
+.inspect-panel__content {
+  position: relative;
+  z-index: 1;
+  width: 420px;
+  max-width: 90vw;
+  height: 100vh;
+  overflow-y: auto;
+  background: rgba(15, 16, 25, 0.95);
+  backdrop-filter: blur(20px);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+  animation: panelSlideIn 0.25s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes panelSlideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+/* ── Scrollbar styling ───────────────────────────────────────────── */
+.inspect-panel__content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.inspect-panel__content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.inspect-panel__content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.inspect-panel__content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+.inspect-panel__header {
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.inspect-panel__title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.inspect-panel__title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+  word-break: break-word;
+}
+
+.inspect-panel__close {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #94a3b8;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inspect-panel__close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+.inspect-panel__subtitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* ── Badges ──────────────────────────────────────────────────────── */
+.inspect-panel__badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+}
+
+.inspect-panel__badge--llm_call {
+  background: rgba(139, 92, 246, 0.15);
+  color: #c4b5fd;
+}
+
+.inspect-panel__badge--tool_call {
+  background: rgba(34, 211, 238, 0.12);
+  color: #67e8f9;
+}
+
+.inspect-panel__badge--delegation {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fcd34d;
+}
+
+.inspect-panel__badge--state_update {
+  background: rgba(74, 222, 128, 0.12);
+  color: #86efac;
+}
+
+/* ── Status indicator ────────────────────────────────────────────── */
+.inspect-panel__status {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.inspect-panel__status--success {
+  color: #4ade80;
+}
+
+.inspect-panel__status--active {
+  color: #22d3ee;
+  animation: statusPulse 1.5s ease-in-out infinite;
+}
+
+.inspect-panel__status--error {
+  color: #f87171;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ── Body ────────────────────────────────────────────────────────── */
+.inspect-panel__body {
+  padding: 8px 24px 24px;
+  flex: 1;
+}
+
+/* ── Sections ────────────────────────────────────────────────────── */
+.inspect-panel__section {
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.inspect-panel__section:last-child {
+  border-bottom: none;
+}
+
+.inspect-panel__section-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #64748b;
+  margin: 0 0 10px;
+}
+
+.inspect-panel__section-title--error {
+  color: #f87171;
+}
+
+/* ── Field grid ──────────────────────────────────────────────────── */
+.inspect-panel__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.inspect-panel__field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.inspect-panel__field-label {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.inspect-panel__field-value {
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+.inspect-panel__field-value--mono {
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+/* ── Token bar ───────────────────────────────────────────────────── */
+.inspect-panel__token-bar {
+  display: flex;
+  gap: 2px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.inspect-panel__token-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.inspect-panel__token-item--total {
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.inspect-panel__token-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+.inspect-panel__token-value {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+/* ── Code blocks (input/output/error) ────────────────────────────── */
+.inspect-panel__code {
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.inspect-panel__code--error {
+  color: #fca5a5;
+  background: rgba(248, 113, 113, 0.06);
+  border-color: rgba(248, 113, 113, 0.1);
+}
