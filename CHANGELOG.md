@@ -1,5 +1,29 @@
 # AgentScope Changelog
 
+## [2026-08-09 08:06] — Week 3 & 4 Build Plan Implementation — Track B — WebSocket Relay & Complex Payloads
+
+**What changed:**
+- `Track B`: Created `backend/app/ws.py` providing a live WebSocket relay endpoint at `/ws` that streams ingested spans from Redis Streams to connected clients.
+- `Track B`: Wired the `ws.py` router into the main FastAPI app in `backend/app/ingest.py`.
+- `Track B`: Added `test_ws.py` testing the complete `/ingest` -> Redis Streams -> `/ws` pipeline. Verified that the exact JSON payload shape defined in `Span` (and `SpanStatus`, `TokenUsage`) streams out flawlessly.
+
+**Why:**
+- Implements Build Plan §4 (Track B, Week 3) by exposing the WS endpoint for Track C to connect to (PRD FR-3, FR-4).
+- Tests pipeline readiness for nested real-world LangGraph traffic (Build Plan §4, Track B, Week 4) guaranteeing robust JSON serialization/deserialization for complex structures.
+- Assures RULES.md invariant #4 (strict arrival order). The endpoint reads directly from the durable Redis Stream via `xread` and dispatches in order.
+
+**Assumptions made (if any):**
+- The WS endpoint relies on standard `WebSocketDisconnect` handling to gracefully release connections.
+- Reading starts from `$` (only new events after connection).
+
+**Open questions / follow-ups (if any):**
+- Track C Teammate: The endpoint is live at `ws://localhost:8000/ws`. It emits JSON text messages exactly matching the `Span` schema (including `status.exception_details` and `token_usage`). You can wire `useWebSocket.ts` to it now.
+- **End-to-End Demo Pending (Week 4)**: I checked the `examples/` directory and Track A has not yet merged `langgraph_demo_agent`. I tested against complex synthetic fixtures simulating nested relationships, token usage, and exception payloads (PRD FR-7) to prove readiness, but the real end-to-end integration checkpoint with Track A remains pending.
+- I am stopping here at the end of Week 4 scope and am ready for Week 5 (anomaly worker) when requested.
+
+**Tests added/run:**
+- `test_ws.py`: Tests the strict arrival order from ingestion through to WS output, verifying nested relationships and exception payloads.
+
 ## [2026-08-08 14:48] — Week 2 Build Plan Implementation — All Tracks — Core Engine & Integration
 
 **What changed:**
