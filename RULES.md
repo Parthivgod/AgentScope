@@ -55,6 +55,7 @@ These apply to every line of code touching the hot path, regardless of which tra
 5. **One rendering path for live and historical views.** `dashboard/` must reuse the same graph-rendering component for live WebSocket data and for historical replay from stored events. The only permitted difference is the event *source*. Do not build a second "quick" historical view — per Build Plan §11, it will diverge and become a maintenance liability.
 6. **Anomaly worker isolation is load-bearing, not incidental.** The worker must be independently killable and restartable without the ingestion path noticing or losing events. Treat any code that couples worker liveness to ingestion liveness as a bug, not a shortcut.
 7. **Detection ≠ enforcement, everywhere in the codebase.** AgentScope surfaces anomalies; it never acts on the monitored agent. There is no exception to this. If a feature request implies AgentScope taking an action on the agent being watched, it is out of scope — see §1.
+8. **No unresolved mocks at integration checkpoints.** A branch cannot be merged into main at a declared integration checkpoint (Build Plan §5) if its CHANGELOG.md entry documents an unresolved mock/stub standing in for a real cross-track connection (e.g., a fake WebSocket, a hardcoded fixture where a real API call belongs, a setInterval-based fake data source in place of real transport). If the upstream dependency is genuinely still blocked on another track, that block applies to the milestone tag — the stub branch does not merge into main as if it were finished.
 
 ---
 

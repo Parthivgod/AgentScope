@@ -20,7 +20,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install fastapi httpx pydantic pytest pytest-asyncio redis langchain-core openai
+        pip install fastapi httpx pydantic pytest pytest-asyncio redis langchain-core openai websockets
         # Install SDK as editable
         pip install -e ./sdk
         
@@ -32,6 +32,27 @@ jobs:
       working-directory: backend
       run: |
         pytest tests/test_ingest.py -k "not valid_api_key"
+
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install fastapi httpx pydantic redis websockets
+        pip install -e ./sdk
+        
+    - name: Run E2E Smoke Test
+      run: |
+        python scripts/smoke-test.py
+
 
   test-dashboard:
     runs-on: ubuntu-latest

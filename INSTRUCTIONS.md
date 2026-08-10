@@ -16,6 +16,16 @@ This file is about **how to work**, not what to build. `RULES.md` tells you the 
 
 ---
 
+## 1.5. Pre-PR Self-Check (Integration Checkpoint Weeks)
+
+Before opening a PR during an integration-checkpoint week (Build Plan §5 — Weeks 1, 3, 4/M1, 6, 8/M2, 11–12/M3), perform this self-check:
+
+1. Grep your track's changed files for patterns: `mock`, `stub`, `placeholder`, `TODO`, `setInterval`, `fake`, `hardcoded`. If any exist in a code path the checkpoint depends on, either resolve it or explicitly flag it in the PR description as a known limitation — don't let it pass through silently just because it's noted in the changelog.
+2. Verify that any cross-track transport your code claims to use (e.g., WebSocket connection, HTTP POST to /ingest) is actually wired to the real endpoint, not a mock implementation.
+3. If you find unresolved mocks in checkpoint-critical paths, see RULES.md §3 invariant #8 — the branch cannot merge until they are resolved or the milestone tag is deferred.
+
+---
+
 ## 2. When to Ask vs. When to Proceed
 
 **Ask a clarifying question before proceeding when:**

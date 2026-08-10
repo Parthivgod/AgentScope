@@ -171,37 +171,39 @@ function createMockSpanSequence(): SpanEvent[] {
   ];
 }
 
-/**
- * Mock WebSocket hook.
- *
- * Returns the same { events, isConnected } interface that the
- * real WebSocket implementation will use, so consumers (App.tsx)
- * don't need to change when the real WS is wired in.
- */
-export function useWebSocket(_url: string) {
+export function useWebSocket(url: string) {
   const [events, setEvents] = useState<SpanEvent[]>([]);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    setIsConnected(true);
+    const ws = new WebSocket(url);
 
-    const mockSpans = createMockSpanSequence();
-    let index = 0;
+    ws.onopen = () => {
+      setIsConnected(true);
+    };
 
-    const interval = setInterval(() => {
-      if (index < mockSpans.length) {
-        setEvents((prev) => [...prev, mockSpans[index]]);
-        index++;
-      } else {
-        clearInterval(interval);
+    ws.onmessage = (event) => {
+      try {
+        const span: SpanEvent = JSON.parse(event.data);
+        setEvents((prev) => [...prev, span]);
+      } catch (err) {
+        console.error('Failed to parse WebSocket message:', err);
       }
-    }, 1200);
+    };
 
-    return () => {
-      clearInterval(interval);
+    ws.onclose = () => {
       setIsConnected(false);
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    ws.onerror = (err) => {
+      console.error('WebSocket error:', err);
+      setIsConnected(false);
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [url]);
 
   return { events, isConnected };
 }

@@ -1,5 +1,50 @@
 # AgentScope Changelog
 
+## [2026-08-10 15:15] — Infra Hardening Post-M1 — Integration — infra-hardening-postm1
+
+**What changed:**
+- `RULES.md`: Added invariant #8 blocking merging stubs at integration checkpoints.
+- `INSTRUCTIONS.md`: Added §1.5 Pre-PR Self-Check for integration checkpoint weeks.
+- `Git`: Added `.gitattributes` setting `merge=union` for `CHANGELOG.md` and `docs/future-work.md`, and created `CONTRIBUTING.md` instructing users to enable it.
+- `Examples`: Added `examples/langgraph_demo_agent/requirements.txt`.
+- `Scripts`: Added `scripts/dev-preflight.sh` and `scripts/dev-preflight.ps1` to check Docker, port 8000, and python dependencies before running the backend.
+- `CI`: Added `scripts/smoke-test.py` and updated `.github/workflows/ci.yml` to run a headless E2E smoke test that validates real span delivery over the WebSocket.
+- `README`: Created root `README.md` containing quick start steps and pointers to documentation.
+
+**Why:**
+- Addresses 6 issues identified during the M1 Integration Merge (documented in the M1 Integration Issues Report). Fixes environment issues (Docker, Ports), missing dependencies, merge conflicts on append-only files, and prevents future mocks from quietly passing through to main via automated CI smoke testing and new rules.
+
+**Assumptions made (if any):**
+- Wrote smoke-test in Python (not bash) to ensure cross-platform compatibility without needing WSL on Windows.
+
+**Open questions / follow-ups (if any):**
+- None.
+
+
+## [2026-08-10 14:48] — M1 Checkpoint Integration — All Tracks — AgentScope Merge
+
+**What changed:**
+- `Integration`: Merged `track-a-nilay`, `track-b-antigravity`, and `track-c-eshan` branches into `main`.
+- `Integration`: Resolved `CHANGELOG.md` merge conflicts by keeping all entries ordered newest-to-oldest.
+- `Integration`: Unified `.github/workflows/ci.yml` to include jobs for backend, SDK (with `pytest-asyncio`), and dashboard build/lint.
+- `Track C`: Patched `dashboard/src/hooks/useWebSocket.ts` to replace the mock `setInterval` logic with a real `WebSocket` connection to the backend relay, parsing incoming JSON payloads.
+- `Integration`: Applied the `m1-zero-rewrite-demo` git tag to the merged codebase.
+
+**Why:**
+- Fulfills Build Plan §4 M1 Checkpoint Integration (Week 4), merging the parallel streams into the first fully working end-to-end version.
+- Allows real data from the LangGraph demo agents to flow through the SDK -> FastAPI -> Redis Streams -> FastAPI WS Relay -> Dashboard pipeline.
+
+**Assumptions made (if any):**
+- Assumed `AGENTSCOPE_API_KEY` is properly set in the local environment across all three components (SDK, backend, dashboard) for successful end-to-end testing.
+
+**Open questions / follow-ups (if any):**
+- Local testing encountered a `404 Not Found` when the SDK sends a POST to `http://localhost:8000/ingest`. This may be due to how `uvicorn app.ingest:app` mounts the router versus how the SDK addresses it, or a trailing slash issue. It requires a quick routing patch before the live demo is perfectly smooth.
+- Track B, Week 5 (Anomaly Worker) is the next scheduled work item.
+
+**Tests added/run:**
+- Verified CI workflows pass for all three tracks on `main`.
+- Verified `useWebSocket.ts` compiles and correctly implements standard WebSocket lifecycle callbacks.
+
 ## [2026-08-10 14:45] — Track A Weeks 3 & 4 Implementation — Track A — Nilay Jain
 
 **What changed:**
