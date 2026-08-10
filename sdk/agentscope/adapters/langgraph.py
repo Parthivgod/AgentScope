@@ -53,10 +53,6 @@ class LangGraphAdapter(AsyncBaseTracer):
             agent_id=self.agent_id
         )
 
-    def _persist_run(self, run: Run) -> None:
-        span = self._convert_run_to_span(run)
-        sender.send(span)
-
-    async def _apersist_run(self, run: Run) -> None:
+    async def _persist_run(self, run: Run) -> None:
         span = self._convert_run_to_span(run)
         sender.send(span)

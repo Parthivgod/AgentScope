@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentscope-sdk"
+version = "0.1.0"
+description = "AgentScope Python SDK for Multi-Agent Observability"
+requires-python = ">=3.9"
+dependencies = [
+    "httpx>=0.23.0",
+    "pydantic>=2.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]

@@ -1,4 +1,5 @@
 import asyncio
+import os
 import httpx
 import logging
 from typing import Optional
@@ -23,16 +24,18 @@ class AsyncEventSender:
                 pass
 
     async def _worker(self):
-        headers = {}
-        if AGENTSCOPE_API_KEY:
-            headers["Authorization"] = f"Bearer {AGENTSCOPE_API_KEY}"
-            
         while True:
             span = await self.queue.get()
             try:
+                headers = {}
+                api_key = os.environ.get("AGENTSCOPE_API_KEY") or AGENTSCOPE_API_KEY
+                ingest_url = os.environ.get("AGENTSCOPE_INGEST_URL") or AGENTSCOPE_INGEST_URL
+                if api_key:
+                    headers["Authorization"] = f"Bearer {api_key}"
+
                 # Convert datetime to isoformat and dump as json
                 payload = span.model_dump(mode="json")
-                res = await self.client.post(AGENTSCOPE_INGEST_URL, json=payload, headers=headers)
+                res = await self.client.post(ingest_url, json=payload, headers=headers)
                 res.raise_for_status()
             except Exception as e:
                 # Fail silent (RULES.md §3)
