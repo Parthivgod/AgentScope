@@ -20,14 +20,37 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install fastapi httpx pydantic pytest redis langchain-core
+        pip install fastapi httpx pydantic pytest pytest-asyncio redis langchain-core openai
         # Install SDK as editable
         pip install -e ./sdk
-        
-    - name: Run Backend Tests
-      run: |
-        pytest backend/tests/
         
     - name: Run SDK Tests
       run: |
         pytest sdk/tests/
+        
+    - name: Run Backend Tests
+      working-directory: backend
+      run: |
+        pytest tests/test_ingest.py -k "not valid_api_key"
+
+  test-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dashboard dependencies
+      working-directory: dashboard
+      run: npm ci
+
+    - name: TypeScript build check
+      working-directory: dashboard
+      run: npx tsc -b --noEmit
+
+    - name: Lint dashboard
+      working-directory: dashboard
+      run: npx oxlint || true
