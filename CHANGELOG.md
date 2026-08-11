@@ -1,5 +1,28 @@
 # AgentScope Changelog
 
+## [2026-08-11 13:12] — Week 5 & 6 Build Plan Implementation — Track B — Anomaly Worker & Rules
+**What changed:**
+- `Track B`: Created `worker/main.py` independent process that reads from `agentscope:events` via `XREAD` and writes anomaly flags to `agentscope:anomalies`.
+- `Track B`: Implemented 6 anomaly rules in `worker/rules/`: Crashes, Failure Loops, Timeouts, Token Spikes, Message Storms, Delegation Cycles.
+- `Track B`: Maintained `agentscope:worker:last_id` in Redis so the worker can restart without data loss (FR-4).
+- `Track B`: Built synthetic failure harness `worker/harness/inject.py`.
+- `Track B`: Updated `backend/app/ws.py` to multiplex reads from both streams and relay anomalies alongside events.
+- `Track B`: Updated `scripts/smoke-test.py` to optionally spawn the worker and assert anomaly flags successfully stream over the WebSocket.
+
+**Why:**
+- Fulfills Build Plan §4 Track B Weeks 5 & 6 (Anomaly worker, rules, integration).
+- Fulfills PRD FR-4 (no data loss) and FR-5 (worker evaluates rules).
+
+**Assumptions made (if any):**
+- Assumed standard JSON serialization for anomaly flags over WS. Track C is expected to adjust parsing for anomaly flags (identifiable by `"is_anomaly": true`).
+- The payload shape sent over the WS relay for anomalies is: `{"rule": "rule_name", "span_id": "...", "trace_id": "...", "agent_id": "...", "details": {...}, "is_anomaly": true}`. Track C will need to handle this shape to render the AlertBadge.
+
+**Open questions / follow-ups (if any):**
+- None. Ready for Track C to integrate anomaly flags into `AlertBadge.tsx`.
+
+**Tests added/run:**
+- `scripts/smoke-test.py`: Tested worker isolation and WebSocket anomaly flag delivery.
+
 ## [2026-08-10 15:15] — Infra Hardening Post-M1 — Integration — infra-hardening-postm1
 
 **What changed:**
