@@ -1,5 +1,33 @@
 # AgentScope Changelog
 
+## [2026-08-11 16:40] — Track A Weeks 5 & 6 Implementation — Track A — Nilay Jain
+
+**What changed:**
+- `Track A / Examples`: Built `examples/custom_demo_agent/` containing `custom_agent.py`, `main.py`, `requirements.txt`, `README.md`, and `test_demo_e2e.py` demonstrating Flow 2 manual instrumentation using `@agentscope.trace` and `agentscope.patch(openai)`.
+- `Track A / Benchmarks`: Created `sdk/agentscope/benchmarks/` containing `overhead_benchmark.py` (`OverheadBenchmark` class for timing baseline vs instrumented workloads), `__init__.py`, `README.md`, and unit test `sdk/tests/test_benchmark_scaffold.py`.
+- `Track A / Redaction`: Updated `sdk/agentscope/config.py` exposing `is_redaction_enabled()`, `set_redaction_enabled()`, and `reset_redaction_config()` tied to `AGENTSCOPE_REDACT_ENABLED` (defaults to `False` per NFR 9.4 and Decision #4).
+- `Track A / Sender`: Updated `sdk/agentscope/sender.py` to enforce client-side scrubbing of `span.input` and `span.output` prior to transmit when redaction is enabled, and added bounded exponential backoff retries (`MAX_RETRIES=3`, `INITIAL_BACKOFF=0.5s`, `BACKOFF_FACTOR=2.0`) for transient errors (HTTP 5xx, timeouts, connection errors) while immediately dropping non-retryable HTTP 4xx errors.
+- `Track A / Tests`: Added `sdk/tests/test_redaction.py` and expanded `sdk/tests/test_sender.py` to test exponential backoff retries, non-retrying 401 client errors, client-side redaction scrubbing, and fail-silent queue flushing.
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 5 (`examples/custom_demo_agent/` + overhead benchmark harness scaffolding) and Week 6 (client-side redaction toggle + sender retry/backoff hardening).
+- Maps to PRD §6.1, FR-1, FR-2, NFR 9.4, NFR 9.5, User Flow 2, RULES.md §3.1, §3.2, and Decision #4.
+
+**Assumptions made (if any):**
+- Assumed `[REDACTED]` string placeholder replacement for `span.input` and `span.output` provides a clean client-side redaction guarantee while keeping `Span` schema validity intact.
+- Assumed initial backoff of 0.5s with factor 2.0 (up to 3 retries) balances prompt retry for transient backend blips without stalling queue drain.
+
+**Open questions / follow-ups (if any):**
+- Full overhead benchmark execution against NFR 9.5 (<5% overhead) is scheduled for Week 9 once load-testing infrastructure is ready.
+
+**Tests added/run:**
+- `sdk/tests/test_redaction.py`: Verified default full-capture, env var override, programmatic toggle, and client-side scrubbing in HTTP payloads.
+- `sdk/tests/test_sender.py`: Verified bounded exponential backoff on 500 errors, immediate skip on 401 errors, retry success on recovery, and fail-silent behavior on retry exhaustion.
+- `sdk/tests/test_benchmark_scaffold.py`: Verified benchmark timing harness runs sync and async comparative workloads.
+- `examples/custom_demo_agent/test_demo_e2e.py`: Verified custom demo agent sends valid spans to `POST /ingest`.
+- All 15 SDK unit tests and 2 demo E2E integration tests passed (100% pass rate).
+
+
 ## [2026-08-10 15:15] — Infra Hardening Post-M1 — Integration — infra-hardening-postm1
 
 **What changed:**
