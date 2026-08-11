@@ -162,3 +162,22 @@
 .agent-node--error .agent-node__label {
   color: #fca5a5;
 }
+
+/* ── Anomalous — amber glow (Overrides normal states) ──────────────── */
+.agent-node--anomalous {
+  border-color: rgba(251, 191, 36, 0.6) !important;
+  animation: anomalousGlow 2s ease-in-out infinite !important;
+}
+
+@keyframes anomalousGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 8px rgba(251, 191, 36, 0.2),
+      0 0 20px rgba(251, 191, 36, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 14px rgba(251, 191, 36, 0.4),
+      0 0 36px rgba(251, 191, 36, 0.15);
+  }
+}

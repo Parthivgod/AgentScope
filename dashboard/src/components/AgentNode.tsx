@@ -14,6 +14,16 @@
 
 import { memo } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
+import AlertBadge from './AlertBadge';
+
+/**
+ * Anomaly definition (Mocked for Week 6, matching expected structure)
+ */
+export interface AnomalyData {
+  rule: string;
+  description: string;
+  timestamp: string;
+}
 
 /** The data shape stored in each custom node */
 export interface AgentNodeData {
@@ -23,6 +33,7 @@ export interface AgentNodeData {
   agentId?: string;
   tokenUsage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number } | null;
   duration?: number | null;
+  anomaly?: AnomalyData | null;
   [key: string]: unknown;
 }
 
@@ -44,16 +55,22 @@ const STATUS_CLASS: Record<string, string> = {
 function AgentNode({ data }: NodeProps) {
   const nodeData = data as unknown as AgentNodeData;
   const icon = SPAN_TYPE_ICONS[nodeData.spanType] ?? '⚙️';
-  const statusClass = STATUS_CLASS[nodeData.status] ?? '';
+  let statusClass = STATUS_CLASS[nodeData.status] ?? '';
+  
+  if (nodeData.anomaly) {
+    statusClass += ' agent-node--anomalous';
+  }
 
   return (
     <div className={`agent-node ${statusClass}`} id={`node-${nodeData.label}`}>
+      {nodeData.anomaly && <AlertBadge rule={nodeData.anomaly.rule} />}
+      
       <Handle type="target" position={Position.Top} className="agent-node__handle" />
 
       <div className="agent-node__header">
         <span className="agent-node__icon">{icon}</span>
         <span className="agent-node__type">{nodeData.spanType.replace('_', ' ')}</span>
-        {nodeData.status === 'active' && (
+        {nodeData.status === 'active' && !nodeData.anomaly && (
           <span className="agent-node__live-dot" />
         )}
       </div>
@@ -79,3 +96,4 @@ function AgentNode({ data }: NodeProps) {
 }
 
 export default memo(AgentNode);
+

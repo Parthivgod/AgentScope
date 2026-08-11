@@ -205,6 +205,30 @@
   color: #f87171;
 }
 
+.inspect-panel__section--anomalous {
+  background: rgba(251, 191, 36, 0.05);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.inspect-panel__section--anomalous .inspect-panel__section-title {
+  color: #fbbf24;
+}
+
+.inspect-panel__anomaly-desc {
+  font-size: 13px;
+  color: #fcd34d;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.inspect-panel__status--anomalous {
+  color: #fbbf24;
+  animation: statusPulse 1.5s ease-in-out infinite;
+}
+
 /* ── Field grid ──────────────────────────────────────────────────── */
 .inspect-panel__grid {
   display: grid;

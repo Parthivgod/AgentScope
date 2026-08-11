@@ -60,7 +60,7 @@ function computeDuration(start: string, end: string | null): number | null {
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const { events, isConnected } = useWebSocket('ws://localhost:8000/ws');
+  const { events, anomalies, isConnected } = useWebSocket('ws://localhost:8000/ws');
 
   // Track the raw span data keyed by span_id for InspectPanel lookups
   const [spanMap, setSpanMap] = useState<Map<string, SpanEvent>>(new Map());
@@ -68,6 +68,7 @@ export default function App() {
   // Currently selected span for inspection
   const [selectedSpanId, setSelectedSpanId] = useState<string | null>(null);
   const selectedSpan = selectedSpanId ? spanMap.get(selectedSpanId) ?? null : null;
+  const selectedAnomaly = selectedSpanId ? anomalies[selectedSpanId] ?? null : null;
 
   // ── Process incoming events → build nodes/edges ───────────────────
   useEffect(() => {
@@ -84,6 +85,46 @@ export default function App() {
 
     // Build/update nodes
     setNodes((nds) => {
+      // Re-map ALL nodes to ensure anomalies apply (anomalies might arrive after span)
+      return nds.map((n) => {
+        // If it's the latest event, update its data
+        if (n.id === latestEvent.span_id) {
+          const status = spanStatus(latestEvent);
+          const duration = computeDuration(latestEvent.start_time, latestEvent.end_time);
+
+          const nodeData: AgentNodeData = {
+            label: latestEvent.name,
+            spanType: latestEvent.span_type,
+            status,
+            agentId: latestEvent.agent_id,
+            tokenUsage: latestEvent.token_usage,
+            duration,
+            anomaly: anomalies[latestEvent.span_id] || null,
+          };
+
+          return { ...n, data: nodeData };
+        }
+        
+        // Ensure older nodes update their anomaly state if one just arrived
+        if (anomalies[n.id] && !(n.data as AgentNodeData).anomaly) {
+          return {
+            ...n,
+            data: {
+              ...(n.data as AgentNodeData),
+              anomaly: anomalies[n.id],
+            }
+          };
+        }
+
+        return n;
+      });
+    });
+
+    // We also need to add the new node if it wasn't mapped above
+    setNodes((nds) => {
+      const existingIdx = nds.findIndex((n) => n.id === latestEvent.span_id);
+      if (existingIdx >= 0) return nds;
+
       const status = spanStatus(latestEvent);
       const duration = computeDuration(latestEvent.start_time, latestEvent.end_time);
 
@@ -94,21 +135,9 @@ export default function App() {
         agentId: latestEvent.agent_id,
         tokenUsage: latestEvent.token_usage,
         duration,
+        anomaly: anomalies[latestEvent.span_id] || null,
       };
 
-      const existingIdx = nds.findIndex((n) => n.id === latestEvent.span_id);
-
-      if (existingIdx >= 0) {
-        // Update existing node
-        const updated = [...nds];
-        updated[existingIdx] = {
-          ...updated[existingIdx],
-          data: nodeData,
-        };
-        return updated;
-      }
-
-      // Add new node (position will be overridden by dagre)
       return [
         ...nds,
         {
@@ -148,7 +177,7 @@ export default function App() {
         },
       ];
     });
-  }, [events, setNodes, setEdges]);
+  }, [events, anomalies, setNodes, setEdges]);
 
   // ── Apply dagre layout whenever nodes/edges change ────────────────
   useEffect(() => {
@@ -188,12 +217,14 @@ export default function App() {
   const stats = useMemo(() => {
     let active = 0;
     let errors = 0;
+    let anomaliesCount = 0;
     nodes.forEach((n) => {
       const data = n.data as AgentNodeData;
       if (data.status === 'active') active++;
       if (data.status === 'error') errors++;
+      if (data.anomaly) anomaliesCount++;
     });
-    return { total: nodes.length, active, errors };
+    return { total: nodes.length, active, errors, anomalies: anomaliesCount };
   }, [nodes]);
 
   return (
@@ -221,6 +252,12 @@ export default function App() {
             <div className="app__stat">
               <span className="app__stat-value app__stat-value--error">{stats.errors}</span>
               <span className="app__stat-label">Errors</span>
+            </div>
+          )}
+          {stats.anomalies > 0 && (
+            <div className="app__stat">
+              <span className="app__stat-value app__stat-value--anomalous" style={{ color: '#fbbf24' }}>{stats.anomalies}</span>
+              <span className="app__stat-label">Anomalies</span>
             </div>
           )}
           <div className="app__stat">
@@ -267,7 +304,8 @@ export default function App() {
       </div>
 
       {/* ── Inspect panel (shown on node click) ────────────────── */}
-      <InspectPanel span={selectedSpan} onClose={onPanelClose} />
+      <InspectPanel span={selectedSpan} anomaly={selectedAnomaly} onClose={onPanelClose} />
     </div>
   );
 }
+

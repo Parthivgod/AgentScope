@@ -14,11 +14,12 @@
  *   - Flow 4 Step 4: click-to-inspect anomaly detail (future extension)
  */
 
-import { type SpanEvent } from '../hooks/useWebSocket';
+import { type SpanEvent, type AnomalyEvent } from '../hooks/useWebSocket';
 import './InspectPanel.css';
 
 interface InspectPanelProps {
   span: SpanEvent | null;
+  anomaly?: AnomalyEvent | null;
   onClose: () => void;
 }
 
@@ -59,7 +60,7 @@ const SPAN_TYPE_LABELS: Record<string, string> = {
   state_update: 'State Update',
 };
 
-export default function InspectPanel({ span, onClose }: InspectPanelProps) {
+export default function InspectPanel({ span, anomaly, onClose }: InspectPanelProps) {
   if (!span) return null;
 
   const duration = computeDuration(span.start_time, span.end_time);
@@ -90,22 +91,40 @@ export default function InspectPanel({ span, onClose }: InspectPanelProps) {
             <span className={`inspect-panel__badge inspect-panel__badge--${span.span_type}`}>
               {SPAN_TYPE_LABELS[span.span_type] ?? span.span_type}
             </span>
-            <span
-              className={`inspect-panel__status ${
-                isError
-                  ? 'inspect-panel__status--error'
-                  : isActive
-                    ? 'inspect-panel__status--active'
-                    : 'inspect-panel__status--success'
-              }`}
-            >
-              {isError ? '● Error' : isActive ? '● Running' : '● Complete'}
-            </span>
+            {anomaly ? (
+              <span className="inspect-panel__status inspect-panel__status--anomalous">
+                ● Anomaly Detected
+              </span>
+            ) : (
+              <span
+                className={`inspect-panel__status ${
+                  isError
+                    ? 'inspect-panel__status--error'
+                    : isActive
+                      ? 'inspect-panel__status--active'
+                      : 'inspect-panel__status--success'
+                }`}
+              >
+                {isError ? '● Error' : isActive ? '● Running' : '● Complete'}
+              </span>
+            )}
           </div>
         </div>
 
         {/* Body */}
         <div className="inspect-panel__body">
+          {/* Anomaly section */}
+          {anomaly && (
+            <section className="inspect-panel__section inspect-panel__section--anomalous">
+              <h3 className="inspect-panel__section-title">Anomaly: {anomaly.rule}</h3>
+              <p className="inspect-panel__anomaly-desc">{anomaly.description}</p>
+              <div className="inspect-panel__field">
+                <span className="inspect-panel__field-label">Detected At</span>
+                <span className="inspect-panel__field-value">{formatTime(anomaly.timestamp)}</span>
+              </div>
+            </section>
+          )}
+
           {/* Timing section */}
           <section className="inspect-panel__section">
             <h3 className="inspect-panel__section-title">Timing</h3>

@@ -46,6 +46,16 @@ export type SpanEvent = {
 };
 
 /**
+ * Expected shape of an anomaly event from Track B the Anomaly Worker (Week 6)
+ */
+export type AnomalyEvent = {
+  rule: string;
+  span_id: string;
+  description: string;
+  timestamp: string;
+};
+
+/**
  * Generate a realistic mock span sequence simulating a branching
  * LangGraph agent: Router → search_web (tool), gpt-4o (LLM),
  * then a delegation to a sub-agent with its own tool call.
@@ -173,6 +183,7 @@ function createMockSpanSequence(): SpanEvent[] {
 
 export function useWebSocket(url: string) {
   const [events, setEvents] = useState<SpanEvent[]>([]);
+  const [anomalies, setAnomalies] = useState<Record<string, AnomalyEvent>>({});
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
@@ -184,8 +195,39 @@ export function useWebSocket(url: string) {
 
     ws.onmessage = (event) => {
       try {
-        const span: SpanEvent = JSON.parse(event.data);
+        const payload = JSON.parse(event.data);
+        
+        // Track B Week 6 gap: Real anomaly events logic will parse distinct payloads.
+        // For now, if the payload looks like an anomaly, parse it:
+        if (payload.rule && payload.span_id) {
+          setAnomalies((prev) => ({ ...prev, [payload.span_id]: payload as AnomalyEvent }));
+          return;
+        }
+
+        // Otherwise assume it's a span:
+        const span = payload as SpanEvent;
         setEvents((prev) => [...prev, span]);
+
+        // MOCK ANOMALY GENERATOR:
+        // Automatically mock an anomaly for demo purposes if it's a tool_call
+        // This is a temporary substitute for the missing Track B integration.
+        if (span.span_type === 'tool_call' && !span.end_time) {
+          setTimeout(() => {
+            setAnomalies((prev) => {
+              if (prev[span.span_id]) return prev; // already flagged
+              return {
+                ...prev,
+                [span.span_id]: {
+                  rule: 'Failure Loops',
+                  span_id: span.span_id,
+                  description: 'Call repeated ≥4 times within 60s without state progression.',
+                  timestamp: new Date().toISOString(),
+                }
+              };
+            });
+          }, 4000);
+        }
+
       } catch (err) {
         console.error('Failed to parse WebSocket message:', err);
       }
@@ -205,5 +247,5 @@ export function useWebSocket(url: string) {
     };
   }, [url]);
 
-  return { events, isConnected };
+  return { events, anomalies, isConnected };
 }

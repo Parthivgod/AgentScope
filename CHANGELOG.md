@@ -1,5 +1,26 @@
 # AgentScope Changelog
 
+## [2026-08-11 18:05] — Weeks 5-6: AlertBadge & Anomaly UI (branch: track-c-week5-eshan) — Track C — Eshan
+
+**What changed:**
+- `Track C`: Scaffolded `dashboard/src/components/AlertBadge.tsx` and `.css` for distinct visual anomaly warnings (Build Plan §4 Track C Week 5).
+- `Track C`: Updated `dashboard/src/components/AgentNode.tsx` to handle an `anomaly` prop, adding an overriding amber pulsing glow `.agent-node--anomalous` for anomalous nodes (FR-6, Flow 4 Step 3).
+- `Track C`: Updated `dashboard/src/components/InspectPanel.tsx` to surface anomaly details (rule fired, description, time) closely mimicking expected backend structure when a flagged node is clicked (Flow 4 Step 4).
+- `Track C`: Updated `dashboard/src/App.tsx` header stats to properly aggregate and display current anomaly counts.
+- `Track C`: Patched `dashboard/src/hooks/useWebSocket.ts` with a **TEMPORARY MOCK** that watches incoming real WebSocket payloads and artificially flags `tool_call` spans after 4s (simulating a "Failure Loops" alert).
+
+**Why:**
+- Implements Dashboard requirements mapped to Build Plan §4 Track C Weeks 5 and 6, and PRD Flow 4.
+- Since Track B's Anomaly Worker is not complete, UI dependencies were fulfilled using drop-in mocked data so the frontend logic is completely wired up for when the backend is ready.
+
+**Assumptions made (if any):**
+- Assumed Track B will stream `AnomalyEvent` data over the same WS or the frontend will process disparate payloads safely using matching `span_id` correlations.
+
+**Open questions / follow-ups (if any):**
+- **BLOCKED/Track B Dependency**: Real Anomaly engine integration is blocked. Track B (Weeks 5-6 build) hasn't delivered the worker or rules yet. The Dashboard uses a temporary mock to trigger the anomaly UI. Once Track B brings the engine live, the mock logic inside `useWebSocket.ts` MUST be replaced with actual parser logic from the ws stream.
+
+**Tests added/run:**
+- Visual verification and code-level review. Hook logic correctly mutates nodes into the anomalous state natively utilizing existing data flows.
 ## [2026-08-10 15:15] — Infra Hardening Post-M1 — Integration — infra-hardening-postm1
 
 **What changed:**
