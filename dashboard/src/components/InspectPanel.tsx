@@ -117,11 +117,7 @@ export default function InspectPanel({ span, anomaly, onClose }: InspectPanelPro
           {anomaly && (
             <section className="inspect-panel__section inspect-panel__section--anomalous">
               <h3 className="inspect-panel__section-title">Anomaly: {anomaly.rule}</h3>
-              <p className="inspect-panel__anomaly-desc">{anomaly.description}</p>
-              <div className="inspect-panel__field">
-                <span className="inspect-panel__field-label">Detected At</span>
-                <span className="inspect-panel__field-value">{formatTime(anomaly.timestamp)}</span>
-              </div>
+              <pre className="inspect-panel__anomaly-desc">{formatJSON(anomaly.details)}</pre>
             </section>
           )}
 
