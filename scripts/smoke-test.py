@@ -9,8 +9,8 @@ from websockets import connect
 async def run_smoke_test():
     print("Starting AgentScope E2E Smoke Test...")
 
-    # Set up environment
-    os.environ["AGENTSCOPE_API_KEY"] = "smoke-test-key"
+    env = os.environ.copy()
+    env["AGENTSCOPE_API_KEY"] = "smoke-test-key"
     
     print("1. Starting Redis (docker-compose)...")
     subprocess.run(["docker-compose", "up", "-d"], cwd="infra", check=True)
@@ -20,14 +20,14 @@ async def run_smoke_test():
     backend_proc = subprocess.Popen(
         ["uvicorn", "app.ingest:app", "--host", "127.0.0.1", "--port", "8000"],
         cwd="backend",
-        env=os.environ
+        env=env
     )
     
     # Start the anomaly worker
     worker_proc = subprocess.Popen(
         ["python", "main.py"],
         cwd="worker",
-        env=os.environ
+        env=env
     )
 
     try:
