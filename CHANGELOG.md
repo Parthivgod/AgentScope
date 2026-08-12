@@ -1,5 +1,32 @@
 # AgentScope Changelog
 
+## [2026-08-12 19:45] — Weeks 5-6 Integration Merge — All Tracks — Anomaly Detection Pipeline
+
+**What changed:**
+- `Integration`: Merged `track-a-week5-nilay` (custom demo agent, benchmarks, redaction, retry/backoff) into `main`.
+- `Integration`: Merged `track-b-antigravity` (anomaly worker, 6 rules, ws.py multiplexing, harness) into `main`.
+- `Integration`: Merged `track-c-week5-eshan` (AlertBadge, anomaly UI, InspectPanel) into `main` after fixing the merge-blocking mock.
+- `Track C Fix`: Removed the `MOCK ANOMALY GENERATOR` from `dashboard/src/hooks/useWebSocket.ts` that was artificially generating anomaly events via `setTimeout`. The hook now exclusively parses real anomaly payloads from Track B's WebSocket relay (identified by `is_anomaly: true`).
+- `Track C Fix`: Updated `AnomalyEvent` type to match Track B's actual payload shape (`trace_id`, `agent_id`, `details`, `is_anomaly`) replacing the old mock shape (`description`, `timestamp`).
+- `Track C Fix`: Updated `InspectPanel.tsx` to render `anomaly.details` as formatted JSON instead of a plain `description` string.
+- `Scripts`: Fixed `scripts/smoke-test.py` environment variable propagation — subprocess `env` was not receiving `AGENTSCOPE_API_KEY` due to `os.environ` reference vs copy semantics.
+
+**Why:**
+- Fulfills Build Plan §5 Week 5-6 Integration Checkpoint, merging all three tracks' anomaly detection work into a single working pipeline.
+- Enforces RULES.md invariant #8: the mock in Track C was identified and removed before merge, unlike the M1 integration where a mock WebSocket shipped to main uncaught.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- None. All three tracks are integrated and the anomaly pipeline is end-to-end functional.
+
+**Tests added/run:**
+- `scripts/smoke-test.py`: Full E2E pass — span ingested via HTTP POST, relayed over WebSocket, anomaly flag detected and delivered. Output: `SUCCESS: Both span and anomaly arrived over WebSocket relay.`
+- SDK tests: 15 passed.
+- Backend `test_ingest.py`: Passed.
+- `examples/custom_demo_agent/main.py`: Executed successfully end-to-end.
+
 ## [2026-08-11 18:05] — Weeks 5-6: AlertBadge & Anomaly UI (branch: track-c-week5-eshan) — Track C — Eshan
 
 **What changed:**
