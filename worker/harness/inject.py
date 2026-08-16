@@ -50,12 +50,63 @@ async def inject_token_spike():
     async with httpx.AsyncClient() as client:
         await client.post(INGEST_URL, json=span, headers={"Authorization": f"Bearer {API_KEY}"})
 
+async def inject_timeout():
+    print("Injecting Timeout (>30s)...")
+    span = get_base_span()
+    span["span_id"] = "timeout-span-1"
+    
+    # 35 seconds duration
+    start = datetime.now(timezone.utc)
+    import datetime as dt
+    end = start + dt.timedelta(seconds=35)
+    
+    span["start_time"] = start.isoformat()
+    span["end_time"] = end.isoformat()
+    
+    async with httpx.AsyncClient() as client:
+        await client.post(INGEST_URL, json=span, headers={"Authorization": f"Bearer {API_KEY}"})
+
+async def inject_message_storm():
+    print("Injecting Message Storm (>20/sec)...")
+    span = get_base_span()
+    async with httpx.AsyncClient() as client:
+        for i in range(25):
+            span["span_id"] = f"storm-span-{i}"
+            await client.post(INGEST_URL, json=span, headers={"Authorization": f"Bearer {API_KEY}"})
+
+async def inject_delegation_cycle():
+    print("Injecting Delegation Cycle (A->B->A)...")
+    # A -> B
+    span1 = get_base_span()
+    span1["span_id"] = "delegation-1"
+    span1["span_type"] = "delegation"
+    span1["agent_id"] = "agent-A"
+    span1["output"] = {"delegated_to": "agent-B"}
+    
+    # B -> A
+    span2 = get_base_span()
+    span2["span_id"] = "delegation-2"
+    span2["parent_span_id"] = "delegation-1"
+    span2["span_type"] = "delegation"
+    span2["agent_id"] = "agent-B"
+    span2["output"] = {"delegated_to": "agent-A"}
+    
+    async with httpx.AsyncClient() as client:
+        await client.post(INGEST_URL, json=span1, headers={"Authorization": f"Bearer {API_KEY}"})
+        await client.post(INGEST_URL, json=span2, headers={"Authorization": f"Bearer {API_KEY}"})
+
 async def run_all():
     await inject_crash()
     await asyncio.sleep(1)
     await inject_failure_loop()
     await asyncio.sleep(1)
     await inject_token_spike()
+    await asyncio.sleep(1)
+    await inject_timeout()
+    await asyncio.sleep(1)
+    await inject_message_storm()
+    await asyncio.sleep(1)
+    await inject_delegation_cycle()
     print("Injection complete.")
 
 if __name__ == "__main__":

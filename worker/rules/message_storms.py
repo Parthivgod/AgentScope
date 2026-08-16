@@ -6,6 +6,8 @@ class MessageStormRule:
     name = "message_storms"
 
     def __init__(self, thresholds: Dict[str, Any]):
+        # Provisional Sprint 1 baseline thresholds, validated via synthetic injection harness.
+        # Pending tuning against real traffic patterns (RULES.md §6).
         self.count = thresholds.get("count", 20)
         self.window_seconds = thresholds.get("window_seconds", 5)
         

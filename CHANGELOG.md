@@ -1,5 +1,29 @@
 # AgentScope Changelog
 
+## [2026-08-16 17:15] — Weeks 7-8: History Endpoint & Deploy Validation — Track B — Parthiv
+
+**What changed:**
+- `Track B / Backend`: Created `backend/app/history.py` (Flow 5) exposing `GET /history/{trace_id}` to retrieve historical spans from Redis Streams in strict arrival order (RULES invariant #4). Uses `XRANGE` bounded by `start_ts` and `end_ts`. Returns exact `Trace` schema shape containing `Span` items.
+- `Track B / Backend`: Integrated `history.py` router into `backend/app/ingest.py`. Added `backend/tests/test_history.py`.
+- `Track B / Infra`: Expanded `infra/docker-compose.yml` to include `nginx`, `backend`, `worker`, and `redis`. Created Dockerfiles for `backend` and `worker`, and `infra/nginx/nginx.conf` proxying `/ingest`, `/ws`, and `/history` with header forwarding to ensure FR-7 authentication rejection works through the proxy.
+- `Track B / Worker`: Added `inject_timeout`, `inject_message_storm`, and `inject_delegation_cycle` to `worker/harness/inject.py` to cover all 6 rules.
+- `Track B / Worker`: Logged precision/recall/F1 test observations for rules. Kept PRD §7 draft values but added provisional Sprint-1 baseline comments in rule initialization (Decision #3).
+
+**Why:**
+- Implements FR-8 (historical replay) mapped to Build Plan §4 Track B Week 7.
+- Implements FR-9 (single docker-compose deployment) mapped to Build Plan §4 Track B Week 8 (Task A). Note: Week 8 scope reflects the 2026-08-16 AWS-timing revision (AWS deploy moved to Week 11).
+- Implements Decision #3 rule threshold tuning mapped to Build Plan §4 Track B Week 8 (Task B).
+
+**Assumptions made (if any):**
+- Assumed `history.py` should use in-memory trace ID filtering on the `XRANGE` results to avoid modifying the ingestion path or adding secondary indexing at this stage.
+
+**Open questions / follow-ups (if any):**
+- Trace-indexed lookup idea and Week 9 load test case for concurrent `/history` + `/ingest` were logged to `docs/future-work.md`.
+
+**Tests added/run:**
+- `test_history.py` created and passed (verifies schema shape and exact order preservation, and clean 404 for missing).
+- `worker/harness/inject.py` expanded and run locally to simulate anomalies.
+
 ## [2026-08-12 22:16] — Hotfix: Dashboard Graph Edges — Track A / Shared
 
 **What changed:**
