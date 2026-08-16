@@ -4,6 +4,8 @@
 **Source docs:** `AgentScope_PRD.md` v1.0, `AgentScope_User_Flows.md` (both updated to match the locked decisions below)
 **Purpose:** A complete, traceable plan covering every requirement in the PRD, split into 3 parallel tracks so the team can build simultaneously without stepping on each other.
 
+> **Revision note (2026-08-16):** AWS deployment resequenced to the end of the build, per team decision. Scope of what moved: only the actual EC2 provisioning/push and the "full stack live on AWS" checkpoint. Docker Compose, Nginx, and TLS infra are still built and validated **locally** on the original Week 8 schedule (FR-9 doesn't require a cloud target to prove out) — only the cloud push itself was backloaded. Weeks 9–10 performance/resilience/security testing still run locally, on their original schedule, unchanged. The freed Week 8 capacity was filled by pulling forward already-planned work (Track A's Week 7 stretch goal, Track C's redaction-mode indicator) rather than compressing later weeks — the plan stays at 12 weeks. A new checkpoint, **M2-AWS** (Week 11), covers the actual cloud deployment; the original M2 (Week 8) now denotes local integration + threshold tuning only. Everything below reflects this; unchanged sections are unmarked, changed rows are noted inline.
+
 ---
 
 ## 0. Project Recap (so this doc is self-contained)
@@ -42,6 +44,7 @@ All items below are decided. PRD and User Flows have been updated to match (see 
 | 6 | LangGraph adapter hooking mechanism | **Callback-tracer pattern**: subclass `langchain_core.tracers.base.AsyncBaseTracer`, inject into the graph's `config["callbacks"]`. | Officially supported API, not a monkey-patch of LangGraph internals. |
 | 7 | Where the SDK writes events | Tracer's `_on_chain_end` / `_on_llm_end` / `_on_tool_end` / `_error` handlers build a `Span`, hand it to an async non-blocking sender that posts to the ingestion endpoint. | Design deliberately — FR-3 and FR-4 both depend on this path. |
 | 8 | First LLM client library for `agentscope.patch()` | **OpenAI client first**; others follow later. | |
+| 9 | *(New)* AWS deployment timing | **Cloud push deferred to Week 11**, after local integration/threshold-tuning is proven at Week 8. Docker Compose/Nginx/TLS infra remains on the original local build schedule. | Team decision, 2026-08-16. Does not touch FR-9's local delivery date. |
 
 ---
 
@@ -137,11 +140,11 @@ Each track below lists: what it owns, which PRD requirements it's responsible fo
 | 4 | Build `examples/langgraph_demo_agent/` (linear + branching, mirroring the LangGraphics test-fixture pattern). Attach `LangGraphAdapter`. **[Integration checkpoint — M1]:** join Track B/C for the first real end-to-end run proving "zero-rewrite." | Needs Track B's real `/ingest` + Track C's dashboard live. |
 | 5 | Build `examples/custom_demo_agent/` (Flow 2 demo). Begin overhead-benchmark harness scaffolding (full run in Week 9). | — |
 | 6 | Implement the redaction toggle (client-side scrubbing before send, Decision #4) and harden sender retry/backoff. | — |
-| 7 | Docs pass on both integration paths; expand SDK test coverage; stretch goal — second LLM client for `patch()`. | — |
-| 8 | **[Integration checkpoint — M2]:** confirm SDK correctly targets the AWS-deployed backend via env vars (Flow 6, Step 4). | Needs Track B's AWS deployment live. |
+| 7 | Docs pass on both integration paths; expand SDK test coverage. | — |
+| **8** | **~~[Integration checkpoint — M2]: confirm SDK targets AWS-deployed backend~~ → moved to Week 11 (M2-AWS).** Revised task: build the second LLM client for `agentscope.patch()` (promoted from Week 7's stretch goal, now the primary Week 8 item since it's no longer blocked waiting on Track B's AWS deploy); begin SDK quickstart documentation draft. | — (no longer blocked on Track B) |
 | 9 | Run the full overhead benchmark (with/without SDK), report against the <5% target (NFR 9.5, Test #5). | — |
 | 10 | Support resilience/security testing from the SDK side — simulate backend-unreachable scenarios end-to-end; finalize redaction-mode tests. | Coordinates with Track B's Test #6/#7. |
-| 11 | SDK documentation (quickstart for both paths); draft the **Instrumentation Methodology** manuscript section. | — |
+| **11** | SDK documentation (quickstart for both paths); draft the **Instrumentation Methodology** manuscript section. **[Integration checkpoint — M2-AWS]:** confirm SDK correctly targets the AWS-deployed backend via env vars (Flow 6, Step 4). | Needs Track B's AWS deployment live *(moved here from Week 8)*. |
 | 12 | Final polish, packaging, release support. | — |
 
 ---
@@ -162,11 +165,11 @@ Each track below lists: what it owns, which PRD requirements it's responsible fo
 | 5 | Anomaly worker skeleton (independent process, reads raw Redis Streams events, never blocks ingestion — FR-5, §9.2). Implement **Failure Loops** + **Crashes** rules. Start the synthetic failure injection harness (prerequisite for §10.3/§10.8). | — |
 | 6 | Implement **Timeouts**, **Token Spikes**, **Message Storms**, **Delegation Cycles**. Wire anomaly flags back through Redis → WS. **[Integration checkpoint]:** hand off to Track C for alert-state wiring. | Track C needs flags flowing to build `AlertBadge`. |
 | 7 | `history.py` historical query endpoint (FR-8). Support Track C's shared live/historical rendering design (event source differs, rendering logic doesn't — Flow 5). | — |
-| 8 | **[Integration checkpoint — M2]:** full `docker-compose` (Nginx + FastAPI + Redis + Worker) deployed to AWS EC2; confirm unauthenticated-request rejection (Flow 6, Step 5). Run the injection harness across all 6 rules, tune thresholds, record precision/recall/F1. | Everyone joins for the M2 demo. |
-| 9 | Load testing (Locust/k6), report p50/p95/p99 latency against the <200ms target (Test #4, NFR 9.1). | — |
-| 10 | Resilience testing (kill worker mid-run, restart Redis, slow WS client — Test #6); security testing (TLS termination, API-key rejection — Test #7); set up the comparative baseline test vs. Phoenix/Langfuse (Test #8). | — |
-| 11 | Backend/infra documentation; draft **System Design** + **Evaluation Results** manuscript sections. | — |
-| 12 | Final deployment hardening, release support. | — |
+| **8** | **[Integration checkpoint — M2, local]:** full `docker-compose` (Nginx + FastAPI + Redis + Worker) validated as a single-command deploy **locally** (FR-9) — ~~deployed to AWS EC2~~ *(cloud push moved to Week 11)*; confirm unauthenticated-request rejection locally. Run the injection harness across all 6 rules, tune thresholds, record precision/recall/F1. | Everyone joins for the M2 (local) demo. |
+| 9 | Load testing (Locust/k6), report p50/p95/p99 latency against the <200ms target (Test #4, NFR 9.1) — **run locally against Docker Compose**, per team decision. | — |
+| 10 | Resilience testing (kill worker mid-run, restart Redis, slow WS client — Test #6); security testing (TLS termination, API-key rejection — Test #7); set up the comparative baseline test vs. Phoenix/Langfuse (Test #8). — **run locally**, per team decision. | — |
+| **11** | **[Integration checkpoint — M2-AWS]:** provision the EC2 instance and deploy the already-validated `docker-compose` stack to it; re-confirm unauthenticated-request rejection against the **live** endpoint (Flow 6, Step 5). Backend/infra documentation; draft **System Design** + **Evaluation Results** manuscript sections. | Needs Week 8's local stack proven stable first — this should be "point the proven stack at EC2," not first-time debugging. |
+| 12 | Final deployment hardening (on the now-live AWS instance), release support. | — |
 
 ---
 
@@ -186,10 +189,10 @@ Each track below lists: what it owns, which PRD requirements it's responsible fo
 | 5 | Polish graph interactions; scaffold `AlertBadge.tsx` ahead of Track B's rules landing. | — |
 | 6 | **[Integration checkpoint]:** wire `AlertBadge` to real anomaly flags; click-to-inspect anomaly detail (Flow 4, Step 4) — distinct visual state from normal "active" pulsing. | Needs Track B's Week 6 deliverable. |
 | 7 | Historical replay UI — reuse `Graph.tsx`/`InspectPanel` for a stored-event source (Flow 5); live/historical toggle. | Needs Track B's `history.py`. |
-| 8 | **[Integration checkpoint — M2]:** full-stack demo against the AWS-deployed backend; UI polish. | — |
-| 9–10 | UX polish; redaction-mode UI indicator (shows when metadata-only mode is active); accessibility/performance pass. | — |
-| 11 | Dashboard documentation; run the **usability test** (Test #9 — unfamiliar observer watches a live failure, explains what happened unaided, per Flow 3 success criteria/§10.9); draft **Usability Findings** manuscript section. | — |
-| 12 | Final polish; support demo video recording (the dashboard is the visual centerpiece of the Flow 1 and Flow 4 demos). | — |
+| **8** | **[Integration checkpoint — M2, local]:** full-stack demo against the **local** Docker Compose stack — ~~AWS-deployed backend~~ *(moved to Week 11)*. Redaction-mode UI indicator (pulled forward from Weeks 9–10, shows when metadata-only mode is active); general UI polish. | — |
+| 9–10 | UX polish; accessibility/performance pass. *(Redaction-mode indicator moved to Week 8 above.)* | — |
+| **11** | Dashboard documentation; run the **usability test** (Test #9 — unfamiliar observer watches a live failure, explains what happened unaided, per Flow 3 success criteria/§10.9); draft **Usability Findings** manuscript section. **[Integration checkpoint — M2-AWS, join if timing allows]:** point the dashboard's WebSocket connection at the live AWS backend to confirm it works end-to-end. | Optional join — depends on Track B's Week 11 AWS deploy landing in time. |
+| 12 | Final polish; support demo video recording (the dashboard is the visual centerpiece of the Flow 1 and Flow 4 demos — can now reference the live AWS deployment if desired). | — |
 
 ---
 
@@ -201,7 +204,8 @@ Each track below lists: what it owns, which PRD requirements it's responsible fo
 | 3 | First synthetic end-to-end pipeline (mock agent → ingest → Redis → WS → dashboard) | A + B + C |
 | 4 | **M1** — real LangGraph agent, zero-rewrite demo, live dashboard | A + B + C |
 | 6 | Anomaly flags wired end-to-end into the dashboard alert state | B + C |
-| 8 | **M2** — full stack on AWS, all 6 rules threshold-tuned | A + B + C |
+| **8** | **M2 (local)** — full stack integrated & threshold-tuned, validated via Docker Compose *(revised: no longer "on AWS" — cloud push moved to Week 11)* | A + B + C |
+| **11** | **M2-AWS** *(new)* — live AWS EC2 deployment confirmed: SDK + dashboard point at it, unauthenticated-request rejection re-confirmed against the live endpoint | A + B (+ C if timing allows) |
 | 11–12 | **M3** — docs, demo video, manuscript sections assembled, public release | A + B + C |
 
 If a track finds itself blocked at one of these points because an upstream track slipped, that's the signal to pull people over rather than letting the blocked track sit idle — these are hard sync points, not soft suggestions.
@@ -221,14 +225,14 @@ If a track finds itself blocked at one of these points because an upstream track
 | FR-6 | Dashboard renders live hierarchical graph, active/idle/anomalous states | C | Weeks 1–6 |
 | FR-7 | Ingestion rejects requests without valid API key | B | Week 1 |
 | FR-8 | Historical replay of completed traces | B (endpoint) + C (UI) | Week 7 |
-| FR-9 | Full stack deploys via single Docker Compose command | B | Week 8 |
+| FR-9 | Full stack deploys via single Docker Compose command | B | **Week 8 (local validation); Week 11 (AWS deployment)** *(revised — was Week 8 only)* |
 
 ### Non-Functional Requirements (PRD §9)
 | ID | Requirement | Owning Track | Validated by |
 |---|---|---|---|
-| 9.1 Performance | <200ms p95 latency under load | B | Week 9 load test |
-| 9.2 Reliability | Worker failure never interrupts ingestion | B | Week 10 fault injection |
-| 9.3 Security | TLS + API-key on all ingestion traffic | B | Week 10 security test |
+| 9.1 Performance | <200ms p95 latency under load | B | Week 9 load test *(run locally, unchanged)* |
+| 9.2 Reliability | Worker failure never interrupts ingestion | B | Week 10 fault injection *(run locally, unchanged)* |
+| 9.3 Security | TLS + API-key on all ingestion traffic | B | Week 10 security test *(run locally, unchanged)*; re-confirmed against live AWS in Week 11 |
 | 9.4 Data Handling | Configurable redaction, default full-capture/opt-in | A (implementation) | Week 6 build, Week 10 test |
 | 9.5 Overhead | SDK adds <5% execution overhead | A | Week 9 benchmark |
 | 9.6 Portability | No kernel privileges / specific OS required | B | Design-time (Docker-based, inherent) |
@@ -241,12 +245,12 @@ If a track finds itself blocked at one of these points because an upstream track
 | # | Test | Owning Track | Week |
 |---|---|---|---|
 | 1 | Unit testing (SDK capture, ingestion schema, per-rule logic) | A + B (own their own units) | Ongoing, every push (CI) |
-| 2 | Integration testing (full Docker Compose stack, real + custom traffic) | B, with A + C | Weeks 3, 4, 8 |
+| 2 | Integration testing (full Docker Compose stack, real + custom traffic) | B, with A + C | Weeks 3, 4, 8 **(local)**, 11 **(AWS)** *(revised — Week 8 was "8" only, now split local/AWS)* |
 | 3 | Anomaly detection validation (injection harness, precision/recall/F1) | B | Weeks 5–8 |
 | 4 | Performance/latency testing (Locust/k6, p50/p95/p99) | B | Week 9 |
 | 5 | Overhead testing (with/without SDK) | A | Week 9 |
 | 6 | Resilience testing (kill worker, restart Redis, slow WS client) | B | Week 10 |
-| 7 | Security testing (API-key rejection, TLS termination) | B | Week 10 |
+| 7 | Security testing (API-key rejection, TLS termination) | B | Week 10 **(local)**, re-confirmed Week 11 **(AWS)** |
 | 8 | Comparative baseline testing (vs. Phoenix/Langfuse, time-to-detection) | B (backend timing) + C (UI) | Week 10 |
 | 9 | Usability testing (unfamiliar observer, live failure, unaided explanation) | C | Week 11 |
 
@@ -271,11 +275,12 @@ Every threshold is provisional — must be empirically justified via the injecti
 
 | Risk | Mitigation | Owner |
 |---|---|---|
-| 12-week timeline is aggressive across SDK + backend + frontend + 6 detectors + AWS + manuscript | M1/M2/M3 checkpoints surface slippage early; don't let one track's delay silently cascade — flag at the weekly sync | Shared |
+| 12-week timeline is aggressive across SDK + backend + frontend + 6 detectors + AWS + manuscript | M1/M2/M2-AWS/M3 checkpoints surface slippage early; don't let one track's delay silently cascade — flag at the weekly sync | Shared |
 | Anomaly thresholds undefined until validated | Injection harness prioritized in Week 5, not deferred to Week 8 | Track B |
 | Single EC2 instance = single point of failure | Accepted out-of-scope limitation; documented as future work | Track B |
-| <200ms latency claim unproven until tested | Load-testing scheduled Week 9, prerequisite to the manuscript claim | Track B |
+| <200ms latency claim unproven until tested | Load-testing scheduled Week 9 (locally), prerequisite to the manuscript claim | Track B |
 | Citation/reference completeness | Cross-verify all literature-review citations before submission | Shared, Week 11–12 |
+| **(New)** AWS deployment now backloaded to Week 11 — less runway to fix cloud-specific issues before release | Docker Compose/Nginx/TLS fully validated locally by Week 8 (M2), so Week 11 is "point the proven stack at EC2," not first-time debugging. If EC2-specific issues do surface, Week 12 is the only remaining buffer — flag immediately at the weekly sync rather than letting it quietly eat into release/demo-video polish. | Track B |
 
 ---
 
@@ -315,6 +320,7 @@ The PRD and User Flows have been updated to match every locked decision in Secti
 - **Redaction default:** PRD §9.4 now states the default explicitly.
 - **§14 open items:** two of five marked resolved; thresholds and the injection harness remain open by design (they require empirical data); venue explicitly deferred.
 - **Event schema (§6.3):** still a draft table in the PRD itself (fine for a requirements doc); this build plan treats formalizing it as a Pydantic model as the Week-1 task for Track A.
+- **AWS deployment timing:** not previously addressed in the PRD/User Flows as a scheduling matter (Flow 6 describes *what* deployment looks like, not *when* in the build it happens) — no source-doc inconsistency introduced by this revision. Worth a quick sanity check that Flow 6's steps still read correctly with the deployment happening at Week 11 rather than Week 8; nothing in Flow 6's step sequence assumes a specific week.
 
 ---
 

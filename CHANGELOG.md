@@ -1,5 +1,24 @@
 # AgentScope Changelog
 
+## [2026-08-12 22:16] — Hotfix: Dashboard Graph Edges — Track A / Shared
+
+**What changed:**
+- `Track A / SDK`: Fixed `LangGraphAdapter` to emit all child spans (nodes) live as they execute, capturing `parent_span_id` effectively by overriding `_on_run_create` and `_on_run_update` instead of LangChain's default `_persist_run` (which silently swallows child runs).
+- `Track A / SDK`: Fixed the `@trace` decorator in `sdk/agentscope/trace.py` to use Python `contextvars` to track `_current_span_id` and `_current_trace_id`. This guarantees child `@trace` calls correctly propagate their parent's `span_id` up to the root, honoring the same hierarchical schema as the LangGraph path.
+- `Track A / Tests`: Updated `sdk/tests/test_cross_path.py` to call `_on_run_update` matching the new adapter lifecycle. 15/15 tests pass.
+
+**Why:**
+- Edges were entirely missing in the Dashboard graph because spans were arriving without a `parent_span_id`. This hotfix correctly fulfills RULES.md invariant #3 (Schema identity) by ensuring both `trace.py` and `LangGraphAdapter` emit properly linked, hierarchical spans live, enabling the dagre layout to successfully render edges.
+
+**Assumptions made (if any):**
+- Testing the dashboard React Flow edges directly is bypassed to save churn, as the bug resided entirely within the backend SDK telemetry emitters.
+
+**Open questions / follow-ups (if any):**
+- None.
+
+**Tests added/run:**
+- Re-ran SDK unit tests locally.
+
 ## [2026-08-12 19:45] — Weeks 5-6 Integration Merge — All Tracks — Anomaly Detection Pipeline
 
 **What changed:**

@@ -47,12 +47,23 @@ class LangGraphAdapter(AsyncBaseTracer):
             input=run.inputs,
             output=run.outputs,
             start_time=start_time,
-            end_time=run.end_time or datetime.now(timezone.utc),
+            end_time=run.end_time,
             status=status,
             token_usage=token_usage,
             agent_id=self.agent_id
         )
 
-    async def _persist_run(self, run: Run) -> None:
+    def _on_run_create(self, run: Run) -> None:
+        """Process a run upon creation, sending an 'active' span live."""
         span = self._convert_run_to_span(run)
         sender.send(span)
+        return None
+
+    async def _on_run_update(self, run: Run) -> None:
+        """Process a run upon completion, sending a 'complete' or 'error' span live."""
+        span = self._convert_run_to_span(run)
+        sender.send(span)
+
+    async def _persist_run(self, run: Run) -> None:
+        """Satisfy AsyncBaseTracer abc. We already emitted spans live via _on_run_update."""
+        pass

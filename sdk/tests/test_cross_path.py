@@ -34,7 +34,7 @@ async def test_identical_schema_decorator_and_adapter():
         inputs={"args": (1,), "kwargs": {}},
         outputs={"output": 2},
     )
-    await adapter._persist_run(run)
+    await adapter._on_run_update(run)
     adapter_span: Span = sender.queue.get_nowait()
     
     # Produce via decorator
@@ -69,7 +69,7 @@ async def test_identical_schema_llm_calls_adapter_and_patch():
         inputs={"messages": [{"role": "user", "content": "Hello"}]},
         outputs={"llm_output": {"token_usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15}}},
     )
-    await adapter._persist_run(llm_run)
+    await adapter._on_run_update(llm_run)
     adapter_llm_span: Span = sender.queue.get_nowait()
 
     # 2. Produce LLM span via patch(openai)
