@@ -1,23 +1,13 @@
 /**
- * useWebSocket.ts — WebSocket hook for consuming live span events.
- *
- * Week 2-3 status: Uses a mock data generator that simulates a
- * realistic multi-agent LangGraph execution flow. The mock produces
- * schema-identical events to what Track B's real WebSocket relay
- * will deliver once ws.py is available.
- *
- * BLOCKED: Real WebSocket integration is blocked on Track B's ws.py
- * deliverable (Build Plan §4 Track B Week 3). Once available, the
- * hook internals swap from mock → real WS; the consumer interface
- * (events + isConnected) stays identical.
+ * useEventSource.ts — Hook for consuming span events, supporting live WS and historical mode.
  *
  * References:
- *   - Build Plan §4 Track C Week 2: mock WS built against schema
- *   - Build Plan §4 Track C Week 3: connect to Track B's real WS relay
- *   - PRD §6.3: event/span schema
+ *   - Build Plan §4 Track C Week 7: historical replay
+ *   - RULES.md invariant #5: one rendering component fed by multiple event sources
  */
 
 import { useEffect, useState } from 'react';
+import { mockHistoryPayload, mockHistoricalAnomalies } from './mockHistory';
 
 export type SpanStatus = {
   status: 'success' | 'error';
@@ -45,9 +35,6 @@ export type SpanEvent = {
   agent_id: string;
 };
 
-/**
- * Expected shape of an anomaly event from Track B the Anomaly Worker (Week 6)
- */
 export type AnomalyEvent = {
   rule: string;
   span_id: string;
@@ -57,12 +44,36 @@ export type AnomalyEvent = {
   is_anomaly: boolean;
 };
 
-export function useWebSocket(url: string) {
+export function useEventSource(url: string, mode: 'live' | 'historical', traceId: string | null) {
   const [events, setEvents] = useState<SpanEvent[]>([]);
   const [anomalies, setAnomalies] = useState<Record<string, AnomalyEvent>>({});
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
+    // Clear state when mode or trace ID changes
+    setEvents([]);
+    setAnomalies({});
+
+    if (mode === 'historical') {
+      setIsConnected(false); // Not a live connection
+      
+      // Temporary mock for Track B's missing history.py endpoint
+      if (traceId) {
+        // Simulate a network fetch delay
+        const timer = setTimeout(() => {
+          setEvents(mockHistoryPayload);
+          const anoms: Record<string, AnomalyEvent> = {};
+          for (const a of mockHistoricalAnomalies) {
+            anoms[a.span_id] = a;
+          }
+          setAnomalies(anoms);
+        }, 300);
+        return () => clearTimeout(timer);
+      }
+      return;
+    }
+
+    // Live mode
     const ws = new WebSocket(url);
 
     ws.onopen = () => {
@@ -78,7 +89,6 @@ export function useWebSocket(url: string) {
           return;
         }
 
-        // Otherwise assume it's a span:
         const span = payload as SpanEvent;
         setEvents((prev) => [...prev, span]);
 
@@ -99,7 +109,7 @@ export function useWebSocket(url: string) {
     return () => {
       ws.close();
     };
-  }, [url]);
+  }, [url, mode, traceId]);
 
   return { events, anomalies, isConnected };
 }

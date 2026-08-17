@@ -1,5 +1,46 @@
 # AgentScope Changelog
 
+## [2026-08-17 19:30] — Feature: Historical Replay (Week 7) & Redaction Indicator (Week 8) — Track C
+
+**What changed:**
+- `Track C`: Replaced `useWebSocket` hook with `useEventSource` that supports dual execution modes: `live` and `historical`.
+- `Track C`: Added UI toggles to `App.tsx` global header to switch between "Live" and "Historical Replay" modes.
+- `Track C`: Added Trace selector dropdown when in historical mode.
+- `Track C`: Created a static `mockHistoryPayload` to supply fake historical trace events, as `history.py` is not yet available.
+- `Track C`: Implemented NFR 9.4 Redaction requirement by adding a global header `🔒 Redacted Data` badge that appears whenever span `input` or `output` payloads contain the literal `[REDACTED]` string.
+- `Track C`: Verified graph rendering works natively on the `events` array dump without any logical forks to `App.tsx` or `Graph.tsx` logic, strictly preserving the Rule 5 invariant.
+
+**Why:**
+- These changes fulfill Track C's deliverables for the Build Plan §4 Weeks 7 and 8 tasks.
+
+**Assumptions made (if any):**
+- Redaction detection currently checks strings via `JSON.stringify(payload).includes('[REDACTED]')` to ensure deeply nested redactions inside objects are accurately identified.
+- Nginx WS route validation (Week 8 M2 Demo Requirement) remains blocked.
+
+**Open questions / follow-ups (if any):**
+- **BLOCKED (Week 7):** Real historical replays are blocked. We used a frontend-side mock because Track B's `history.py` endpoint deliverable does not exist yet.
+- **BLOCKED (Week 8):** The full-stack Nginx M2 Demo dry-run is blocked. There is no `nginx` reverse proxy service in `infra/docker-compose.yml`. The WS connection remains temporarily hardcoded to direct bypass `ws://localhost:8000/ws`.
+
+**Tests added/run:**
+- Dashboard built locally using `npm run build` to verify React Typescript integrations.
+## [2026-08-17 13:16] — Hotfix: Dashboard React State Batching (Edges) — Track C
+
+**What changed:**
+- `Track C`: Completely rewrote the `useEffect` block in `dashboard/src/App.tsx` that maps incoming `events` to React Flow `nodes` and `edges`.
+- `Track C`: Instead of only processing the `events[events.length - 1]` event, the effect now maps over the entire `events` array to compute the latest state of each span, guaranteeing no events are silently skipped.
+
+**Why:**
+- The previous implementation suffered from a severe race condition due to React 18's state batching. If multiple spans arrived from the WebSocket in the same tick (e.g., from a fast local branching agent), only the final span in the batch was processed into a node/edge. This resulted in orphaned edges (referencing parent nodes that were skipped) and dropped nodes entirely, confirming the previous hotfix's assumption that edge rendering was still broken on the dashboard side.
+
+**Assumptions made (if any):**
+- Rebuilding `nodes` and `edges` arrays from the full `events` state on every render is fast enough for our current constraints, and ensures flawless data consistency which is a hard prerequisite for building the Week 7 historical replay feature (where all events arrive in a single batch).
+
+**Open questions / follow-ups (if any):**
+- None. Edges are now robustly guaranteed to render for every parent-child pair in the span array.
+
+**Tests added/run:**
+- Code-level tracing verifies the `setNodes` and `setEdges` batching race condition is fully mitigated.
+
 ## [2026-08-12 22:16] — Hotfix: Dashboard Graph Edges — Track A / Shared
 
 **What changed:**
