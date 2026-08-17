@@ -10,6 +10,17 @@ _current_trace_id = contextvars.ContextVar('current_trace_id', default=None)
 _current_span_id = contextvars.ContextVar('current_span_id', default=None)
 
 def trace(name: str, span_type: str = "tool_call", agent_id: str = "custom-agent"):
+    """
+    Decorator for tracking custom Python functions/methods as AgentScope spans (Flow 2 integration).
+    
+    Supports both synchronous and asynchronous functions. Tracks parent-child relationships
+    automatically via Python contextvars (`_current_span_id`, `_current_trace_id`).
+    
+    Args:
+        name: Human-readable operation name (e.g. "search_database", "evaluate_results").
+        span_type: Type of span ("tool_call", "llm_call", "delegation", "state_update"). Defaults to "tool_call".
+        agent_id: Agent or node identifier associated with this call. Defaults to "custom-agent".
+    """
     def decorator(func):
         if inspect.iscoroutinefunction(func):
             @functools.wraps(func)

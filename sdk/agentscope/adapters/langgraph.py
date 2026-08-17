@@ -5,6 +5,18 @@ from agentscope.schema import Span, SpanStatus
 from agentscope.sender import sender
 
 class LangGraphAdapter(AsyncBaseTracer):
+    """
+    LangChain / LangGraph callback tracer adapter for zero-rewrite instrumentation (Flow 1 integration).
+    
+    Subclasses `AsyncBaseTracer` to observe LangGraph node/chain/llm runs and automatically convert
+    them into AgentScope `Span` schema events. Injected via `config={"callbacks": [adapter]}` or
+    attached directly to compiled graphs. Emits live 'active' spans on start and 'complete'/'error'
+    spans on end.
+    
+    Args:
+        agent_id: Agent identifier assigned to generated spans.
+        trace_id: Trace identifier associated with the full run.
+    """
     def __init__(self, agent_id: str, trace_id: str, **kwargs):
         super().__init__(**kwargs)
         self.agent_id = agent_id
@@ -28,11 +40,15 @@ class LangGraphAdapter(AsyncBaseTracer):
             llm_output = run.outputs.get("llm_output", {})
             if isinstance(llm_output, dict) and "token_usage" in llm_output:
                 tu = llm_output["token_usage"]
-                token_usage = {
-                    "prompt_tokens": tu.get("prompt_tokens", 0),
-                    "completion_tokens": tu.get("completion_tokens", 0),
-                    "total_tokens": tu.get("total_tokens", 0)
-                }
+                if isinstance(tu, dict):
+                    prompt_tok = tu.get("prompt_tokens", 0) or 0
+                    comp_tok = tu.get("completion_tokens", 0) or 0
+                    tot_tok = tu.get("total_tokens", 0) or (prompt_tok + comp_tok)
+                    token_usage = {
+                        "prompt_tokens": int(prompt_tok) if isinstance(prompt_tok, (int, float, str)) and str(prompt_tok).isdigit() else 0,
+                        "completion_tokens": int(comp_tok) if isinstance(comp_tok, (int, float, str)) and str(comp_tok).isdigit() else 0,
+                        "total_tokens": int(tot_tok) if isinstance(tot_tok, (int, float, str)) and str(tot_tok).isdigit() else 0
+                    }
 
         start_time = run.start_time
         if not start_time:

@@ -1,5 +1,52 @@
 # AgentScope Changelog
 
+## [2026-08-17 15:25] — Track A Week 8: Second LLM Client Patching & SDK Quickstart Draft — Track A — Nilay Jain
+
+**What changed:**
+- `Track A / Patching`: Implemented Anthropic Python SDK patching (`_patch_anthropic`) in `sdk/agentscope/patch.py` supporting both sync (`Messages.create`) and async (`AsyncMessages.create`) calls. Updated `patch()` entry point to accept target modules (`"openai"`, `"anthropic"`, or `None` for all supported clients).
+- `Track A / Token Extraction`: Extended `_extract_token_usage` in `patch.py` to extract Anthropic `input_tokens` and `output_tokens` fail-silently into normalized `prompt_tokens`, `completion_tokens`, and `total_tokens` fields.
+- `Track A / Tests`: Added Anthropic sync and async patching unit tests in `sdk/tests/test_patch.py`. Updated `sdk/tests/test_cross_path.py` to assert 3-way schema identity across `LangGraphAdapter` (Flow 1), `patch(openai)` (Flow 2), and `patch(anthropic)` (Flow 2).
+- `Track A / Quickstart`: Created preliminary SDK quickstart guide in `docs/sdk-quickstart.md` covering 5-minute setup for Flow 1 (LangGraph callback adapter) and Flow 2 (`@trace` decorator + `patch()`).
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 8 tasks (promoted from Week 7 stretch per the 2026-08-16 plan revision, moving AWS deployment to Week 11).
+- Maps to PRD FR-1, FR-2, User Flows 1 & 2, and RULES.md §2 Decision #8 and §3 Invariant #3 (Schema identity across integration paths).
+
+**Assumptions made (if any):**
+- Assumed Anthropic SDK's `Messages.create` and `AsyncMessages.create` are the primary targets for Anthropic instrumentation, mirroring OpenAI's `Completions.create` pattern.
+
+**Open questions / follow-ups (if any):**
+- None. All Week 7 and Week 8 tasks complete.
+
+**Tests added/run:**
+- `sdk/tests/test_patch.py`: Added `test_sync_anthropic_patch_success`, `test_async_anthropic_patch_success`, and `test_extract_token_usage_anthropic_format`.
+- `sdk/tests/test_cross_path.py`: Updated `test_identical_schema_llm_calls_adapter_and_patch` to verify 3-way structural and payload identity across LangGraphAdapter, OpenAI patch, and Anthropic patch.
+- Ran `python -m pytest sdk/tests`: All 22 unit tests passed (100% pass rate).
+
+## [2026-08-17 15:15] — Track A Week 7: SDK Documentation & Test Expansion — Track A — Nilay Jain
+
+**What changed:**
+- `Track A / Docs`: Updated `sdk/agentscope/__init__.py` with comprehensive module-level docstring and usage notes covering Flow 1 (LangGraph zero-rewrite adapter path) and Flow 2 (custom `@trace` decorator and `patch()` path), plus updated docstrings across `Span`, `Trace`, `TokenUsage`, `SpanStatus`, `trace`, `LangGraphAdapter`, and `patch`.
+- `Track A / Hardening`: Hardened `_extract_token_usage` in `sdk/agentscope/patch.py` and `_convert_run_to_span` in `sdk/agentscope/adapters/langgraph.py` to handle missing, string, or malformed `token_usage` attributes fail-silently without raising.
+- `Track A / Sender`: Fixed `httpx.RequestError` exception tuple in `sdk/agentscope/sender.py` to ensure retry loop captures network failures properly.
+- `Track A / Tests`: Expanded `sdk/tests/test_redaction.py` to test composition of client-side redaction with exponential backoff retries, expanded `sdk/tests/test_patch.py` with edge cases for malformed/string token extraction, and updated `sdk/tests/test_sender.py` to test spans with missing/malformed token usage.
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 7 tasks.
+- Maps to PRD §6.1, FR-1, FR-2, User Flows 1 & 2, and RULES.md §3.1 and §3.2 (Fail-silent invariants #1/#2).
+
+**Assumptions made (if any):**
+- Assumed documentation in `__init__.py` provides the primary entry point reference for first-time developers choosing between Flow 1 and Flow 2.
+
+**Open questions / follow-ups (if any):**
+- None for Week 7. Ready for Week 8 scope.
+
+**Tests added/run:**
+- `sdk/tests/test_redaction.py`: Verified redaction composition during 500 retry/backoff loops.
+- `sdk/tests/test_patch.py`: Verified fail-silent extraction of stringified, dict, and bad property token usage.
+- `sdk/tests/test_sender.py`: Verified queue draining and payload structure for spans with empty/missing token usage.
+- Ran `python -m pytest sdk/tests`: All 19 unit tests passed (100% pass rate).
+
 ## [2026-08-12 22:16] — Hotfix: Dashboard Graph Edges — Track A / Shared
 
 **What changed:**

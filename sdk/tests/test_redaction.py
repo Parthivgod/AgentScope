@@ -1,6 +1,7 @@
 import pytest
 import os
 import asyncio
+import httpx
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 
@@ -71,3 +72,50 @@ async def test_client_side_redaction_in_sender():
     assert posted_json["output"] == "[REDACTED]"
     assert posted_json["trace_id"] == "test-redact-trace"
     assert posted_json["name"] == "sensitive_tool"
+
+@pytest.mark.asyncio
+async def test_redaction_combined_with_retry_backoff():
+    set_redaction_enabled(True)
+    sender_instance = AsyncEventSender(max_retries=2, initial_backoff=0.01, backoff_factor=2.0)
+
+    posted_payloads = []
+
+    class Mock500Response:
+        status_code = 500
+        def raise_for_status(self):
+            raise httpx.HTTPStatusError("500 Internal Error", request=None, response=self)
+
+    class Mock200Response:
+        status_code = 200
+        def raise_for_status(self): pass
+
+    async def mock_post(url, json=None, headers=None):
+        posted_payloads.append(json)
+        if len(posted_payloads) == 1:
+            return Mock500Response()
+        return Mock200Response()
+
+    sender_instance.client.post = AsyncMock(side_effect=mock_post)
+
+    span = Span(
+        trace_id="test-redact-retry-trace",
+        span_id="span-retry-123",
+        span_type="tool_call",
+        name="sensitive_tool_retry",
+        input={"secret_key": "sensitive_val"},
+        output={"secret_output": "sensitive_out"},
+        start_time=datetime.now(timezone.utc),
+        agent_id="test-agent"
+    )
+
+    sender_instance.send(span)
+    await asyncio.sleep(0.1)
+
+    # 1 initial attempt (500) + 1 retry (200) = 2 posted payloads
+    assert len(posted_payloads) == 2
+    for payload in posted_payloads:
+        assert payload["input"] == "[REDACTED]"
+        assert payload["output"] == "[REDACTED]"
+        assert payload["trace_id"] == "test-redact-retry-trace"
+    assert sender_instance.queue.empty()
+

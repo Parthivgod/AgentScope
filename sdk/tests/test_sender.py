@@ -113,3 +113,39 @@ async def test_retry_eventually_succeeds(monkeypatch, test_sender):
     # Succeeded on 2nd call
     assert call_count == 2
     assert test_sender.queue.empty()
+
+@pytest.mark.asyncio
+async def test_sender_handles_malformed_token_usage_span(monkeypatch, test_sender):
+    from agentscope.schema import TokenUsage
+
+    posted_payload = None
+
+    class MockResponse:
+        status_code = 200
+        def raise_for_status(self): pass
+
+    async def mock_post(*args, **kwargs):
+        nonlocal posted_payload
+        posted_payload = kwargs.get("json")
+        return MockResponse()
+
+    monkeypatch.setattr(test_sender.client, "post", mock_post)
+
+    # TokenUsage with None or missing counters
+    span = Span(
+        trace_id="t_malformed",
+        span_id="s_malformed",
+        span_type="llm_call",
+        name="test_llm",
+        start_time=datetime.now(timezone.utc),
+        token_usage=TokenUsage(prompt_tokens=None, completion_tokens=None, total_tokens=None),
+        agent_id="a1"
+    )
+
+    test_sender.send(span)
+    await asyncio.sleep(0.1)
+
+    assert posted_payload is not None
+    assert posted_payload["token_usage"] == {"prompt_tokens": None, "completion_tokens": None, "total_tokens": None}
+    assert test_sender.queue.empty()
+

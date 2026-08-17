@@ -58,7 +58,7 @@ class AsyncEventSender:
                         else:
                             # Server error (5xx) -> transient failure, candidate for retry
                             res.raise_for_status()
-                    except (httpx.TimeoutException, httpx.NetworkError, httpx.HTTPStatusError) as exc:
+                    except (httpx.TimeoutException, httpx.RequestError, httpx.HTTPStatusError) as exc:
                         if attempt < self.max_retries:
                             backoff = self.initial_backoff * (self.backoff_factor ** attempt)
                             logger.warning(

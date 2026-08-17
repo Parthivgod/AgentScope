@@ -54,7 +54,7 @@ async def test_identical_schema_decorator_and_adapter():
 
 @pytest.mark.asyncio
 async def test_identical_schema_llm_calls_adapter_and_patch():
-    # 1. Produce LLM span via LangGraphAdapter
+    # 1. Produce LLM span via LangGraphAdapter (Flow 1)
     adapter = LangGraphAdapter(agent_id="test-agent", trace_id="trace-llm")
     run_id = uuid.uuid4()
     t1 = datetime.now(timezone.utc)
@@ -72,40 +72,79 @@ async def test_identical_schema_llm_calls_adapter_and_patch():
     await adapter._on_run_update(llm_run)
     adapter_llm_span: Span = sender.queue.get_nowait()
 
-    # 2. Produce LLM span via patch(openai)
-    patch(agent_id="test-agent", trace_id="trace-llm")
-    
-    import openai
-    from openai.resources.chat.completions import Completions
-    
-    mock_response = MagicMock()
-    mock_response.usage.prompt_tokens = 10
-    mock_response.usage.completion_tokens = 5
-    mock_response.usage.total_tokens = 15
-    mock_response.model_dump.return_value = {"id": "chatcmpl-123", "choices": []}
-    
-    mock_client = MagicMock()
+    # 2. Produce LLM span via patch(openai) (Flow 2 - OpenAI)
+    mock_openai_response = MagicMock()
+    mock_openai_response.usage.prompt_tokens = 10
+    mock_openai_response.usage.completion_tokens = 5
+    mock_openai_response.usage.total_tokens = 15
+    mock_openai_response.model_dump.return_value = {"id": "chatcmpl-123", "choices": []}
+    mock_openai_client = MagicMock()
 
     with pytest.MonkeyPatch.context() as m:
-        def dummy_create(self, *a, **kw):
-            return mock_response
-        m.setattr("openai.resources.chat.completions.Completions.create", dummy_create)
+        from openai.resources.chat.completions import Completions
+        def dummy_openai_create(self, *a, **kw):
+            return mock_openai_response
+        m.setattr("openai.resources.chat.completions.Completions.create", dummy_openai_create)
         
         if hasattr(Completions.create, "_agentscope_patched"):
             delattr(Completions.create, "_agentscope_patched")
             
-        patch(agent_id="test-agent", trace_id="trace-llm")
-        completions_inst = Completions(client=mock_client)
+        patch(target_module="openai", agent_id="test-agent", trace_id="trace-llm")
+        completions_inst = Completions(client=mock_openai_client)
         completions_inst.create(model="gpt-4o", messages=[{"role": "user", "content": "Hello"}])
 
-    patch_llm_span: Span = sender.queue.get_nowait()
+    openai_span: Span = sender.queue.get_nowait()
 
-    # Confirm schema-identical spans (RULES.md §3 Invariant #3)
-    assert adapter_llm_span.span_type == patch_llm_span.span_type == "llm_call"
-    assert adapter_llm_span.agent_id == patch_llm_span.agent_id == "test-agent"
-    assert adapter_llm_span.trace_id == patch_llm_span.trace_id == "trace-llm"
-    assert adapter_llm_span.status.status == patch_llm_span.status.status == "success"
-    assert adapter_llm_span.token_usage == patch_llm_span.token_usage
-    assert patch_llm_span.token_usage.prompt_tokens == 10
-    assert patch_llm_span.token_usage.completion_tokens == 5
-    assert patch_llm_span.token_usage.total_tokens == 15
+    # 3. Produce LLM span via patch(anthropic) (Flow 2 - Anthropic)
+    from types import ModuleType
+    import sys
+
+    class AnthropicUsage:
+        input_tokens = 10
+        output_tokens = 5
+
+    mock_anthropic_response = MagicMock()
+    mock_anthropic_response.usage = AnthropicUsage()
+    mock_anthropic_response.model_dump.return_value = {"id": "msg-123", "content": []}
+
+    mock_anthropic = ModuleType("anthropic")
+    mock_messages_mod = ModuleType("anthropic.resources.messages")
+
+    class DummyMessages:
+        def create(self, *args, **kwargs):
+            return mock_anthropic_response
+
+    class DummyAsyncMessages:
+        async def create(self, *args, **kwargs):
+            return mock_anthropic_response
+
+    mock_messages_mod.Messages = DummyMessages
+    mock_messages_mod.AsyncMessages = DummyAsyncMessages
+    mock_anthropic.resources = ModuleType("anthropic.resources")
+    mock_anthropic.resources.messages = mock_messages_mod
+
+    with pytest.MonkeyPatch.context() as m:
+        m.setitem(sys.modules, "anthropic", mock_anthropic)
+        m.setitem(sys.modules, "anthropic.resources.messages", mock_messages_mod)
+
+        patch(target_module="anthropic", agent_id="test-agent", trace_id="trace-llm")
+        msg_inst = DummyMessages()
+        msg_inst.create(model="claude-3-5-sonnet", messages=[{"role": "user", "content": "Hello"}])
+
+    anthropic_span: Span = sender.queue.get_nowait()
+
+    # Confirm 3-way schema-identical spans (RULES.md §3 Invariant #3)
+    assert adapter_llm_span.span_type == openai_span.span_type == anthropic_span.span_type == "llm_call"
+    assert adapter_llm_span.agent_id == openai_span.agent_id == anthropic_span.agent_id == "test-agent"
+    assert adapter_llm_span.trace_id == openai_span.trace_id == anthropic_span.trace_id == "trace-llm"
+    assert adapter_llm_span.status.status == openai_span.status.status == anthropic_span.status.status == "success"
+    
+    # Token usage structure & count equivalence across all 3 paths
+    assert adapter_llm_span.token_usage == openai_span.token_usage == anthropic_span.token_usage
+    assert anthropic_span.token_usage.prompt_tokens == 10
+    assert anthropic_span.token_usage.completion_tokens == 5
+    assert anthropic_span.token_usage.total_tokens == 15
+
+    # Confirm Pydantic schema dump structure identity
+    assert set(adapter_llm_span.model_dump().keys()) == set(openai_span.model_dump().keys()) == set(anthropic_span.model_dump().keys())
+
