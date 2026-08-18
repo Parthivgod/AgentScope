@@ -1,5 +1,24 @@
 # AgentScope Changelog
 
+## [2026-08-18 10:42] — Gap-closing: Nginx Proxy Validation — Track B
+
+**What changed:**
+- `Track B / Fix`: Made optional dependency imports (`LangGraphAdapter`, `trace`, `patch`) lazy in `sdk/agentscope/__init__.py`. Eager imports were previously crashing the backend and worker containers that only needed `schema.py` and didn't install `langchain_core`.
+- `Track B / Fix`: Updated `backend/Dockerfile` to install `uvicorn[standard]` (instead of base `uvicorn`) to enable the required WebSocket upgrade protocols for the Nginx proxy.
+- `Track B / Testing`: Validated FR-9 and FR-7 explicitly through the Nginx reverse proxy (port 80) rather than testing FastAPI in isolation. Verified that `POST /ingest` correctly rejects unauthenticated requests with HTTP 401, and that authorized events successfully write to Redis and stream out over `ws://localhost/ws`.
+
+**Why:**
+- The previous Week 8 entry documented Nginx configuration but lacked actual end-to-end proxy test coverage. Exercising the full docker-compose stack exposed real environment misconfigurations (missing websocket libraries and SDK eager-import crashes) which are now resolved.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- None.
+
+**Tests added/run:**
+- `Nginx Proxy Test`: Started full docker-compose stack. Unauthenticated `POST /ingest` to port 80 successfully returned `401`. Authenticated `POST /ingest` successfully returned `accepted` and a Python WebSocket client connected to `ws://localhost/ws` successfully received the streamed event payload.
+
 ## [2026-08-16 17:15] — Weeks 7-8: History Endpoint & Deploy Validation — Track B — Parthiv
 
 **What changed:**

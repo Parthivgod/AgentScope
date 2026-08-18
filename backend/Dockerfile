@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY sdk /app/sdk
 RUN pip install -e /app/sdk
-RUN pip install fastapi uvicorn redis
+RUN pip install fastapi "uvicorn[standard]" redis
 
 COPY backend /app/backend
 WORKDIR /app/backend
