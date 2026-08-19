@@ -33,7 +33,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
-import { useWebSocket, type SpanEvent } from './hooks/useWebSocket';
+import { useEventSource, type SpanEvent } from './hooks/useEventSource';
 import { getLayoutedElements } from './layout';
 import AgentNode, { type AgentNodeData } from './components/AgentNode';
 import InspectPanel from './components/InspectPanel';
@@ -58,9 +58,12 @@ function computeDuration(start: string, end: string | null): number | null {
 }
 
 export default function App() {
+  const [mode, setMode] = useState<'live' | 'historical'>('live');
+  const [historicalTraceId, setHistoricalTraceId] = useState<string | null>('t-history-001');
+
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const { events, anomalies, isConnected } = useWebSocket('ws://localhost:8000/ws');
+  const { events, anomalies, isConnected } = useEventSource('ws://localhost:8000/ws', mode, historicalTraceId);
 
   // Track the raw span data keyed by span_id for InspectPanel lookups
   const [spanMap, setSpanMap] = useState<Map<string, SpanEvent>>(new Map());
@@ -74,108 +77,81 @@ export default function App() {
   useEffect(() => {
     if (events.length === 0) return;
 
-    const latestEvent = events[events.length - 1];
+    // Build a map of the latest state for each span_id
+    const latestSpans = new Map<string, SpanEvent>();
+    for (const e of events) {
+      latestSpans.set(e.span_id, e);
+    }
 
-    // Update the span map with latest data
-    setSpanMap((prev) => {
-      const next = new Map(prev);
-      next.set(latestEvent.span_id, latestEvent);
-      return next;
-    });
+    setSpanMap(latestSpans);
 
-    // Build/update nodes
-    setNodes((nds) => {
-      // Re-map ALL nodes to ensure anomalies apply (anomalies might arrive after span)
-      return nds.map((n) => {
-        // If it's the latest event, update its data
-        if (n.id === latestEvent.span_id) {
-          const status = spanStatus(latestEvent);
-          const duration = computeDuration(latestEvent.start_time, latestEvent.end_time);
+    setNodes((currentNodes) => {
+      const nextNodes = [];
+      const currentNodesMap = new Map(currentNodes.map((n) => [n.id, n]));
 
-          const nodeData: AgentNodeData = {
-            label: latestEvent.name,
-            spanType: latestEvent.span_type,
-            status,
-            agentId: latestEvent.agent_id,
-            tokenUsage: latestEvent.token_usage,
-            duration,
-            anomaly: anomalies[latestEvent.span_id] || null,
-          };
-
-          return { ...n, data: nodeData };
-        }
+      for (const [spanId, latestEvent] of latestSpans.entries()) {
+        const existingNode = currentNodesMap.get(spanId);
         
-        // Ensure older nodes update their anomaly state if one just arrived
-        if (anomalies[n.id] && !(n.data as AgentNodeData).anomaly) {
-          return {
-            ...n,
-            data: {
-              ...(n.data as AgentNodeData),
-              anomaly: anomalies[n.id],
-            }
+        const anomalyEvent = anomalies[spanId];
+        let anomalyData = null;
+        if (anomalyEvent) {
+          anomalyData = {
+            rule: anomalyEvent.rule,
+            description: anomalyEvent.details?.message || 'Anomaly detected',
+            timestamp: new Date().toISOString(),
           };
         }
 
-        return n;
-      });
-    });
-
-    // We also need to add the new node if it wasn't mapped above
-    setNodes((nds) => {
-      const existingIdx = nds.findIndex((n) => n.id === latestEvent.span_id);
-      if (existingIdx >= 0) return nds;
-
-      const status = spanStatus(latestEvent);
-      const duration = computeDuration(latestEvent.start_time, latestEvent.end_time);
-
-      const nodeData: AgentNodeData = {
-        label: latestEvent.name,
-        spanType: latestEvent.span_type,
-        status,
-        agentId: latestEvent.agent_id,
-        tokenUsage: latestEvent.token_usage,
-        duration,
-        anomaly: anomalies[latestEvent.span_id] || null,
-      };
-
-      return [
-        ...nds,
-        {
-          id: latestEvent.span_id,
-          type: 'agentNode',
-          position: { x: 0, y: 0 },
-          data: nodeData,
-        },
-      ];
-    });
-
-    // Build/update edges
-    setEdges((eds) => {
-      if (!latestEvent.parent_span_id) return eds;
-
-      const edgeId = `e-${latestEvent.parent_span_id}-${latestEvent.span_id}`;
-      const existingIdx = eds.findIndex((e) => e.id === edgeId);
-
-      if (existingIdx >= 0) {
-        // Update animation state
-        const updated = [...eds];
-        updated[existingIdx] = {
-          ...updated[existingIdx],
-          animated: latestEvent.end_time === null,
+        const nodeData: AgentNodeData = {
+          label: latestEvent.name,
+          spanType: latestEvent.span_type,
+          status: spanStatus(latestEvent),
+          agentId: latestEvent.agent_id,
+          tokenUsage: latestEvent.token_usage,
+          duration: computeDuration(latestEvent.start_time, latestEvent.end_time),
+          anomaly: anomalyData,
         };
-        return updated;
-      }
 
-      return [
-        ...eds,
-        {
-          id: edgeId,
-          source: latestEvent.parent_span_id,
-          target: latestEvent.span_id,
-          animated: latestEvent.end_time === null,
-          style: { stroke: '#475569', strokeWidth: 1.5 },
-        },
-      ];
+        if (existingNode) {
+          nextNodes.push({ ...existingNode, data: nodeData });
+        } else {
+          nextNodes.push({
+            id: spanId,
+            type: 'agentNode',
+            position: { x: 0, y: 0 },
+            data: nodeData,
+          });
+        }
+      }
+      return nextNodes;
+    });
+
+    setEdges((currentEdges) => {
+      const nextEdges = [];
+      const currentEdgesMap = new Map(currentEdges.map((e) => [e.id, e]));
+
+      for (const latestEvent of latestSpans.values()) {
+        if (latestEvent.parent_span_id) {
+          const edgeId = `e-${latestEvent.parent_span_id}-${latestEvent.span_id}`;
+          const existingEdge = currentEdgesMap.get(edgeId);
+
+          if (existingEdge) {
+            nextEdges.push({
+              ...existingEdge,
+              animated: latestEvent.end_time === null,
+            });
+          } else {
+            nextEdges.push({
+              id: edgeId,
+              source: latestEvent.parent_span_id,
+              target: latestEvent.span_id,
+              animated: latestEvent.end_time === null,
+              style: { stroke: '#475569', strokeWidth: 1.5 },
+            });
+          }
+        }
+      }
+      return nextEdges;
     });
   }, [events, anomalies, setNodes, setEdges]);
 
@@ -227,6 +203,13 @@ export default function App() {
     return { total: nodes.length, active, errors, anomalies: anomaliesCount };
   }, [nodes]);
 
+  const isRedacted = useMemo(() => {
+    return events.some(e => 
+      (e.input && JSON.stringify(e.input).includes('[REDACTED]')) ||
+      (e.output && JSON.stringify(e.output).includes('[REDACTED]'))
+    );
+  }, [events]);
+
   return (
     <div className="app" id="agentscope-dashboard">
       {/* ── Header bar ─────────────────────────────────────────── */}
@@ -236,8 +219,41 @@ export default function App() {
             <span className="app__logo-icon">◉</span> AgentScope
           </h1>
           <span className={`app__connection ${isConnected ? 'app__connection--on' : ''}`}>
-            {isConnected ? 'Live' : 'Disconnected'}
+            {isConnected ? 'Live' : mode === 'historical' ? 'Historical' : 'Disconnected'}
           </span>
+          {isRedacted && (
+            <span className="app__badge app__badge--redacted" style={{ background: '#ef4444', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, marginLeft: '8px' }}>
+              🔒 Redacted Data
+            </span>
+          )}
+
+          <div className="app__mode-toggles" style={{ marginLeft: '1.5rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <button 
+              className={`app__toggle-btn ${mode === 'live' ? 'app__toggle-btn--active' : ''}`}
+              onClick={() => setMode('live')}
+              style={{ background: mode === 'live' ? '#3b82f6' : '#1e293b', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}
+            >
+              Live
+            </button>
+            <button 
+              className={`app__toggle-btn ${mode === 'historical' ? 'app__toggle-btn--active' : ''}`}
+              onClick={() => setMode('historical')}
+              style={{ background: mode === 'historical' ? '#3b82f6' : '#1e293b', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}
+            >
+              Historical Replay
+            </button>
+            {mode === 'historical' && (
+              <select 
+                value={historicalTraceId || ''} 
+                onChange={(e) => setHistoricalTraceId(e.target.value)}
+                style={{ background: '#0f172a', color: '#cbd5e1', border: '1px solid #334155', padding: '4px 8px', borderRadius: '4px', fontSize: '0.875rem', marginLeft: '0.5rem', cursor: 'pointer' }}
+              >
+                <option value="trace-branching-001">Trace: trace-branching-001</option>
+                <option value="t-history-001">Trace: t-history-001</option>
+                <option value="t-history-002">Trace: t-history-002</option>
+              </select>
+            )}
+          </div>
         </div>
         <div className="app__header-right">
           <div className="app__stat">

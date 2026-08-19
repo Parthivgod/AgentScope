@@ -14,7 +14,7 @@
  *   - Flow 4 Step 4: click-to-inspect anomaly detail (future extension)
  */
 
-import { type SpanEvent, type AnomalyEvent } from '../hooks/useWebSocket';
+import { type SpanEvent, type AnomalyEvent } from '../hooks/useEventSource';
 import './InspectPanel.css';
 
 interface InspectPanelProps {
