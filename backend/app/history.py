@@ -35,4 +35,15 @@ async def get_trace_history(
     if not spans:
         raise HTTPException(status_code=404, detail="Trace not found or no spans recorded")
         
-    return Trace(trace_id=trace_id, spans=spans)
+    start_time = min(span.start_time for span in spans)
+    end_time_candidates = [span.end_time for span in spans if span.end_time]
+    end_time = max(end_time_candidates) if end_time_candidates else None
+    status = "error" if any(span.status.status == "error" for span in spans) else "success"
+        
+    return Trace(
+        trace_id=trace_id, 
+        spans=spans, 
+        start_time=start_time, 
+        end_time=end_time, 
+        status=status
+    )

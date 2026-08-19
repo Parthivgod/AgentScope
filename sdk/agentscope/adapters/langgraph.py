@@ -53,11 +53,10 @@ class LangGraphAdapter(AsyncBaseTracer):
             agent_id=self.agent_id
         )
 
-    def _on_run_create(self, run: Run) -> None:
+    async def _on_run_create(self, run: Run) -> None:
         """Process a run upon creation, sending an 'active' span live."""
         span = self._convert_run_to_span(run)
         sender.send(span)
-        return None
 
     async def _on_run_update(self, run: Run) -> None:
         """Process a run upon completion, sending a 'complete' or 'error' span live."""

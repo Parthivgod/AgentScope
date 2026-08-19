@@ -7,7 +7,6 @@
  */
 
 import { useEffect, useState } from 'react';
-import { mockHistoryPayload, mockHistoricalAnomalies } from './mockHistory';
 
 export type SpanStatus = {
   status: 'success' | 'error';
@@ -57,18 +56,27 @@ export function useEventSource(url: string, mode: 'live' | 'historical', traceId
     if (mode === 'historical') {
       setIsConnected(false); // Not a live connection
       
-      // Temporary mock for Track B's missing history.py endpoint
       if (traceId) {
-        // Simulate a network fetch delay
-        const timer = setTimeout(() => {
-          setEvents(mockHistoryPayload);
-          const anoms: Record<string, AnomalyEvent> = {};
-          for (const a of mockHistoricalAnomalies) {
-            anoms[a.span_id] = a;
-          }
-          setAnomalies(anoms);
-        }, 300);
-        return () => clearTimeout(timer);
+        const controller = new AbortController();
+        fetch(`http://localhost:80/history/${traceId}`, {
+          signal: controller.signal
+        })
+          .then(res => {
+            if (!res.ok) throw new Error('Failed to fetch history');
+            return res.json();
+          })
+          .then(data => {
+            setEvents(data.spans || []);
+            // Anomalies aren't returned by history.py yet
+            setAnomalies({});
+          })
+          .catch(err => {
+            if (err.name !== 'AbortError') {
+              console.error('Error fetching historical trace:', err);
+            }
+          });
+          
+        return () => controller.abort();
       }
       return;
     }

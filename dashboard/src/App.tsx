@@ -248,6 +248,7 @@ export default function App() {
                 onChange={(e) => setHistoricalTraceId(e.target.value)}
                 style={{ background: '#0f172a', color: '#cbd5e1', border: '1px solid #334155', padding: '4px 8px', borderRadius: '4px', fontSize: '0.875rem', marginLeft: '0.5rem', cursor: 'pointer' }}
               >
+                <option value="trace-branching-001">Trace: trace-branching-001</option>
                 <option value="t-history-001">Trace: t-history-001</option>
                 <option value="t-history-002">Trace: t-history-002</option>
               </select>
