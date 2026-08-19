@@ -8,6 +8,8 @@ class FailureLoopRule:
     name = "failure_loops"
 
     def __init__(self, thresholds: Dict[str, Any]):
+        # Provisional Sprint 1 baseline thresholds, validated via synthetic injection harness.
+        # Pending tuning against real traffic patterns (RULES.md §6).
         self.count_threshold = thresholds.get("count", 4)
         self.window_seconds = thresholds.get("window_seconds", 60)
         # state: agent_id -> list of (timestamp, signature)
