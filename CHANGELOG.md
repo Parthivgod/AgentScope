@@ -1,5 +1,25 @@
 # AgentScope Changelog
 
+## [2026-08-19 15:00] — Gap-closing: Anthropic Target Confirmation & Schema Identity — Track A
+
+**What changed:**
+- `Track A / Review`: Logged explicit human confirmation that Anthropic's Messages API remains the second target for `agentscope.patch()`. The previous assumption made during Week 7-8 has now been reviewed and locked in.
+- `Track A / Review`: Verified that the schema-identity guarantee (RULES.md invariant #3) strictly holds for Anthropic spans. `patch.py` correctly normalizes Anthropic's `input_tokens` and `output_tokens` into the `TokenUsage` schema (`prompt_tokens`/`completion_tokens`).
+- `Track A / Review`: Verified that `sdk/tests/test_cross_path.py` already includes explicit assertions on the Anthropic token values (`assert anthropic_span.token_usage.prompt_tokens == 10`), proving the normalization is fully exercised and not failing silently.
+
+**Why:**
+- INSTRUCTIONS.md §2 required human confirmation for picking the second `agentscope.patch()` target. The previous entry assumed Anthropic without confirming. This entry closes that gap by officially confirming the choice.
+- Ensured no fail-silent bugs existed in token extraction and output mapping for Anthropic. Everything already maps correctly and was already fully tested, requiring no code changes.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- None.
+
+**Tests added/run:**
+- Code-level review confirmed `test_cross_path.py` and `patch.py` correctly cover Anthropic schema normalization. No new tests needed.
+
 ## [2026-08-17 15:25] — Track A Week 8: Second LLM Client Patching & SDK Quickstart Draft — Track A — Nilay Jain
 
 **What changed:**
