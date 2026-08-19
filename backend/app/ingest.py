@@ -4,9 +4,11 @@ from fastapi import FastAPI, HTTPException, Request, Depends
 from agentscope.schema import Span
 from app.redis_client import redis_client
 from app.ws import router as ws_router
+from app.history import router as history_router
 
 app = FastAPI(title="AgentScope Ingestion API")
 app.include_router(ws_router)
+app.include_router(history_router)
 
 # Middleware / Dependency for API Key validation
 async def verify_api_key(request: Request):

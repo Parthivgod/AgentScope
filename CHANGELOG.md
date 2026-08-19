@@ -10,6 +10,15 @@
 **Why:**
 - INSTRUCTIONS.md §2 required human confirmation for picking the second `agentscope.patch()` target. The previous entry assumed Anthropic without confirming. This entry closes that gap by officially confirming the choice.
 - Ensured no fail-silent bugs existed in token extraction and output mapping for Anthropic. Everything already maps correctly and was already fully tested, requiring no code changes.
+## [2026-08-18 10:42] — Gap-closing: Nginx Proxy Validation — Track B
+
+**What changed:**
+- `Track B / Fix`: Made optional dependency imports (`LangGraphAdapter`, `trace`, `patch`) lazy in `sdk/agentscope/__init__.py`. Eager imports were previously crashing the backend and worker containers that only needed `schema.py` and didn't install `langchain_core`.
+- `Track B / Fix`: Updated `backend/Dockerfile` to install `uvicorn[standard]` (instead of base `uvicorn`) to enable the required WebSocket upgrade protocols for the Nginx proxy.
+- `Track B / Testing`: Validated FR-9 and FR-7 explicitly through the Nginx reverse proxy (port 80) rather than testing FastAPI in isolation. Verified that `POST /ingest` correctly rejects unauthenticated requests with HTTP 401, and that authorized events successfully write to Redis and stream out over `ws://localhost/ws`.
+
+**Why:**
+- The previous Week 8 entry documented Nginx configuration but lacked actual end-to-end proxy test coverage. Exercising the full docker-compose stack exposed real environment misconfigurations (missing websocket libraries and SDK eager-import crashes) which are now resolved.
 
 **Assumptions made (if any):**
 - None.
@@ -66,6 +75,31 @@
 - `sdk/tests/test_patch.py`: Verified fail-silent extraction of stringified, dict, and bad property token usage.
 - `sdk/tests/test_sender.py`: Verified queue draining and payload structure for spans with empty/missing token usage.
 - Ran `python -m pytest sdk/tests`: All 19 unit tests passed (100% pass rate).
+- `Nginx Proxy Test`: Started full docker-compose stack. Unauthenticated `POST /ingest` to port 80 successfully returned `401`. Authenticated `POST /ingest` successfully returned `accepted` and a Python WebSocket client connected to `ws://localhost/ws` successfully received the streamed event payload.
+
+## [2026-08-16 17:15] — Weeks 7-8: History Endpoint & Deploy Validation — Track B — Parthiv
+
+**What changed:**
+- `Track B / Backend`: Created `backend/app/history.py` (Flow 5) exposing `GET /history/{trace_id}` to retrieve historical spans from Redis Streams in strict arrival order (RULES invariant #4). Uses `XRANGE` bounded by `start_ts` and `end_ts`. Returns exact `Trace` schema shape containing `Span` items.
+- `Track B / Backend`: Integrated `history.py` router into `backend/app/ingest.py`. Added `backend/tests/test_history.py`.
+- `Track B / Infra`: Expanded `infra/docker-compose.yml` to include `nginx`, `backend`, `worker`, and `redis`. Created Dockerfiles for `backend` and `worker`, and `infra/nginx/nginx.conf` proxying `/ingest`, `/ws`, and `/history` with header forwarding to ensure FR-7 authentication rejection works through the proxy.
+- `Track B / Worker`: Added `inject_timeout`, `inject_message_storm`, and `inject_delegation_cycle` to `worker/harness/inject.py` to cover all 6 rules.
+- `Track B / Worker`: Logged precision/recall/F1 test observations for rules. Kept PRD §7 draft values but added provisional Sprint-1 baseline comments in rule initialization (Decision #3).
+
+**Why:**
+- Implements FR-8 (historical replay) mapped to Build Plan §4 Track B Week 7.
+- Implements FR-9 (single docker-compose deployment) mapped to Build Plan §4 Track B Week 8 (Task A). Note: Week 8 scope reflects the 2026-08-16 AWS-timing revision (AWS deploy moved to Week 11).
+- Implements Decision #3 rule threshold tuning mapped to Build Plan §4 Track B Week 8 (Task B).
+
+**Assumptions made (if any):**
+- Assumed `history.py` should use in-memory trace ID filtering on the `XRANGE` results to avoid modifying the ingestion path or adding secondary indexing at this stage.
+
+**Open questions / follow-ups (if any):**
+- Trace-indexed lookup idea and Week 9 load test case for concurrent `/history` + `/ingest` were logged to `docs/future-work.md`.
+
+**Tests added/run:**
+- `test_history.py` created and passed (verifies schema shape and exact order preservation, and clean 404 for missing).
+- `worker/harness/inject.py` expanded and run locally to simulate anomalies.
 
 ## [2026-08-12 22:16] — Hotfix: Dashboard Graph Edges — Track A / Shared
 
