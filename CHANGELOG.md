@@ -1,5 +1,25 @@
 # AgentScope Changelog
 
+## [2026-08-22 02:00] — Week 11 Track B: Backend/Infra Docs + System Design & Evaluation Results Manuscript Sections — Track B — Parthiv
+
+**What changed:**
+- `Track B / Docs`: Created `docs/backend-infra.md` — architecture, components, stack operation (incl. TLS cert generation), and the full testing/operational-check inventory (load, resilience, smoke).
+- `Track B / Manuscript`: Drafted `manuscript/system-design.md` (architecture, read path, deployment, design principles; explicitly notes the reference AWS EC2 target with go-live pending — no implication it is live) and `manuscript/evaluation-results.md` (latency, SDK overhead, Phoenix baseline, resilience, security, accessibility — every number cites its CHANGELOG entry and artifact).
+
+**Why:**
+- Fulfills Build Plan §4 Track B Week 11. Per RULES.md §6, PRD targets are labeled as targets throughout; the anomaly precision/recall targets are explicitly NOT claimed (harness re-validation not completed), and no AWS-dependent claim is made.
+
+**Assumptions made (if any):**
+- All evaluation numbers were measured on the local stack; the manuscript states this and marks the AWS go-live as pending.
+
+**Open questions / follow-ups (if any):**
+- Precision/recall validation against final thresholds remains an open evaluation item before any claim can be made.
+
+**Tests added/run:**
+- None (documentation). Citations verified against the 2026-08-21/22 changelog entries.
+
+---
+
 ## [2026-08-22 01:20] — Week 10 Track B: Resilience, TLS, API-Key Re-confirm & Phoenix Baseline (Test #6/#7/#8) — Track B — Parthiv
 
 **What changed:**
