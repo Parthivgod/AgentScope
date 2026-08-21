@@ -85,41 +85,59 @@ export function useEventSource(url: string, mode: 'live' | 'historical', traceId
       return;
     }
 
-    // Live mode
-    const ws = new WebSocket(url);
+    // Live mode — with automatic reconnection (demo-readiness: a dropped WS
+    // must not silently freeze the dashboard; reconnect with backoff instead).
+    let ws: WebSocket | null = null;
+    let closedByCleanup = false;
+    let retry = 0;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-    ws.onopen = () => {
-      setIsConnected(true);
-    };
+    const connect = () => {
+      ws = new WebSocket(url);
 
-    ws.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data);
-        
-        if (payload.is_anomaly) {
-          setAnomalies((prev) => ({ ...prev, [payload.span_id]: payload as AnomalyEvent }));
-          return;
+      ws.onopen = () => {
+        retry = 0;
+        setIsConnected(true);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+
+          if (payload.is_anomaly) {
+            setAnomalies((prev) => ({ ...prev, [payload.span_id]: payload as AnomalyEvent }));
+            return;
+          }
+
+          const span = payload as SpanEvent;
+          setEvents((prev) => [...prev, span]);
+
+        } catch (err) {
+          console.error('Failed to parse WebSocket message:', err);
         }
+      };
 
-        const span = payload as SpanEvent;
-        setEvents((prev) => [...prev, span]);
+      ws.onclose = () => {
+        setIsConnected(false);
+        if (!closedByCleanup) {
+          const delay = Math.min(1000 * 2 ** retry, 10000);
+          retry += 1;
+          reconnectTimer = setTimeout(connect, delay);
+        }
+      };
 
-      } catch (err) {
-        console.error('Failed to parse WebSocket message:', err);
-      }
+      ws.onerror = () => {
+        // onclose follows onerror; reconnection is handled there
+        setIsConnected(false);
+      };
     };
 
-    ws.onclose = () => {
-      setIsConnected(false);
-    };
-
-    ws.onerror = (err) => {
-      console.error('WebSocket error:', err);
-      setIsConnected(false);
-    };
+    connect();
 
     return () => {
-      ws.close();
+      closedByCleanup = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      ws?.close();
     };
   }, [url, mode, traceId]);
 

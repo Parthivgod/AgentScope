@@ -1,5 +1,29 @@
 # AgentScope Changelog
 
+## [2026-08-22 03:45] — Week 12 Track C: Demo-Ready State + Demo Script — Track C — Eshan
+
+**What changed:**
+- `Track C / Reliability`: Live WebSocket now auto-reconnects with exponential backoff in `useEventSource.ts` — a dropped connection previously froze the dashboard silently (found by the demo-readiness check when a mid-test stack restart killed the WS; anomaly flags never rendered).
+- `Track C / Cleanup`: Deleted the dead `dashboard/src/hooks/mockHistory.ts` (unreferenced since the 2026-08-19 mock removal; pre-merge mock-grep hygiene).
+- `Track C / Demo`: Added `scripts/demo-readiness-test.mjs` (headless check: zero console errors, replay renders a linked trace, live failure injection renders anomalous nodes + alert badges) and `docs/demo-script.md` (talking points against the LOCAL stack: zero-rewrite moment, live anomaly alert, replay parity, 401/TLS close). The video recording itself is a team task; nothing in the script assumes AWS.
+
+**Measured results:**
+- Demo-readiness check: replay `trace-linear-demo-1` renders 4 nodes / 3 edges; live injection of 3 failing spans renders 3 anomalous nodes with alert badges; console errors: 0. DEMO-READY: PASS.
+
+**Why:**
+- Fulfills Build Plan §4 Track C Week 12 (demo-ready local system + script; no autonomous video recording).
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- None.
+
+**Tests added/run:**
+- `demo-readiness-test.mjs`: PASS. `npm run build` clean.
+
+---
+
 ## [2026-08-22 02:40] — Week 11 Track C: Dashboard Docs + Usability Test #9 Preparation (prep only, no session) — Track C — Eshan
 
 **What changed:**
