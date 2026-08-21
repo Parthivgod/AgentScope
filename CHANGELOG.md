@@ -24,330 +24,6 @@
 
 ---
 
-## [2026-08-22 02:40] — Week 11 Track C: Dashboard Docs + Usability Test #9 Preparation (prep only, no session) — Track C — Eshan
-
-**What changed:**
-- `Track C / Docs`: Created `docs/dashboard.md` — running instructions, live/replay usage, accessibility design rules to preserve, and the repeatable a11y check scripts.
-- `Track C / Usability prep`: Created `docs/usability-test-prep.md` — the Test #9 scenario pack: which failure to inject (repeated tool failures; verified live against the local stack — the `crashes` rule fires within seconds, failure-loops engages at 4+/60s), the verbatim observer question, secondary prompts, a results-recording table, and the Flow 3 success criterion. **The actual session with a real observer has NOT happened and must be scheduled by the team; no usability findings exist, and the manuscript section stays unwritten until real observations are recorded.**
-
-**Why:**
-- Fulfills Build Plan §4 Track C Week 11. A coding agent cannot conduct Test #9; per the Weeks 9-12 prompt this is preparation only — no plausible-sounding observer reaction was fabricated.
-
-**Assumptions made (if any):**
-- None.
-
-**Open questions / follow-ups (if any):**
-- Team to schedule the observer session; findings drafted only afterwards from the recorded answers.
-
-**Tests added/run:**
-- Injection validated live: 8 error spans over ~12s produced crashes-rule anomalies on the local stack (verified in the anomalies stream and worker logs).
-
----
-
-## [2026-08-22 01:40] — Week 10 Track C: Closing Week 9 Accessibility Findings — Track C — Eshan
-
-**What changed:**
-- `Track C / A11y`: InspectPanel now closes on Escape (previously mouse-only via Close button/backdrop click), giving keyboard users full open→inspect→dismiss parity. Added `dashboard/scripts/escape-close-test.mjs` as a repeatable programmatic check.
-
-**Measured results:**
-- Escape test: panel opens on Enter (verified) and closes on Escape (verified) — PASS.
-- axe-core re-scan: still 0 violations (29 passes) after the change.
-
-**Why:**
-- Closes the follow-up logged in the Week 9 Track C entry.
-
-**Assumptions made (if any):**
-- None.
-
-**Open questions / follow-ups (if any):**
-- Production-build Lighthouse measurement remains scheduled for Week 12 hardening.
-
-**Tests added/run:**
-- `escape-close-test.mjs`: PASS. `npm run build` clean. axe re-scan: 0 violations.
-
----
-
-## [2026-08-22 00:20] — Week 9 Track C: Accessibility & UX Pass (axe-core + Lighthouse, real scans) — Track C — Eshan
-
-**What changed:**
-- `Track C / Tooling`: Added real accessibility scanning: `dashboard/scripts/a11y-scan.mjs` (axe-core via playwright-core driving system Chrome, plus a Tab-order probe) and `dashboard/scripts/keyboard-nav-test.mjs` (focuses a graph node and verifies Enter opens the InspectPanel). No visual-eyeball substitutes.
-- `Track C / A11y fixes`: (1) Node states now carry non-hue cues — status glyphs (⟳ active / ✓ complete / ✖ error / ⚠ anomalous) rendered next to the span type, and anomalous nodes use a dashed border — because error-red vs complete-green was hue-only and indistinguishable under red-green color-vision deficiency (FR-6). (2) Graph nodes are now keyboard-accessible: `tabIndex=0`, `role="button"`, descriptive `aria-label` (name, type, status), Enter/Space opens the InspectPanel, `:focus-visible` outline added; previously nodes were unreachable by keyboard and the InspectPanel could only be opened with a mouse. (3) Color-contrast fixes: active mode-toggle background #3b82f6→#1d4ed8, redaction badge #ef4444→#b91c1c, stat labels and node meta text #64748b→#94a3b8 (all now ≥4.5:1).
-
-**Measured results (real scans, local dashboard):**
-- axe-core BEFORE fixes: 1 serious violation (color-contrast, 4 nodes: active toggle button, stat labels), 29 passes; Tab probe showed graph nodes unreachable by keyboard.
-- axe-core AFTER fixes: **0 violations**, 29 passes.
-- Lighthouse: accessibility 95 → **100**; best-practices 96 (unchanged); performance 30 → 39 — measured on the Vite DEV server (unminified, no bundling), so the performance number is not representative of a production build; recorded as-is, flagged accordingly.
-- Keyboard test: focused node announces `delegation node "LangGraph", status active. Press Enter to inspect.`; Enter opens the InspectPanel (verified programmatically).
-
-**Why:**
-- Fulfills Build Plan §4 Track C Week 9 (accessibility/performance pass) with concrete, specific findings rather than a "polish complete" claim.
-
-**Assumptions made (if any):**
-- Status glyphs + dashed border are considered sufficient non-hue differentiation for the four node states; hue cues are retained for users with normal color vision.
-
-**Open questions / follow-ups (if any):**
-- InspectPanel closes only via its Close button; adding Escape-to-close is a small Week 10 candidate.
-- The Lighthouse performance score should be re-measured against a production build (`npm run build && vite preview`) during Week 12 hardening.
-
-**Tests added/run:**
-- `dashboard/scripts/a11y-scan.mjs` and `keyboard-nav-test.mjs` added as repeatable checks; `npm run build` clean; scans re-run post-fix (0 violations).
-
----
-
----
-
-## [2026-08-22 03:00] — Week 12 Track A: Packaging Polish — Track A — Nilay
-
-**What changed:**
-- `Track A / Packaging`: Polished `sdk/pyproject.toml` — added readme/license metadata, an `include` package allowlist, package data, and optional-dependency extras: `[langgraph]` (adapter path deps: langchain-core, typing_extensions) and `[dev]` (pytest). Created `sdk/README.md` (install variants, both integration paths, env vars, pointer to the quickstart). Publishing/release-tagging intentionally deferred to the final merge per the Weeks 9-12 plan.
-
-**Why:**
-- Fulfills Build Plan §4 Track A Week 12 (packaging only).
-
-**Assumptions made (if any):**
-- Base install intentionally excludes langchain-core; the adapter path is opt-in via the extra.
-
-**Open questions / follow-ups (if any):**
-- Note for the team: pip-installing `arize-phoenix` on Python 3.11 breaks pytest collection globally (its auto-loaded plugin hits a dataclass incompatibility); the Docker Phoenix image avoids this. The pip package was uninstalled locally after the Week 10 baseline.
-
-**Tests added/run:**
-- `pip install -e .` and `pip install -e .[langgraph]` verified importable; SDK suite 25/25 pass.
-
----
-
-## [2026-08-22 02:20] — Week 11 Track A: SDK Quickstart Finalized + Instrumentation Methodology Manuscript Section — Track A — Nilay
-
-**What changed:**
-- `Track A / Docs`: Finalized `docs/sdk-quickstart.md` for both integration paths — added concrete verification steps against the running stack (`/traces`, `/history`) and a "Guarantees (measured)" section citing the fail-silent, redaction, and overhead results by changelog entry.
-- `Track A / Manuscript`: Drafted `manuscript/instrumentation-methodology.md` — integration paths, delivery semantics, measured overhead (both workload configurations, cited to the 2026-08-21 23:30 entry), and the Phoenix comparison (cited to 2026-08-22 01:20). Explicitly avoids any AWS-deployed-backend claim (Flow 6 Step 4 deferred per the M2-AWS prompt).
-
-**Why:**
-- Fulfills Build Plan §4 Track A Week 11. Per RULES.md §6, the section cites Week 9's actual measured numbers — both the +79.7%/+60.7% demo-workload result and the +1.76% LLM-bound result — rather than the <5% target.
-
-**Assumptions made (if any):**
-- None.
-
-**Open questions / follow-ups (if any):**
-- None.
-
-**Tests added/run:**
-- None (documentation).
-
----
-
-## [2026-08-22 00:45] — Week 10 Track A: Resilience & Redaction Wire Tests (Test #6/#7, SDK side) — Track A — Nilay
-
-**What changed:**
-- `Track A / Resilience`: Added `scripts/resilience-backend-kill.py` — runs a monitored (SDK-attached) LangGraph workload of 30 sequential graph invocations against the local stack, `docker compose stop backend` mid-run (4s in), then verifies the agent process's actual outcome.
-- `Track A / Security`: Added `sdk/tests/test_redaction_wire.py` — a local stub ingest server records the exact bytes that leave the SDK process; with redaction enabled, the raw input/output strings must be absent from every recorded request body, and the `[REDACTED]` placeholders present. A second test pins the default full-capture behavior (raw payloads DO leave by design, Decision #4).
-
-**Measured results:**
-- Backend-kill test: agent exited code 0, **30/30 workloads completed with correct outputs** ("[Calculator Node]" results), zero tracebacks — only fail-silent sender warnings (bounded retries then drop), exactly per RULES.md invariants #1/#2. Verified by observing the agent's outputs and exit, not just absence of exceptions. RESULT: PASS.
-- Redaction wire test: stub server received the span POST; raw secret strings absent from all bodies, `[REDACTED]` present in `input`/`output`. RESULT: PASS (both tests).
-
-**Why:**
-- Fulfills Build Plan §4 Track A Week 10 and PRD §10 Tests #6/#7: backend-unreachable must not affect the monitored agent, and scrubbed fields must be genuinely absent from what leaves the SDK process (RULES.md §4), not merely hidden downstream.
-
-**Assumptions made (if any):**
-- None.
-
-**Open questions / follow-ups (if any):**
-- The kill test exercises `docker compose stop backend`; a kill -9 variant is redundant here since the SDK treats both as connection failure.
-
-**Tests added/run:**
-- `sdk/tests/test_redaction_wire.py`: 2/2 pass. Full SDK suite: **25/25 pass**. `scripts/resilience-backend-kill.py`: PASS (exit 0, 30/30 outputs correct, no traceback).
-
----
-
-## [2026-08-21 23:30] — Week 9 Track A: SDK Overhead Benchmark Executed (NFR 9.5 / Test #5) — Track A — Nilay
-
-**What changed:**
-- `Track A / Benchmarks`: Added `sdk/agentscope/benchmarks/week9_overhead_benchmark.py` — runs the actual `examples/langgraph_demo_agent` branching graph with and without the SDK attached (LangGraphAdapter + fail-silent async sender), 30 paired interleaved runs (5 warmup pairs discarded), same inputs per pair, no outlier removal. Timed quantity is the host agent's `graph.ainvoke()` wall time.
-- `Track A / Benchmarks`: Added second configuration with 100ms simulated LLM latency per node (same graph structure) to measure relative overhead on the LLM-bound workload class NFR 9.5's target addresses. Raw logs saved under `sdk/agentscope/benchmarks/results/`.
-
-**Measured results (both configurations, local stack, 30 paired runs):**
-- Demo workload as-is (~4.7ms/graph baseline): overhead **+3.3ms mean absolute; +79.7% mean / +60.7% median relative** — **misses the <5% target on this workload**, because the demo graph is CPU-trivial and any instrumentation dominates it. Reported as measured per RULES.md §6; not softened.
-- LLM-bound workload (100ms/node simulated latency, ~208ms/graph baseline): overhead **+3.6ms mean absolute; +1.76% mean and median relative** — meets the <5% target on the workload class the target was written for.
-- Absolute SDK cost is consistent (~3.3–3.6ms/graph) across both configurations: span construction, callback dispatch, queueing. Network delivery is async and off the timed path (invariants #1/#2 hold).
-
-**Why:**
-- Fulfills Build Plan §4 Track A Week 9 and PRD §10 Test #5 with statistically meaningful N≥10 paired runs (30 used), replacing the Week 5 scaffold's synthetic-only timing.
-
-**Assumptions made (if any):**
-- The <5% NFR target is interpreted as applying to realistic LLM-bound agent workloads; on a CPU-trivial graph the relative number is dominated by any instrumentation. Both numbers are reported so the manuscript can state this plainly rather than pick the flattering one.
-
-**Open questions / follow-ups (if any):**
-- Manuscript (Week 11, Instrumentation Methodology) must cite BOTH numbers above with this entry as source; any "<5%" claim must be scoped to the LLM-bound configuration.
-
-**Tests added/run:**
-- `sdk/tests`: 23/23 pass (unchanged). Benchmark executed twice (2026-08-21); second full run log committed at `sdk/agentscope/benchmarks/results/week9-overhead-2026-08-21-run2.log`; first run's config-1 numbers (+73.1% mean/+60.4% median) agree with the committed run.
-
----
-
----
-
-## [2026-08-22 02:40] — Week 11 Track C: Dashboard Docs + Usability Test #9 Preparation (prep only, no session) — Track C — Eshan
-
-**What changed:**
-- `Track C / Docs`: Created `docs/dashboard.md` — running instructions, live/replay usage, accessibility design rules to preserve, and the repeatable a11y check scripts.
-- `Track C / Usability prep`: Created `docs/usability-test-prep.md` — the Test #9 scenario pack: which failure to inject (repeated tool failures; verified live against the local stack — the `crashes` rule fires within seconds, failure-loops engages at 4+/60s), the verbatim observer question, secondary prompts, a results-recording table, and the Flow 3 success criterion. **The actual session with a real observer has NOT happened and must be scheduled by the team; no usability findings exist, and the manuscript section stays unwritten until real observations are recorded.**
-
-**Why:**
-- Fulfills Build Plan §4 Track C Week 11. A coding agent cannot conduct Test #9; per the Weeks 9-12 prompt this is preparation only — no plausible-sounding observer reaction was fabricated.
-
-**Assumptions made (if any):**
-- None.
-
-**Open questions / follow-ups (if any):**
-- Team to schedule the observer session; findings drafted only afterwards from the recorded answers.
-
-**Tests added/run:**
-- Injection validated live: 8 error spans over ~12s produced crashes-rule anomalies on the local stack (verified in the anomalies stream and worker logs).
-
----
-
-## [2026-08-22 01:40] — Week 10 Track C: Closing Week 9 Accessibility Findings — Track C — Eshan
-
-**What changed:**
-- `Track C / A11y`: InspectPanel now closes on Escape (previously mouse-only via Close button/backdrop click), giving keyboard users full open→inspect→dismiss parity. Added `dashboard/scripts/escape-close-test.mjs` as a repeatable programmatic check.
-
-**Measured results:**
-- Escape test: panel opens on Enter (verified) and closes on Escape (verified) — PASS.
-- axe-core re-scan: still 0 violations (29 passes) after the change.
-
-**Why:**
-- Closes the follow-up logged in the Week 9 Track C entry.
-
-**Assumptions made (if any):**
-- None.
-
-**Open questions / follow-ups (if any):**
-- Production-build Lighthouse measurement remains scheduled for Week 12 hardening.
-
-**Tests added/run:**
-- `escape-close-test.mjs`: PASS. `npm run build` clean. axe re-scan: 0 violations.
-
----
-
-## [2026-08-22 00:20] — Week 9 Track C: Accessibility & UX Pass (axe-core + Lighthouse, real scans) — Track C — Eshan
-
-**What changed:**
-- `Track C / Tooling`: Added real accessibility scanning: `dashboard/scripts/a11y-scan.mjs` (axe-core via playwright-core driving system Chrome, plus a Tab-order probe) and `dashboard/scripts/keyboard-nav-test.mjs` (focuses a graph node and verifies Enter opens the InspectPanel). No visual-eyeball substitutes.
-- `Track C / A11y fixes`: (1) Node states now carry non-hue cues — status glyphs (⟳ active / ✓ complete / ✖ error / ⚠ anomalous) rendered next to the span type, and anomalous nodes use a dashed border — because error-red vs complete-green was hue-only and indistinguishable under red-green color-vision deficiency (FR-6). (2) Graph nodes are now keyboard-accessible: `tabIndex=0`, `role="button"`, descriptive `aria-label` (name, type, status), Enter/Space opens the InspectPanel, `:focus-visible` outline added; previously nodes were unreachable by keyboard and the InspectPanel could only be opened with a mouse. (3) Color-contrast fixes: active mode-toggle background #3b82f6→#1d4ed8, redaction badge #ef4444→#b91c1c, stat labels and node meta text #64748b→#94a3b8 (all now ≥4.5:1).
-
-**Measured results (real scans, local dashboard):**
-- axe-core BEFORE fixes: 1 serious violation (color-contrast, 4 nodes: active toggle button, stat labels), 29 passes; Tab probe showed graph nodes unreachable by keyboard.
-- axe-core AFTER fixes: **0 violations**, 29 passes.
-- Lighthouse: accessibility 95 → **100**; best-practices 96 (unchanged); performance 30 → 39 — measured on the Vite DEV server (unminified, no bundling), so the performance number is not representative of a production build; recorded as-is, flagged accordingly.
-- Keyboard test: focused node announces `delegation node "LangGraph", status active. Press Enter to inspect.`; Enter opens the InspectPanel (verified programmatically).
-
-**Why:**
-- Fulfills Build Plan §4 Track C Week 9 (accessibility/performance pass) with concrete, specific findings rather than a "polish complete" claim.
-
-**Assumptions made (if any):**
-- Status glyphs + dashed border are considered sufficient non-hue differentiation for the four node states; hue cues are retained for users with normal color vision.
-
-**Open questions / follow-ups (if any):**
-- InspectPanel closes only via its Close button; adding Escape-to-close is a small Week 10 candidate.
-- The Lighthouse performance score should be re-measured against a production build (`npm run build && vite preview`) during Week 12 hardening.
-
-**Tests added/run:**
-- `dashboard/scripts/a11y-scan.mjs` and `keyboard-nav-test.mjs` added as repeatable checks; `npm run build` clean; scans re-run post-fix (0 violations).
-
----
-
----
-
-## [2026-08-22 03:00] — Week 12 Track A: Packaging Polish — Track A — Nilay
-
-**What changed:**
-- `Track A / Packaging`: Polished `sdk/pyproject.toml` — added readme/license metadata, an `include` package allowlist, package data, and optional-dependency extras: `[langgraph]` (adapter path deps: langchain-core, typing_extensions) and `[dev]` (pytest). Created `sdk/README.md` (install variants, both integration paths, env vars, pointer to the quickstart). Publishing/release-tagging intentionally deferred to the final merge per the Weeks 9-12 plan.
-
-**Why:**
-- Fulfills Build Plan §4 Track A Week 12 (packaging only).
-
-**Assumptions made (if any):**
-- Base install intentionally excludes langchain-core; the adapter path is opt-in via the extra.
-
-**Open questions / follow-ups (if any):**
-- Note for the team: pip-installing `arize-phoenix` on Python 3.11 breaks pytest collection globally (its auto-loaded plugin hits a dataclass incompatibility); the Docker Phoenix image avoids this. The pip package was uninstalled locally after the Week 10 baseline.
-
-**Tests added/run:**
-- `pip install -e .` and `pip install -e .[langgraph]` verified importable; SDK suite 25/25 pass.
-
----
-
-## [2026-08-22 02:20] — Week 11 Track A: SDK Quickstart Finalized + Instrumentation Methodology Manuscript Section — Track A — Nilay
-
-**What changed:**
-- `Track A / Docs`: Finalized `docs/sdk-quickstart.md` for both integration paths — added concrete verification steps against the running stack (`/traces`, `/history`) and a "Guarantees (measured)" section citing the fail-silent, redaction, and overhead results by changelog entry.
-- `Track A / Manuscript`: Drafted `manuscript/instrumentation-methodology.md` — integration paths, delivery semantics, measured overhead (both workload configurations, cited to the 2026-08-21 23:30 entry), and the Phoenix comparison (cited to 2026-08-22 01:20). Explicitly avoids any AWS-deployed-backend claim (Flow 6 Step 4 deferred per the M2-AWS prompt).
-
-**Why:**
-- Fulfills Build Plan §4 Track A Week 11. Per RULES.md §6, the section cites Week 9's actual measured numbers — both the +79.7%/+60.7% demo-workload result and the +1.76% LLM-bound result — rather than the <5% target.
-
-**Assumptions made (if any):**
-- None.
-
-**Open questions / follow-ups (if any):**
-- None.
-
-**Tests added/run:**
-- None (documentation).
-
----
-
-## [2026-08-22 00:45] — Week 10 Track A: Resilience & Redaction Wire Tests (Test #6/#7, SDK side) — Track A — Nilay
-
-**What changed:**
-- `Track A / Resilience`: Added `scripts/resilience-backend-kill.py` — runs a monitored (SDK-attached) LangGraph workload of 30 sequential graph invocations against the local stack, `docker compose stop backend` mid-run (4s in), then verifies the agent process's actual outcome.
-- `Track A / Security`: Added `sdk/tests/test_redaction_wire.py` — a local stub ingest server records the exact bytes that leave the SDK process; with redaction enabled, the raw input/output strings must be absent from every recorded request body, and the `[REDACTED]` placeholders present. A second test pins the default full-capture behavior (raw payloads DO leave by design, Decision #4).
-
-**Measured results:**
-- Backend-kill test: agent exited code 0, **30/30 workloads completed with correct outputs** ("[Calculator Node]" results), zero tracebacks — only fail-silent sender warnings (bounded retries then drop), exactly per RULES.md invariants #1/#2. Verified by observing the agent's outputs and exit, not just absence of exceptions. RESULT: PASS.
-- Redaction wire test: stub server received the span POST; raw secret strings absent from all bodies, `[REDACTED]` present in `input`/`output`. RESULT: PASS (both tests).
-
-**Why:**
-- Fulfills Build Plan §4 Track A Week 10 and PRD §10 Tests #6/#7: backend-unreachable must not affect the monitored agent, and scrubbed fields must be genuinely absent from what leaves the SDK process (RULES.md §4), not merely hidden downstream.
-
-**Assumptions made (if any):**
-- None.
-
-**Open questions / follow-ups (if any):**
-- The kill test exercises `docker compose stop backend`; a kill -9 variant is redundant here since the SDK treats both as connection failure.
-
-**Tests added/run:**
-- `sdk/tests/test_redaction_wire.py`: 2/2 pass. Full SDK suite: **25/25 pass**. `scripts/resilience-backend-kill.py`: PASS (exit 0, 30/30 outputs correct, no traceback).
-
----
-
-## [2026-08-21 23:30] — Week 9 Track A: SDK Overhead Benchmark Executed (NFR 9.5 / Test #5) — Track A — Nilay
-
-**What changed:**
-- `Track A / Benchmarks`: Added `sdk/agentscope/benchmarks/week9_overhead_benchmark.py` — runs the actual `examples/langgraph_demo_agent` branching graph with and without the SDK attached (LangGraphAdapter + fail-silent async sender), 30 paired interleaved runs (5 warmup pairs discarded), same inputs per pair, no outlier removal. Timed quantity is the host agent's `graph.ainvoke()` wall time.
-- `Track A / Benchmarks`: Added second configuration with 100ms simulated LLM latency per node (same graph structure) to measure relative overhead on the LLM-bound workload class NFR 9.5's target addresses. Raw logs saved under `sdk/agentscope/benchmarks/results/`.
-
-**Measured results (both configurations, local stack, 30 paired runs):**
-- Demo workload as-is (~4.7ms/graph baseline): overhead **+3.3ms mean absolute; +79.7% mean / +60.7% median relative** — **misses the <5% target on this workload**, because the demo graph is CPU-trivial and any instrumentation dominates it. Reported as measured per RULES.md §6; not softened.
-- LLM-bound workload (100ms/node simulated latency, ~208ms/graph baseline): overhead **+3.6ms mean absolute; +1.76% mean and median relative** — meets the <5% target on the workload class the target was written for.
-- Absolute SDK cost is consistent (~3.3–3.6ms/graph) across both configurations: span construction, callback dispatch, queueing. Network delivery is async and off the timed path (invariants #1/#2 hold).
-
-**Why:**
-- Fulfills Build Plan §4 Track A Week 9 and PRD §10 Test #5 with statistically meaningful N≥10 paired runs (30 used), replacing the Week 5 scaffold's synthetic-only timing.
-
-**Assumptions made (if any):**
-- The <5% NFR target is interpreted as applying to realistic LLM-bound agent workloads; on a CPU-trivial graph the relative number is dominated by any instrumentation. Both numbers are reported so the manuscript can state this plainly rather than pick the flattering one.
-
-**Open questions / follow-ups (if any):**
-- Manuscript (Week 11, Instrumentation Methodology) must cite BOTH numbers above with this entry as source; any "<5%" claim must be scoped to the LLM-bound configuration.
-
-**Tests added/run:**
-- `sdk/tests`: 23/23 pass (unchanged). Benchmark executed twice (2026-08-21); second full run log committed at `sdk/agentscope/benchmarks/results/week9-overhead-2026-08-21-run2.log`; first run's config-1 numbers (+73.1% mean/+60.4% median) agree with the committed run.
-
----
-
----
-
 ## [2026-08-22 03:20] — Week 12 Track B: Final Local Deployment Hardening — Track B — Parthiv
 
 **What changed:**
@@ -369,6 +45,124 @@
 
 ---
 
+## [2026-08-22 03:00] — Week 12 Track A: Packaging Polish — Track A — Nilay
+
+**What changed:**
+- `Track A / Packaging`: Polished `sdk/pyproject.toml` — added readme/license metadata, an `include` package allowlist, package data, and optional-dependency extras: `[langgraph]` (adapter path deps: langchain-core, typing_extensions) and `[dev]` (pytest). Created `sdk/README.md` (install variants, both integration paths, env vars, pointer to the quickstart). Publishing/release-tagging intentionally deferred to the final merge per the Weeks 9-12 plan.
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 12 (packaging only).
+
+**Assumptions made (if any):**
+- Base install intentionally excludes langchain-core; the adapter path is opt-in via the extra.
+
+**Open questions / follow-ups (if any):**
+- Note for the team: pip-installing `arize-phoenix` on Python 3.11 breaks pytest collection globally (its auto-loaded plugin hits a dataclass incompatibility); the Docker Phoenix image avoids this. The pip package was uninstalled locally after the Week 10 baseline.
+
+**Tests added/run:**
+- `pip install -e .` and `pip install -e .[langgraph]` verified importable; SDK suite 25/25 pass.
+
+---
+
+## [2026-08-22 03:00] — Week 12 Track A: Packaging Polish — Track A — Nilay
+
+**What changed:**
+- `Track A / Packaging`: Polished `sdk/pyproject.toml` — added readme/license metadata, an `include` package allowlist, package data, and optional-dependency extras: `[langgraph]` (adapter path deps: langchain-core, typing_extensions) and `[dev]` (pytest). Created `sdk/README.md` (install variants, both integration paths, env vars, pointer to the quickstart). Publishing/release-tagging intentionally deferred to the final merge per the Weeks 9-12 plan.
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 12 (packaging only).
+
+**Assumptions made (if any):**
+- Base install intentionally excludes langchain-core; the adapter path is opt-in via the extra.
+
+**Open questions / follow-ups (if any):**
+- Note for the team: pip-installing `arize-phoenix` on Python 3.11 breaks pytest collection globally (its auto-loaded plugin hits a dataclass incompatibility); the Docker Phoenix image avoids this. The pip package was uninstalled locally after the Week 10 baseline.
+
+**Tests added/run:**
+- `pip install -e .` and `pip install -e .[langgraph]` verified importable; SDK suite 25/25 pass.
+
+---
+
+## [2026-08-22 02:40] — Week 11 Track C: Dashboard Docs + Usability Test #9 Preparation (prep only, no session) — Track C — Eshan
+
+**What changed:**
+- `Track C / Docs`: Created `docs/dashboard.md` — running instructions, live/replay usage, accessibility design rules to preserve, and the repeatable a11y check scripts.
+- `Track C / Usability prep`: Created `docs/usability-test-prep.md` — the Test #9 scenario pack: which failure to inject (repeated tool failures; verified live against the local stack — the `crashes` rule fires within seconds, failure-loops engages at 4+/60s), the verbatim observer question, secondary prompts, a results-recording table, and the Flow 3 success criterion. **The actual session with a real observer has NOT happened and must be scheduled by the team; no usability findings exist, and the manuscript section stays unwritten until real observations are recorded.**
+
+**Why:**
+- Fulfills Build Plan §4 Track C Week 11. A coding agent cannot conduct Test #9; per the Weeks 9-12 prompt this is preparation only — no plausible-sounding observer reaction was fabricated.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- Team to schedule the observer session; findings drafted only afterwards from the recorded answers.
+
+**Tests added/run:**
+- Injection validated live: 8 error spans over ~12s produced crashes-rule anomalies on the local stack (verified in the anomalies stream and worker logs).
+
+---
+
+## [2026-08-22 02:40] — Week 11 Track C: Dashboard Docs + Usability Test #9 Preparation (prep only, no session) — Track C — Eshan
+
+**What changed:**
+- `Track C / Docs`: Created `docs/dashboard.md` — running instructions, live/replay usage, accessibility design rules to preserve, and the repeatable a11y check scripts.
+- `Track C / Usability prep`: Created `docs/usability-test-prep.md` — the Test #9 scenario pack: which failure to inject (repeated tool failures; verified live against the local stack — the `crashes` rule fires within seconds, failure-loops engages at 4+/60s), the verbatim observer question, secondary prompts, a results-recording table, and the Flow 3 success criterion. **The actual session with a real observer has NOT happened and must be scheduled by the team; no usability findings exist, and the manuscript section stays unwritten until real observations are recorded.**
+
+**Why:**
+- Fulfills Build Plan §4 Track C Week 11. A coding agent cannot conduct Test #9; per the Weeks 9-12 prompt this is preparation only — no plausible-sounding observer reaction was fabricated.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- Team to schedule the observer session; findings drafted only afterwards from the recorded answers.
+
+**Tests added/run:**
+- Injection validated live: 8 error spans over ~12s produced crashes-rule anomalies on the local stack (verified in the anomalies stream and worker logs).
+
+---
+
+## [2026-08-22 02:20] — Week 11 Track A: SDK Quickstart Finalized + Instrumentation Methodology Manuscript Section — Track A — Nilay
+
+**What changed:**
+- `Track A / Docs`: Finalized `docs/sdk-quickstart.md` for both integration paths — added concrete verification steps against the running stack (`/traces`, `/history`) and a "Guarantees (measured)" section citing the fail-silent, redaction, and overhead results by changelog entry.
+- `Track A / Manuscript`: Drafted `manuscript/instrumentation-methodology.md` — integration paths, delivery semantics, measured overhead (both workload configurations, cited to the 2026-08-21 23:30 entry), and the Phoenix comparison (cited to 2026-08-22 01:20). Explicitly avoids any AWS-deployed-backend claim (Flow 6 Step 4 deferred per the M2-AWS prompt).
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 11. Per RULES.md §6, the section cites Week 9's actual measured numbers — both the +79.7%/+60.7% demo-workload result and the +1.76% LLM-bound result — rather than the <5% target.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- None.
+
+**Tests added/run:**
+- None (documentation).
+
+---
+
+## [2026-08-22 02:20] — Week 11 Track A: SDK Quickstart Finalized + Instrumentation Methodology Manuscript Section — Track A — Nilay
+
+**What changed:**
+- `Track A / Docs`: Finalized `docs/sdk-quickstart.md` for both integration paths — added concrete verification steps against the running stack (`/traces`, `/history`) and a "Guarantees (measured)" section citing the fail-silent, redaction, and overhead results by changelog entry.
+- `Track A / Manuscript`: Drafted `manuscript/instrumentation-methodology.md` — integration paths, delivery semantics, measured overhead (both workload configurations, cited to the 2026-08-21 23:30 entry), and the Phoenix comparison (cited to 2026-08-22 01:20). Explicitly avoids any AWS-deployed-backend claim (Flow 6 Step 4 deferred per the M2-AWS prompt).
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 11. Per RULES.md §6, the section cites Week 9's actual measured numbers — both the +79.7%/+60.7% demo-workload result and the +1.76% LLM-bound result — rather than the <5% target.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- None.
+
+**Tests added/run:**
+- None (documentation).
+
+---
+
 ## [2026-08-22 02:00] — Week 11 Track B: Backend/Infra Docs + System Design & Evaluation Results Manuscript Sections — Track B — Parthiv
 
 **What changed:**
@@ -386,6 +180,52 @@
 
 **Tests added/run:**
 - None (documentation). Citations verified against the 2026-08-21/22 changelog entries.
+
+---
+
+## [2026-08-22 01:40] — Week 10 Track C: Closing Week 9 Accessibility Findings — Track C — Eshan
+
+**What changed:**
+- `Track C / A11y`: InspectPanel now closes on Escape (previously mouse-only via Close button/backdrop click), giving keyboard users full open→inspect→dismiss parity. Added `dashboard/scripts/escape-close-test.mjs` as a repeatable programmatic check.
+
+**Measured results:**
+- Escape test: panel opens on Enter (verified) and closes on Escape (verified) — PASS.
+- axe-core re-scan: still 0 violations (29 passes) after the change.
+
+**Why:**
+- Closes the follow-up logged in the Week 9 Track C entry.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- Production-build Lighthouse measurement remains scheduled for Week 12 hardening.
+
+**Tests added/run:**
+- `escape-close-test.mjs`: PASS. `npm run build` clean. axe re-scan: 0 violations.
+
+---
+
+## [2026-08-22 01:40] — Week 10 Track C: Closing Week 9 Accessibility Findings — Track C — Eshan
+
+**What changed:**
+- `Track C / A11y`: InspectPanel now closes on Escape (previously mouse-only via Close button/backdrop click), giving keyboard users full open→inspect→dismiss parity. Added `dashboard/scripts/escape-close-test.mjs` as a repeatable programmatic check.
+
+**Measured results:**
+- Escape test: panel opens on Enter (verified) and closes on Escape (verified) — PASS.
+- axe-core re-scan: still 0 violations (29 passes) after the change.
+
+**Why:**
+- Closes the follow-up logged in the Week 9 Track C entry.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- Production-build Lighthouse measurement remains scheduled for Week 12 hardening.
+
+**Tests added/run:**
+- `escape-close-test.mjs`: PASS. `npm run build` clean. axe re-scan: 0 violations.
 
 ---
 
@@ -415,6 +255,112 @@
 
 **Tests added/run:**
 - `scripts/resilience-stack.py`: 3/3 PASS. TLS checks: all PASS. Backend suite still 9/9 locally. Phoenix baseline executed with verified span export.
+
+---
+
+## [2026-08-22 00:45] — Week 10 Track A: Resilience & Redaction Wire Tests (Test #6/#7, SDK side) — Track A — Nilay
+
+**What changed:**
+- `Track A / Resilience`: Added `scripts/resilience-backend-kill.py` — runs a monitored (SDK-attached) LangGraph workload of 30 sequential graph invocations against the local stack, `docker compose stop backend` mid-run (4s in), then verifies the agent process's actual outcome.
+- `Track A / Security`: Added `sdk/tests/test_redaction_wire.py` — a local stub ingest server records the exact bytes that leave the SDK process; with redaction enabled, the raw input/output strings must be absent from every recorded request body, and the `[REDACTED]` placeholders present. A second test pins the default full-capture behavior (raw payloads DO leave by design, Decision #4).
+
+**Measured results:**
+- Backend-kill test: agent exited code 0, **30/30 workloads completed with correct outputs** ("[Calculator Node]" results), zero tracebacks — only fail-silent sender warnings (bounded retries then drop), exactly per RULES.md invariants #1/#2. Verified by observing the agent's outputs and exit, not just absence of exceptions. RESULT: PASS.
+- Redaction wire test: stub server received the span POST; raw secret strings absent from all bodies, `[REDACTED]` present in `input`/`output`. RESULT: PASS (both tests).
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 10 and PRD §10 Tests #6/#7: backend-unreachable must not affect the monitored agent, and scrubbed fields must be genuinely absent from what leaves the SDK process (RULES.md §4), not merely hidden downstream.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- The kill test exercises `docker compose stop backend`; a kill -9 variant is redundant here since the SDK treats both as connection failure.
+
+**Tests added/run:**
+- `sdk/tests/test_redaction_wire.py`: 2/2 pass. Full SDK suite: **25/25 pass**. `scripts/resilience-backend-kill.py`: PASS (exit 0, 30/30 outputs correct, no traceback).
+
+---
+
+## [2026-08-22 00:45] — Week 10 Track A: Resilience & Redaction Wire Tests (Test #6/#7, SDK side) — Track A — Nilay
+
+**What changed:**
+- `Track A / Resilience`: Added `scripts/resilience-backend-kill.py` — runs a monitored (SDK-attached) LangGraph workload of 30 sequential graph invocations against the local stack, `docker compose stop backend` mid-run (4s in), then verifies the agent process's actual outcome.
+- `Track A / Security`: Added `sdk/tests/test_redaction_wire.py` — a local stub ingest server records the exact bytes that leave the SDK process; with redaction enabled, the raw input/output strings must be absent from every recorded request body, and the `[REDACTED]` placeholders present. A second test pins the default full-capture behavior (raw payloads DO leave by design, Decision #4).
+
+**Measured results:**
+- Backend-kill test: agent exited code 0, **30/30 workloads completed with correct outputs** ("[Calculator Node]" results), zero tracebacks — only fail-silent sender warnings (bounded retries then drop), exactly per RULES.md invariants #1/#2. Verified by observing the agent's outputs and exit, not just absence of exceptions. RESULT: PASS.
+- Redaction wire test: stub server received the span POST; raw secret strings absent from all bodies, `[REDACTED]` present in `input`/`output`. RESULT: PASS (both tests).
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 10 and PRD §10 Tests #6/#7: backend-unreachable must not affect the monitored agent, and scrubbed fields must be genuinely absent from what leaves the SDK process (RULES.md §4), not merely hidden downstream.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- The kill test exercises `docker compose stop backend`; a kill -9 variant is redundant here since the SDK treats both as connection failure.
+
+**Tests added/run:**
+- `sdk/tests/test_redaction_wire.py`: 2/2 pass. Full SDK suite: **25/25 pass**. `scripts/resilience-backend-kill.py`: PASS (exit 0, 30/30 outputs correct, no traceback).
+
+---
+
+## [2026-08-22 00:20] — Week 9 Track C: Accessibility & UX Pass (axe-core + Lighthouse, real scans) — Track C — Eshan
+
+**What changed:**
+- `Track C / Tooling`: Added real accessibility scanning: `dashboard/scripts/a11y-scan.mjs` (axe-core via playwright-core driving system Chrome, plus a Tab-order probe) and `dashboard/scripts/keyboard-nav-test.mjs` (focuses a graph node and verifies Enter opens the InspectPanel). No visual-eyeball substitutes.
+- `Track C / A11y fixes`: (1) Node states now carry non-hue cues — status glyphs (⟳ active / ✓ complete / ✖ error / ⚠ anomalous) rendered next to the span type, and anomalous nodes use a dashed border — because error-red vs complete-green was hue-only and indistinguishable under red-green color-vision deficiency (FR-6). (2) Graph nodes are now keyboard-accessible: `tabIndex=0`, `role="button"`, descriptive `aria-label` (name, type, status), Enter/Space opens the InspectPanel, `:focus-visible` outline added; previously nodes were unreachable by keyboard and the InspectPanel could only be opened with a mouse. (3) Color-contrast fixes: active mode-toggle background #3b82f6→#1d4ed8, redaction badge #ef4444→#b91c1c, stat labels and node meta text #64748b→#94a3b8 (all now ≥4.5:1).
+
+**Measured results (real scans, local dashboard):**
+- axe-core BEFORE fixes: 1 serious violation (color-contrast, 4 nodes: active toggle button, stat labels), 29 passes; Tab probe showed graph nodes unreachable by keyboard.
+- axe-core AFTER fixes: **0 violations**, 29 passes.
+- Lighthouse: accessibility 95 → **100**; best-practices 96 (unchanged); performance 30 → 39 — measured on the Vite DEV server (unminified, no bundling), so the performance number is not representative of a production build; recorded as-is, flagged accordingly.
+- Keyboard test: focused node announces `delegation node "LangGraph", status active. Press Enter to inspect.`; Enter opens the InspectPanel (verified programmatically).
+
+**Why:**
+- Fulfills Build Plan §4 Track C Week 9 (accessibility/performance pass) with concrete, specific findings rather than a "polish complete" claim.
+
+**Assumptions made (if any):**
+- Status glyphs + dashed border are considered sufficient non-hue differentiation for the four node states; hue cues are retained for users with normal color vision.
+
+**Open questions / follow-ups (if any):**
+- InspectPanel closes only via its Close button; adding Escape-to-close is a small Week 10 candidate.
+- The Lighthouse performance score should be re-measured against a production build (`npm run build && vite preview`) during Week 12 hardening.
+
+**Tests added/run:**
+- `dashboard/scripts/a11y-scan.mjs` and `keyboard-nav-test.mjs` added as repeatable checks; `npm run build` clean; scans re-run post-fix (0 violations).
+
+---
+
+---
+
+## [2026-08-22 00:20] — Week 9 Track C: Accessibility & UX Pass (axe-core + Lighthouse, real scans) — Track C — Eshan
+
+**What changed:**
+- `Track C / Tooling`: Added real accessibility scanning: `dashboard/scripts/a11y-scan.mjs` (axe-core via playwright-core driving system Chrome, plus a Tab-order probe) and `dashboard/scripts/keyboard-nav-test.mjs` (focuses a graph node and verifies Enter opens the InspectPanel). No visual-eyeball substitutes.
+- `Track C / A11y fixes`: (1) Node states now carry non-hue cues — status glyphs (⟳ active / ✓ complete / ✖ error / ⚠ anomalous) rendered next to the span type, and anomalous nodes use a dashed border — because error-red vs complete-green was hue-only and indistinguishable under red-green color-vision deficiency (FR-6). (2) Graph nodes are now keyboard-accessible: `tabIndex=0`, `role="button"`, descriptive `aria-label` (name, type, status), Enter/Space opens the InspectPanel, `:focus-visible` outline added; previously nodes were unreachable by keyboard and the InspectPanel could only be opened with a mouse. (3) Color-contrast fixes: active mode-toggle background #3b82f6→#1d4ed8, redaction badge #ef4444→#b91c1c, stat labels and node meta text #64748b→#94a3b8 (all now ≥4.5:1).
+
+**Measured results (real scans, local dashboard):**
+- axe-core BEFORE fixes: 1 serious violation (color-contrast, 4 nodes: active toggle button, stat labels), 29 passes; Tab probe showed graph nodes unreachable by keyboard.
+- axe-core AFTER fixes: **0 violations**, 29 passes.
+- Lighthouse: accessibility 95 → **100**; best-practices 96 (unchanged); performance 30 → 39 — measured on the Vite DEV server (unminified, no bundling), so the performance number is not representative of a production build; recorded as-is, flagged accordingly.
+- Keyboard test: focused node announces `delegation node "LangGraph", status active. Press Enter to inspect.`; Enter opens the InspectPanel (verified programmatically).
+
+**Why:**
+- Fulfills Build Plan §4 Track C Week 9 (accessibility/performance pass) with concrete, specific findings rather than a "polish complete" claim.
+
+**Assumptions made (if any):**
+- Status glyphs + dashed border are considered sufficient non-hue differentiation for the four node states; hue cues are retained for users with normal color vision.
+
+**Open questions / follow-ups (if any):**
+- InspectPanel closes only via its Close button; adding Escape-to-close is a small Week 10 candidate.
+- The Lighthouse performance score should be re-measured against a production build (`npm run build && vite preview`) during Week 12 hardening.
+
+**Tests added/run:**
+- `dashboard/scripts/a11y-scan.mjs` and `keyboard-nav-test.mjs` added as repeatable checks; `npm run build` clean; scans re-run post-fix (0 violations).
+
+---
 
 ---
 
@@ -449,6 +395,60 @@
 
 ---
 
+## [2026-08-21 23:30] — Week 9 Track A: SDK Overhead Benchmark Executed (NFR 9.5 / Test #5) — Track A — Nilay
+
+**What changed:**
+- `Track A / Benchmarks`: Added `sdk/agentscope/benchmarks/week9_overhead_benchmark.py` — runs the actual `examples/langgraph_demo_agent` branching graph with and without the SDK attached (LangGraphAdapter + fail-silent async sender), 30 paired interleaved runs (5 warmup pairs discarded), same inputs per pair, no outlier removal. Timed quantity is the host agent's `graph.ainvoke()` wall time.
+- `Track A / Benchmarks`: Added second configuration with 100ms simulated LLM latency per node (same graph structure) to measure relative overhead on the LLM-bound workload class NFR 9.5's target addresses. Raw logs saved under `sdk/agentscope/benchmarks/results/`.
+
+**Measured results (both configurations, local stack, 30 paired runs):**
+- Demo workload as-is (~4.7ms/graph baseline): overhead **+3.3ms mean absolute; +79.7% mean / +60.7% median relative** — **misses the <5% target on this workload**, because the demo graph is CPU-trivial and any instrumentation dominates it. Reported as measured per RULES.md §6; not softened.
+- LLM-bound workload (100ms/node simulated latency, ~208ms/graph baseline): overhead **+3.6ms mean absolute; +1.76% mean and median relative** — meets the <5% target on the workload class the target was written for.
+- Absolute SDK cost is consistent (~3.3–3.6ms/graph) across both configurations: span construction, callback dispatch, queueing. Network delivery is async and off the timed path (invariants #1/#2 hold).
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 9 and PRD §10 Test #5 with statistically meaningful N≥10 paired runs (30 used), replacing the Week 5 scaffold's synthetic-only timing.
+
+**Assumptions made (if any):**
+- The <5% NFR target is interpreted as applying to realistic LLM-bound agent workloads; on a CPU-trivial graph the relative number is dominated by any instrumentation. Both numbers are reported so the manuscript can state this plainly rather than pick the flattering one.
+
+**Open questions / follow-ups (if any):**
+- Manuscript (Week 11, Instrumentation Methodology) must cite BOTH numbers above with this entry as source; any "<5%" claim must be scoped to the LLM-bound configuration.
+
+**Tests added/run:**
+- `sdk/tests`: 23/23 pass (unchanged). Benchmark executed twice (2026-08-21); second full run log committed at `sdk/agentscope/benchmarks/results/week9-overhead-2026-08-21-run2.log`; first run's config-1 numbers (+73.1% mean/+60.4% median) agree with the committed run.
+
+---
+
+---
+
+## [2026-08-21 23:30] — Week 9 Track A: SDK Overhead Benchmark Executed (NFR 9.5 / Test #5) — Track A — Nilay
+
+**What changed:**
+- `Track A / Benchmarks`: Added `sdk/agentscope/benchmarks/week9_overhead_benchmark.py` — runs the actual `examples/langgraph_demo_agent` branching graph with and without the SDK attached (LangGraphAdapter + fail-silent async sender), 30 paired interleaved runs (5 warmup pairs discarded), same inputs per pair, no outlier removal. Timed quantity is the host agent's `graph.ainvoke()` wall time.
+- `Track A / Benchmarks`: Added second configuration with 100ms simulated LLM latency per node (same graph structure) to measure relative overhead on the LLM-bound workload class NFR 9.5's target addresses. Raw logs saved under `sdk/agentscope/benchmarks/results/`.
+
+**Measured results (both configurations, local stack, 30 paired runs):**
+- Demo workload as-is (~4.7ms/graph baseline): overhead **+3.3ms mean absolute; +79.7% mean / +60.7% median relative** — **misses the <5% target on this workload**, because the demo graph is CPU-trivial and any instrumentation dominates it. Reported as measured per RULES.md §6; not softened.
+- LLM-bound workload (100ms/node simulated latency, ~208ms/graph baseline): overhead **+3.6ms mean absolute; +1.76% mean and median relative** — meets the <5% target on the workload class the target was written for.
+- Absolute SDK cost is consistent (~3.3–3.6ms/graph) across both configurations: span construction, callback dispatch, queueing. Network delivery is async and off the timed path (invariants #1/#2 hold).
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 9 and PRD §10 Test #5 with statistically meaningful N≥10 paired runs (30 used), replacing the Week 5 scaffold's synthetic-only timing.
+
+**Assumptions made (if any):**
+- The <5% NFR target is interpreted as applying to realistic LLM-bound agent workloads; on a CPU-trivial graph the relative number is dominated by any instrumentation. Both numbers are reported so the manuscript can state this plainly rather than pick the flattering one.
+
+**Open questions / follow-ups (if any):**
+- Manuscript (Week 11, Instrumentation Methodology) must cite BOTH numbers above with this entry as source; any "<5%" claim must be scoped to the LLM-bound configuration.
+
+**Tests added/run:**
+- `sdk/tests`: 23/23 pass (unchanged). Benchmark executed twice (2026-08-21); second full run log committed at `sdk/agentscope/benchmarks/results/week9-overhead-2026-08-21-run2.log`; first run's config-1 numbers (+73.1% mean/+60.4% median) agree with the committed run.
+
+---
+
+---
+
 ## [2026-08-21 23:00] — M2 Verification Run + Historical Replay UI Fix — Shared (pre-Weeks 9-12)
 
 **What changed:**
@@ -473,16 +473,6 @@
 
 ---
 
-## [2026-08-19 15:00] — Gap-closing: Anthropic Target Confirmation & Schema Identity — Track A
-
-**What changed:**
-- `Track A / Review`: Logged explicit human confirmation that Anthropic's Messages API remains the second target for `agentscope.patch()`. The previous assumption made during Week 7-8 has now been reviewed and locked in.
-- `Track A / Review`: Verified that the schema-identity guarantee (RULES.md invariant #3) strictly holds for Anthropic spans. `patch.py` correctly normalizes Anthropic's `input_tokens` and `output_tokens` into the `TokenUsage` schema (`prompt_tokens`/`completion_tokens`).
-- `Track A / Review`: Verified that `sdk/tests/test_cross_path.py` already includes explicit assertions on the Anthropic token values (`assert anthropic_span.token_usage.prompt_tokens == 10`), proving the normalization is fully exercised and not failing silently.
-
-**Why:**
-- INSTRUCTIONS.md §2 required human confirmation for picking the second `agentscope.patch()` target. The previous entry assumed Anthropic without confirming. This entry closes that gap by officially confirming the choice.
-- Ensured no fail-silent bugs existed in token extraction and output mapping for Anthropic. Everything already maps correctly and was already fully tested, requiring no code changes.
 ## [2026-08-19 15:15] — Gap-closing: Live Edge Verification — Track C
 
 **What changed:**
@@ -525,6 +515,35 @@
 - Dashboard builds without errors after removing the mock import.
 - Backend `/history/trace-branching-001` returns valid JSON with spans after the Trace construction fix.
 
+## [2026-08-19 15:00] — Gap-closing: Anthropic Target Confirmation & Schema Identity — Track A
+
+**What changed:**
+- `Track A / Review`: Logged explicit human confirmation that Anthropic's Messages API remains the second target for `agentscope.patch()`. The previous assumption made during Week 7-8 has now been reviewed and locked in.
+- `Track A / Review`: Verified that the schema-identity guarantee (RULES.md invariant #3) strictly holds for Anthropic spans. `patch.py` correctly normalizes Anthropic's `input_tokens` and `output_tokens` into the `TokenUsage` schema (`prompt_tokens`/`completion_tokens`).
+- `Track A / Review`: Verified that `sdk/tests/test_cross_path.py` already includes explicit assertions on the Anthropic token values (`assert anthropic_span.token_usage.prompt_tokens == 10`), proving the normalization is fully exercised and not failing silently.
+
+**Why:**
+- INSTRUCTIONS.md §2 required human confirmation for picking the second `agentscope.patch()` target. The previous entry assumed Anthropic without confirming. This entry closes that gap by officially confirming the choice.
+- Ensured no fail-silent bugs existed in token extraction and output mapping for Anthropic. Everything already maps correctly and was already fully tested, requiring no code changes.
+## [2026-08-18 10:42] — Gap-closing: Nginx Proxy Validation — Track B
+
+**What changed:**
+- `Track B / Fix`: Made optional dependency imports (`LangGraphAdapter`, `trace`, `patch`) lazy in `sdk/agentscope/__init__.py`. Eager imports were previously crashing the backend and worker containers that only needed `schema.py` and didn't install `langchain_core`.
+- `Track B / Fix`: Updated `backend/Dockerfile` to install `uvicorn[standard]` (instead of base `uvicorn`) to enable the required WebSocket upgrade protocols for the Nginx proxy.
+- `Track B / Testing`: Validated FR-9 and FR-7 explicitly through the Nginx reverse proxy (port 80) rather than testing FastAPI in isolation. Verified that `POST /ingest` correctly rejects unauthenticated requests with HTTP 401, and that authorized events successfully write to Redis and stream out over `ws://localhost/ws`.
+
+**Why:**
+- The previous Week 8 entry documented Nginx configuration but lacked actual end-to-end proxy test coverage. Exercising the full docker-compose stack exposed real environment misconfigurations (missing websocket libraries and SDK eager-import crashes) which are now resolved.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- None.
+
+**Tests added/run:**
+- Code-level review confirmed `test_cross_path.py` and `patch.py` correctly cover Anthropic schema normalization. No new tests needed.
+
 ## [2026-08-17 19:30] — Feature: Historical Replay (Week 7) & Redaction Indicator (Week 8) — Track C
 
 **What changed:**
@@ -548,42 +567,6 @@
 
 **Tests added/run:**
 - Dashboard built locally using `npm run build` to verify React Typescript integrations.
-## [2026-08-17 13:16] — Hotfix: Dashboard React State Batching (Edges) — Track C
-
-**What changed:**
-- `Track C`: Completely rewrote the `useEffect` block in `dashboard/src/App.tsx` that maps incoming `events` to React Flow `nodes` and `edges`.
-- `Track C`: Instead of only processing the `events[events.length - 1]` event, the effect now maps over the entire `events` array to compute the latest state of each span, guaranteeing no events are silently skipped.
-
-**Why:**
-- The previous implementation suffered from a severe race condition due to React 18's state batching. If multiple spans arrived from the WebSocket in the same tick (e.g., from a fast local branching agent), only the final span in the batch was processed into a node/edge. This resulted in orphaned edges (referencing parent nodes that were skipped) and dropped nodes entirely, confirming the previous hotfix's assumption that edge rendering was still broken on the dashboard side.
-
-**Assumptions made (if any):**
-- Rebuilding `nodes` and `edges` arrays from the full `events` state on every render is fast enough for our current constraints, and ensures flawless data consistency which is a hard prerequisite for building the Week 7 historical replay feature (where all events arrive in a single batch).
-
-**Open questions / follow-ups (if any):**
-- None. Edges are now robustly guaranteed to render for every parent-child pair in the span array.
-
-**Tests added/run:**
-- Code-level tracing verifies the `setNodes` and `setEdges` batching race condition is fully mitigated.
-## [2026-08-18 10:42] — Gap-closing: Nginx Proxy Validation — Track B
-
-**What changed:**
-- `Track B / Fix`: Made optional dependency imports (`LangGraphAdapter`, `trace`, `patch`) lazy in `sdk/agentscope/__init__.py`. Eager imports were previously crashing the backend and worker containers that only needed `schema.py` and didn't install `langchain_core`.
-- `Track B / Fix`: Updated `backend/Dockerfile` to install `uvicorn[standard]` (instead of base `uvicorn`) to enable the required WebSocket upgrade protocols for the Nginx proxy.
-- `Track B / Testing`: Validated FR-9 and FR-7 explicitly through the Nginx reverse proxy (port 80) rather than testing FastAPI in isolation. Verified that `POST /ingest` correctly rejects unauthenticated requests with HTTP 401, and that authorized events successfully write to Redis and stream out over `ws://localhost/ws`.
-
-**Why:**
-- The previous Week 8 entry documented Nginx configuration but lacked actual end-to-end proxy test coverage. Exercising the full docker-compose stack exposed real environment misconfigurations (missing websocket libraries and SDK eager-import crashes) which are now resolved.
-
-**Assumptions made (if any):**
-- None.
-
-**Open questions / follow-ups (if any):**
-- None.
-
-**Tests added/run:**
-- Code-level review confirmed `test_cross_path.py` and `patch.py` correctly cover Anthropic schema normalization. No new tests needed.
-
 ## [2026-08-17 15:25] — Track A Week 8: Second LLM Client Patching & SDK Quickstart Draft — Track A — Nilay Jain
 
 **What changed:**
@@ -632,6 +615,23 @@
 - Ran `python -m pytest sdk/tests`: All 19 unit tests passed (100% pass rate).
 - `Nginx Proxy Test`: Started full docker-compose stack. Unauthenticated `POST /ingest` to port 80 successfully returned `401`. Authenticated `POST /ingest` successfully returned `accepted` and a Python WebSocket client connected to `ws://localhost/ws` successfully received the streamed event payload.
 
+## [2026-08-17 13:16] — Hotfix: Dashboard React State Batching (Edges) — Track C
+
+**What changed:**
+- `Track C`: Completely rewrote the `useEffect` block in `dashboard/src/App.tsx` that maps incoming `events` to React Flow `nodes` and `edges`.
+- `Track C`: Instead of only processing the `events[events.length - 1]` event, the effect now maps over the entire `events` array to compute the latest state of each span, guaranteeing no events are silently skipped.
+
+**Why:**
+- The previous implementation suffered from a severe race condition due to React 18's state batching. If multiple spans arrived from the WebSocket in the same tick (e.g., from a fast local branching agent), only the final span in the batch was processed into a node/edge. This resulted in orphaned edges (referencing parent nodes that were skipped) and dropped nodes entirely, confirming the previous hotfix's assumption that edge rendering was still broken on the dashboard side.
+
+**Assumptions made (if any):**
+- Rebuilding `nodes` and `edges` arrays from the full `events` state on every render is fast enough for our current constraints, and ensures flawless data consistency which is a hard prerequisite for building the Week 7 historical replay feature (where all events arrive in a single batch).
+
+**Open questions / follow-ups (if any):**
+- None. Edges are now robustly guaranteed to render for every parent-child pair in the span array.
+
+**Tests added/run:**
+- Code-level tracing verifies the `setNodes` and `setEdges` batching race condition is fully mitigated.
 ## [2026-08-16 17:15] — Weeks 7-8: History Endpoint & Deploy Validation — Track B — Parthiv
 
 **What changed:**
@@ -723,28 +723,6 @@
 
 **Tests added/run:**
 - Visual verification and code-level review. Hook logic correctly mutates nodes into the anomalous state natively utilizing existing data flows.
-## [2026-08-11 13:12] — Week 5 & 6 Build Plan Implementation — Track B — Anomaly Worker & Rules
-**What changed:**
-- `Track B`: Created `worker/main.py` independent process that reads from `agentscope:events` via `XREAD` and writes anomaly flags to `agentscope:anomalies`.
-- `Track B`: Implemented 6 anomaly rules in `worker/rules/`: Crashes, Failure Loops, Timeouts, Token Spikes, Message Storms, Delegation Cycles.
-- `Track B`: Maintained `agentscope:worker:last_id` in Redis so the worker can restart without data loss (FR-4).
-- `Track B`: Built synthetic failure harness `worker/harness/inject.py`.
-- `Track B`: Updated `backend/app/ws.py` to multiplex reads from both streams and relay anomalies alongside events.
-- `Track B`: Updated `scripts/smoke-test.py` to optionally spawn the worker and assert anomaly flags successfully stream over the WebSocket.
-
-**Why:**
-- Fulfills Build Plan §4 Track B Weeks 5 & 6 (Anomaly worker, rules, integration).
-- Fulfills PRD FR-4 (no data loss) and FR-5 (worker evaluates rules).
-
-**Assumptions made (if any):**
-- Assumed standard JSON serialization for anomaly flags over WS. Track C is expected to adjust parsing for anomaly flags (identifiable by `"is_anomaly": true`).
-- The payload shape sent over the WS relay for anomalies is: `{"rule": "rule_name", "span_id": "...", "trace_id": "...", "agent_id": "...", "details": {...}, "is_anomaly": true}`. Track C will need to handle this shape to render the AlertBadge.
-
-**Open questions / follow-ups (if any):**
-- None. Ready for Track C to integrate anomaly flags into `AlertBadge.tsx`.
-
-**Tests added/run:**
-- `scripts/smoke-test.py`: Tested worker isolation and WebSocket anomaly flag delivery.
 ## [2026-08-11 16:40] — Track A Weeks 5 & 6 Implementation — Track A — Nilay Jain
 
 **What changed:**
@@ -773,6 +751,28 @@
 - All 15 SDK unit tests and 2 demo E2E integration tests passed (100% pass rate).
 
 
+## [2026-08-11 13:12] — Week 5 & 6 Build Plan Implementation — Track B — Anomaly Worker & Rules
+**What changed:**
+- `Track B`: Created `worker/main.py` independent process that reads from `agentscope:events` via `XREAD` and writes anomaly flags to `agentscope:anomalies`.
+- `Track B`: Implemented 6 anomaly rules in `worker/rules/`: Crashes, Failure Loops, Timeouts, Token Spikes, Message Storms, Delegation Cycles.
+- `Track B`: Maintained `agentscope:worker:last_id` in Redis so the worker can restart without data loss (FR-4).
+- `Track B`: Built synthetic failure harness `worker/harness/inject.py`.
+- `Track B`: Updated `backend/app/ws.py` to multiplex reads from both streams and relay anomalies alongside events.
+- `Track B`: Updated `scripts/smoke-test.py` to optionally spawn the worker and assert anomaly flags successfully stream over the WebSocket.
+
+**Why:**
+- Fulfills Build Plan §4 Track B Weeks 5 & 6 (Anomaly worker, rules, integration).
+- Fulfills PRD FR-4 (no data loss) and FR-5 (worker evaluates rules).
+
+**Assumptions made (if any):**
+- Assumed standard JSON serialization for anomaly flags over WS. Track C is expected to adjust parsing for anomaly flags (identifiable by `"is_anomaly": true`).
+- The payload shape sent over the WS relay for anomalies is: `{"rule": "rule_name", "span_id": "...", "trace_id": "...", "agent_id": "...", "details": {...}, "is_anomaly": true}`. Track C will need to handle this shape to render the AlertBadge.
+
+**Open questions / follow-ups (if any):**
+- None. Ready for Track C to integrate anomaly flags into `AlertBadge.tsx`.
+
+**Tests added/run:**
+- `scripts/smoke-test.py`: Tested worker isolation and WebSocket anomaly flag delivery.
 ## [2026-08-10 15:15] — Infra Hardening Post-M1 — Integration — infra-hardening-postm1
 
 **What changed:**
