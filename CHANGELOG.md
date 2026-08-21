@@ -1,5 +1,93 @@
 # AgentScope Changelog
 
+## [2026-08-22 03:00] — Week 12 Track A: Packaging Polish — Track A — Nilay
+
+**What changed:**
+- `Track A / Packaging`: Polished `sdk/pyproject.toml` — added readme/license metadata, an `include` package allowlist, package data, and optional-dependency extras: `[langgraph]` (adapter path deps: langchain-core, typing_extensions) and `[dev]` (pytest). Created `sdk/README.md` (install variants, both integration paths, env vars, pointer to the quickstart). Publishing/release-tagging intentionally deferred to the final merge per the Weeks 9-12 plan.
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 12 (packaging only).
+
+**Assumptions made (if any):**
+- Base install intentionally excludes langchain-core; the adapter path is opt-in via the extra.
+
+**Open questions / follow-ups (if any):**
+- Note for the team: pip-installing `arize-phoenix` on Python 3.11 breaks pytest collection globally (its auto-loaded plugin hits a dataclass incompatibility); the Docker Phoenix image avoids this. The pip package was uninstalled locally after the Week 10 baseline.
+
+**Tests added/run:**
+- `pip install -e .` and `pip install -e .[langgraph]` verified importable; SDK suite 25/25 pass.
+
+---
+
+## [2026-08-22 02:20] — Week 11 Track A: SDK Quickstart Finalized + Instrumentation Methodology Manuscript Section — Track A — Nilay
+
+**What changed:**
+- `Track A / Docs`: Finalized `docs/sdk-quickstart.md` for both integration paths — added concrete verification steps against the running stack (`/traces`, `/history`) and a "Guarantees (measured)" section citing the fail-silent, redaction, and overhead results by changelog entry.
+- `Track A / Manuscript`: Drafted `manuscript/instrumentation-methodology.md` — integration paths, delivery semantics, measured overhead (both workload configurations, cited to the 2026-08-21 23:30 entry), and the Phoenix comparison (cited to 2026-08-22 01:20). Explicitly avoids any AWS-deployed-backend claim (Flow 6 Step 4 deferred per the M2-AWS prompt).
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 11. Per RULES.md §6, the section cites Week 9's actual measured numbers — both the +79.7%/+60.7% demo-workload result and the +1.76% LLM-bound result — rather than the <5% target.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- None.
+
+**Tests added/run:**
+- None (documentation).
+
+---
+
+## [2026-08-22 00:45] — Week 10 Track A: Resilience & Redaction Wire Tests (Test #6/#7, SDK side) — Track A — Nilay
+
+**What changed:**
+- `Track A / Resilience`: Added `scripts/resilience-backend-kill.py` — runs a monitored (SDK-attached) LangGraph workload of 30 sequential graph invocations against the local stack, `docker compose stop backend` mid-run (4s in), then verifies the agent process's actual outcome.
+- `Track A / Security`: Added `sdk/tests/test_redaction_wire.py` — a local stub ingest server records the exact bytes that leave the SDK process; with redaction enabled, the raw input/output strings must be absent from every recorded request body, and the `[REDACTED]` placeholders present. A second test pins the default full-capture behavior (raw payloads DO leave by design, Decision #4).
+
+**Measured results:**
+- Backend-kill test: agent exited code 0, **30/30 workloads completed with correct outputs** ("[Calculator Node]" results), zero tracebacks — only fail-silent sender warnings (bounded retries then drop), exactly per RULES.md invariants #1/#2. Verified by observing the agent's outputs and exit, not just absence of exceptions. RESULT: PASS.
+- Redaction wire test: stub server received the span POST; raw secret strings absent from all bodies, `[REDACTED]` present in `input`/`output`. RESULT: PASS (both tests).
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 10 and PRD §10 Tests #6/#7: backend-unreachable must not affect the monitored agent, and scrubbed fields must be genuinely absent from what leaves the SDK process (RULES.md §4), not merely hidden downstream.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- The kill test exercises `docker compose stop backend`; a kill -9 variant is redundant here since the SDK treats both as connection failure.
+
+**Tests added/run:**
+- `sdk/tests/test_redaction_wire.py`: 2/2 pass. Full SDK suite: **25/25 pass**. `scripts/resilience-backend-kill.py`: PASS (exit 0, 30/30 outputs correct, no traceback).
+
+---
+
+## [2026-08-21 23:30] — Week 9 Track A: SDK Overhead Benchmark Executed (NFR 9.5 / Test #5) — Track A — Nilay
+
+**What changed:**
+- `Track A / Benchmarks`: Added `sdk/agentscope/benchmarks/week9_overhead_benchmark.py` — runs the actual `examples/langgraph_demo_agent` branching graph with and without the SDK attached (LangGraphAdapter + fail-silent async sender), 30 paired interleaved runs (5 warmup pairs discarded), same inputs per pair, no outlier removal. Timed quantity is the host agent's `graph.ainvoke()` wall time.
+- `Track A / Benchmarks`: Added second configuration with 100ms simulated LLM latency per node (same graph structure) to measure relative overhead on the LLM-bound workload class NFR 9.5's target addresses. Raw logs saved under `sdk/agentscope/benchmarks/results/`.
+
+**Measured results (both configurations, local stack, 30 paired runs):**
+- Demo workload as-is (~4.7ms/graph baseline): overhead **+3.3ms mean absolute; +79.7% mean / +60.7% median relative** — **misses the <5% target on this workload**, because the demo graph is CPU-trivial and any instrumentation dominates it. Reported as measured per RULES.md §6; not softened.
+- LLM-bound workload (100ms/node simulated latency, ~208ms/graph baseline): overhead **+3.6ms mean absolute; +1.76% mean and median relative** — meets the <5% target on the workload class the target was written for.
+- Absolute SDK cost is consistent (~3.3–3.6ms/graph) across both configurations: span construction, callback dispatch, queueing. Network delivery is async and off the timed path (invariants #1/#2 hold).
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 9 and PRD §10 Test #5 with statistically meaningful N≥10 paired runs (30 used), replacing the Week 5 scaffold's synthetic-only timing.
+
+**Assumptions made (if any):**
+- The <5% NFR target is interpreted as applying to realistic LLM-bound agent workloads; on a CPU-trivial graph the relative number is dominated by any instrumentation. Both numbers are reported so the manuscript can state this plainly rather than pick the flattering one.
+
+**Open questions / follow-ups (if any):**
+- Manuscript (Week 11, Instrumentation Methodology) must cite BOTH numbers above with this entry as source; any "<5%" claim must be scoped to the LLM-bound configuration.
+
+**Tests added/run:**
+- `sdk/tests`: 23/23 pass (unchanged). Benchmark executed twice (2026-08-21); second full run log committed at `sdk/agentscope/benchmarks/results/week9-overhead-2026-08-21-run2.log`; first run's config-1 numbers (+73.1% mean/+60.4% median) agree with the committed run.
+
+---
+
 ## [2026-08-21 23:00] — M2 Verification Run + Historical Replay UI Fix — Shared (pre-Weeks 9-12)
 
 **What changed:**

@@ -1,0 +1,35 @@
+Week 9 SDK overhead benchmark (NFR 9.5 / Test #5)
+
+--- Configuration: demo branching graph as-is (30 paired runs, 5 warmup pairs discarded) ---
+  ingest url: http://localhost:8000/ingest
+  run   1/35: baseline=   10.17ms  instrumented=   15.25ms
+  run   5/35: baseline=    2.81ms  instrumented=    3.39ms
+  run  10/35: baseline=    4.43ms  instrumented=    6.76ms
+  run  15/35: baseline=    3.75ms  instrumented=    5.02ms
+  run  20/35: baseline=    7.16ms  instrumented=    8.93ms
+  run  25/35: baseline=    4.75ms  instrumented=    8.51ms
+  run  30/35: baseline=    3.35ms  instrumented=   10.42ms
+  run  35/35: baseline=    4.94ms  instrumented=    9.01ms
+
+=== Results (measured; no outlier removal) ===
+  baseline      mean=4.674ms  median=4.721ms  stdev=1.050ms
+  instrumented  mean=7.998ms  median=7.738ms  stdev=2.341ms
+  paired diff   mean=3.324ms  median=3.289ms  stdev=2.475ms
+  overhead pct  mean=+79.72%  median=+60.74%  min=-27.73%  max=+211.34%
+
+--- Configuration: branching graph, 100ms simulated LLM latency per node (30 paired runs, 5 warmup pairs discarded) ---
+  ingest url: http://localhost:8000/ingest
+  run   1/35: baseline=  208.74ms  instrumented=  206.09ms
+  run   5/35: baseline=  204.84ms  instrumented=  210.27ms
+  run  10/35: baseline=  205.35ms  instrumented=  208.75ms
+  run  15/35: baseline=  209.70ms  instrumented=  223.14ms
+  run  20/35: baseline=  209.48ms  instrumented=  216.06ms
+  run  25/35: baseline=  204.40ms  instrumented=  209.43ms
+  run  30/35: baseline=  203.94ms  instrumented=  204.40ms
+  run  35/35: baseline=  206.66ms  instrumented=  207.46ms
+
+=== Results (measured; no outlier removal) ===
+  baseline      mean=207.531ms  median=205.605ms  stdev=5.469ms
+  instrumented  mean=211.148ms  median=209.088ms  stdev=5.828ms
+  paired diff   mean=3.617ms  median=3.664ms  stdev=4.205ms
+  overhead pct  mean=+1.76%  median=+1.76%  min=-3.12%  max=+7.27%
