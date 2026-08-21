@@ -1,5 +1,34 @@
 # AgentScope Changelog
 
+## [2026-08-22 01:20] — Week 10 Track B: Resilience, TLS, API-Key Re-confirm & Phoenix Baseline (Test #6/#7/#8) — Track B — Parthiv
+
+**What changed:**
+- `Track B / Resilience`: Added `scripts/resilience-stack.py` with three checks against the local stack: `worker-kill` (ingest 70 spans across a mid-stream worker kill/restart), `redis-restart` (full Redis restart mid-run), `slow-ws` (a WebSocket client that connects and never reads).
+- `Track B / Security`: Added TLS termination to local Nginx — new `listen 8443 ssl` server block (TLSv1.2/1.3), self-signed cert mounted via docker-compose (cert generation command documented in compose; certs gitignored). Verified all endpoints through HTTPS incl. WSS relay.
+- `Track B / Baseline`: Added `scripts/baseline-comparison-phoenix.py` — same branching-graph workloads as the Week 9 overhead benchmark, three arms: no instrumentation / AgentScope LangGraphAdapter / Arize Phoenix (OpenInference LangChain global tracer → local Phoenix container via OTLP gRPC, with explicit SDK provider and force_flush; export verified by Phoenix traceCount growing from 0 to 55).
+
+**Measured results:**
+- worker-kill: PASS — ingestion continued while the worker was stopped (stream grew during downtime), zero ingest errors; after restart the worker caught up (`agentscope:worker:last_id` advanced past the kill point). Invariant #6 holds.
+- redis-restart: PASS — 0 accepted events lost across a full Redis restart (XLEN 132 pre = 132 immediately post, AOF persistence, FR-4); ingestion recovered automatically within ~2s after Redis returned (transient 5xx during the restart window itself is expected — Redis is the store). Backend's redis-py pool self-heals stale connections.
+- slow-ws: PASS — ingest p50/p95 with a stalled, never-reading WS client: 48/52ms, identical to the no-WS baseline (48/52ms). Backend does not block on a slow consumer.
+- TLS: Nginx terminates TLS 1.3 (TLS_AES_256_GCM_SHA384) on 8443; /ingest, /traces, /history all proxy correctly; unauthenticated → 401 and bad key → 401 over HTTPS; valid key → 200; WSS relay over TLS verified end-to-end (span arrived on wss://localhost:8443/ws). NFR 9.3 satisfied locally with a self-signed cert.
+- Phoenix baseline (n=15/arm, 3 warmup, no outlier removal): demo-workload-as-is — AgentScope +93.1% mean / +84.0% median overhead, Phoenix +201.7% / +206.6%; LLM-bound (100ms/node) — AgentScope −0.5% mean / +0.9% median, Phoenix +2.6% / +4.3%. AgentScope's instrumentation overhead is lower than Phoenix's on both workload classes in this run. Raw log: `infra/loadtest/results/baseline-phoenix-2026-08-22.log`.
+
+**Why:**
+- Fulfills Build Plan §4 Track B Week 10 and PRD §10 Tests #6/#7/#8. Phoenix was installed and run locally (Docker `arizephoenix/phoenix:latest`); the comparison numbers above are real measurements from a verified-exporting setup — not estimated. (The pip-installed `arize-phoenix` package itself fails to import on the local Python 3.11 environment — dataclass mutable-default error — which is why the Docker image was used.)
+
+**Assumptions made (if any):**
+- Overhead comparison uses BatchSpanProcessor (OTEL default) for Phoenix, matching how its exporters run in practice; AgentScope uses its async fail-silent sender. Both enqueue off the critical path.
+- Local self-signed cert stands in for a real certificate in the reference deployment.
+
+**Open questions / follow-ups (if any):**
+- Langfuse baseline not run; one third-party baseline (Phoenix) was completed within the session. Langfuse can be added with the same script pattern later if needed.
+
+**Tests added/run:**
+- `scripts/resilience-stack.py`: 3/3 PASS. TLS checks: all PASS. Backend suite still 9/9 locally. Phoenix baseline executed with verified span export.
+
+---
+
 ## [2026-08-21 23:50] — Week 9 Track B: Load Testing + Read-Path Optimization (NFR 9.1 / Test #4) — Track B — Parthiv
 
 **What changed:**

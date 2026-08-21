@@ -1,0 +1,12 @@
+Overriding of current TracerProvider is not allowed
+Comparative overhead baseline: AgentScope vs Arize Phoenix (same workload)
+
+--- demo branching graph as-is (n=15 per arm) ---
+baseline   mean=    6.44ms
+agentscope mean=   12.29ms  overhead-vs-baseline mean= +93.06%  median= +84.00%
+phoenix    mean=   19.29ms  overhead-vs-baseline mean=+201.71%  median=+206.60%
+
+--- branching graph, 100ms simulated LLM latency/node (n=15 per arm) ---
+baseline   mean=  215.00ms
+agentscope mean=  213.46ms  overhead-vs-baseline mean=  -0.54%  median=  +0.94%
+phoenix    mean=  220.19ms  overhead-vs-baseline mean=  +2.63%  median=  +4.33%
