@@ -1,5 +1,26 @@
 # AgentScope Changelog
 
+## [2026-08-22 03:20] — Week 12 Track B: Final Local Deployment Hardening — Track B — Parthiv
+
+**What changed:**
+- `Track B / Infra`: Hardened `infra/docker-compose.yml`: Redis healthcheck (backend and worker now gate on `service_healthy` instead of bare startup), CPU/memory limits on all four services, `restart: unless-stopped` on worker and nginx.
+- `Track B / Nginx`: Added http-level hardening defaults to `nginx.conf`: `client_max_body_size 2m`, proxy connect/read/send timeouts tuned for the WS relay.
+- TLS termination was already delivered in Week 10 (8443, TLS 1.3, verified) — this entry completes the remaining hardening items.
+
+**Why:**
+- Fulfills Build Plan §4 Track B Week 12: make the LOCAL docker-compose deployment as solid as possible now, since the deferred AWS step will deploy it as-is.
+
+**Assumptions made (if any):**
+- Resource limits sized for a single-node student-budget deployment (backend 2 CPU/1G; redis 1 CPU/512M; worker 1 CPU/512M; nginx 1 CPU/256M).
+
+**Open questions / follow-ups (if any):**
+- None.
+
+**Tests added/run:**
+- `docker compose up -d` with the hardened config: all four services Up, redis `(healthy)`, both `http://localhost/traces` and `https://localhost:8443/traces` return 200.
+
+---
+
 ## [2026-08-22 02:00] — Week 11 Track B: Backend/Infra Docs + System Design & Evaluation Results Manuscript Sections — Track B — Parthiv
 
 **What changed:**
