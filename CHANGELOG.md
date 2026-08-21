@@ -1,5 +1,30 @@
 # AgentScope Changelog
 
+## [2026-08-21 23:30] — Week 9 Track A: SDK Overhead Benchmark Executed (NFR 9.5 / Test #5) — Track A — Nilay
+
+**What changed:**
+- `Track A / Benchmarks`: Added `sdk/agentscope/benchmarks/week9_overhead_benchmark.py` — runs the actual `examples/langgraph_demo_agent` branching graph with and without the SDK attached (LangGraphAdapter + fail-silent async sender), 30 paired interleaved runs (5 warmup pairs discarded), same inputs per pair, no outlier removal. Timed quantity is the host agent's `graph.ainvoke()` wall time.
+- `Track A / Benchmarks`: Added second configuration with 100ms simulated LLM latency per node (same graph structure) to measure relative overhead on the LLM-bound workload class NFR 9.5's target addresses. Raw logs saved under `sdk/agentscope/benchmarks/results/`.
+
+**Measured results (both configurations, local stack, 30 paired runs):**
+- Demo workload as-is (~4.7ms/graph baseline): overhead **+3.3ms mean absolute; +79.7% mean / +60.7% median relative** — **misses the <5% target on this workload**, because the demo graph is CPU-trivial and any instrumentation dominates it. Reported as measured per RULES.md §6; not softened.
+- LLM-bound workload (100ms/node simulated latency, ~208ms/graph baseline): overhead **+3.6ms mean absolute; +1.76% mean and median relative** — meets the <5% target on the workload class the target was written for.
+- Absolute SDK cost is consistent (~3.3–3.6ms/graph) across both configurations: span construction, callback dispatch, queueing. Network delivery is async and off the timed path (invariants #1/#2 hold).
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 9 and PRD §10 Test #5 with statistically meaningful N≥10 paired runs (30 used), replacing the Week 5 scaffold's synthetic-only timing.
+
+**Assumptions made (if any):**
+- The <5% NFR target is interpreted as applying to realistic LLM-bound agent workloads; on a CPU-trivial graph the relative number is dominated by any instrumentation. Both numbers are reported so the manuscript can state this plainly rather than pick the flattering one.
+
+**Open questions / follow-ups (if any):**
+- Manuscript (Week 11, Instrumentation Methodology) must cite BOTH numbers above with this entry as source; any "<5%" claim must be scoped to the LLM-bound configuration.
+
+**Tests added/run:**
+- `sdk/tests`: 23/23 pass (unchanged). Benchmark executed twice (2026-08-21); second full run log committed at `sdk/agentscope/benchmarks/results/week9-overhead-2026-08-21-run2.log`; first run's config-1 numbers (+73.1% mean/+60.4% median) agree with the committed run.
+
+---
+
 ## [2026-08-21 23:00] — M2 Verification Run + Historical Replay UI Fix — Shared (pre-Weeks 9-12)
 
 **What changed:**
