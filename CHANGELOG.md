@@ -1,5 +1,36 @@
 # AgentScope Changelog
 
+## [2026-08-21 23:50] — Week 9 Track B: Load Testing + Read-Path Optimization (NFR 9.1 / Test #4) — Track B — Parthiv
+
+**What changed:**
+- `Track B / Load testing`: Added Locust suite (`infra/loadtest/locustfile.py`) targeting the LOCAL stack THROUGH NGINX (port 80): authenticated POST /ingest, GET /traces, GET /history/{id}, and unauthenticated ingest (must 401). Added `event_latency_probe.py` measuring the metric NFR 9.1 actually names — event-to-dashboard latency (POST /ingest → same span arriving on a /ws WebSocket), run concurrently with background load.
+- `Track B / Optimization`: Implemented the per-trace read index parked in `docs/future-work.md`: ingest now also `ZADD`s `agentscope:traces` (timestamp-scored) and `RPUSH`es per-trace message-ID lists (`agentscope:trace:<id>`). `/history/{id}` serves from the index via pipelined exact-ID XRANGEs (O(trace size) instead of O(stream)); `/history` and `/traces` retain a full-scan fallback that rebuilds the index for pre-index data or after a flush. Index maintenance is wrapped fail-silent so it can never break ingestion (RULES.md §3.1/#6).
+- `Track B / Infra`: Backend container now runs uvicorn with `--workers 4` (app is stateless; all state in Redis) to cut tail latency under concurrent load.
+- `Track B / Test infra`: Fixed the Windows-local `RuntimeError: Event loop is closed` failures in `test_ws.py`/`test_history.py`: `redis_client.py` now provides `get_redis()` returning one async client per event loop (async connections bind to their creating loop), endpoints fetch it per call, and test Redis cleanup moved to a sync client in `tests/conftest.py`. Full backend suite now passes locally: 9/9.
+
+**Measured results (all through Nginx, local stack, no outlier removal):**
+- BEFORE optimization, mixed traffic 50u/60s: aggregate p50=1700ms / p95=3600ms / p99=4400ms, 2 transient 502s; 10u: p50=540ms / p95=1300ms. Root cause: `/history` and `/traces` full-stream XRANGE+JSON-parse per request blocked the single event loop. **Missed the <200ms p95 target ~18× at 50u.**
+- AFTER optimization, mixed traffic 50u/60s: aggregate p50=120ms / p95=320ms / p99=440ms, zero failures, ~211 req/s (vs ~24 req/s before). Ingest-only 50u (pre-index): p50=140ms / p95=240ms.
+- Event-to-dashboard latency (the NFR 9.1 metric, ingest→WS, concurrent probe): idle p50=47ms / p95=63ms / p99=63ms (n=100); under 10-user background load (1 worker) p95=219ms (miss); with 4 workers under 10-user load p50=47ms / p95=63ms (n=198); with 4 workers under 50-user load **p50=78ms / p95=156ms / p99=218ms (n=300) — meets the <200ms p95 target**.
+- Raw HTTP endpoint p95 at 50-user saturation remains above 200ms (aggregate 320ms) — reported as measured; the NFR target is defined on event-to-dashboard latency, which passes.
+
+**Why:**
+- Fulfills Build Plan §4 Track B Week 9 and PRD §10 Test #4 ("load testing at increasing concurrency; p50/p95/p99 reporting"). Initial runs missed the target; per the Week 9 prompt's flag-don't-soften rule the miss was reported, and the read-path optimization (user-approved) was implemented and re-measured. Both before/after numbers are recorded here as the traceable source for any manuscript claim.
+
+**Assumptions made (if any):**
+- The <200ms p95 target (PRD success metrics / NFR 9.1) is interpreted as event-to-dashboard latency under realistic concurrent load, matching FR-3's wording; HTTP endpoint percentiles are reported alongside as secondary evidence.
+- Redis persistence/worker behavior is untouched: the worker still consumes `agentscope:events` unchanged; index keys are additive.
+
+**Open questions / follow-ups (if any):**
+- `/traces` may briefly list a trace whose events were externally flushed (index outlives stream); `/history` falls back correctly and 404s. Acceptable for the local reference deployment; noted for future work.
+- Raw run artifacts in `infra/loadtest/results/` (Locust CSVs for every scenario + probe output).
+
+**Tests added/run:**
+- `backend/tests`: 9/9 pass locally (previously 4-5 of 9 failed on Windows due to the event-loop issue). No behavior regressions: ingest→history order, WS relay order/payload integrity, 401s all verified.
+- Re-verified live stack post-rebuild: demo agent ingest OK, `/traces` lists real traces, `/history` returns 8 spans in order.
+
+---
+
 ## [2026-08-21 23:00] — M2 Verification Run + Historical Replay UI Fix — Shared (pre-Weeks 9-12)
 
 **What changed:**

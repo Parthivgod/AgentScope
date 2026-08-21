@@ -2,7 +2,7 @@ import json
 import asyncio
 import logging
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from app.redis_client import redis_client
+from app.redis_client import get_redis
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             # Block for 1000ms waiting for new events
             # This allows the loop to periodically check for disconnects
-            events = await redis_client.xread(
+            events = await get_redis().xread(
                 {"agentscope:events": last_event_id, "agentscope:anomalies": last_anomaly_id},
                 count=50, block=1000
             )

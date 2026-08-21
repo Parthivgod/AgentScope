@@ -1,0 +1,29 @@
+"""Shared fixtures for backend tests.
+
+Cleanup uses a *synchronous* Redis client on purpose: the async connection
+pool binds its connections to whichever event loop first uses it, so calling
+``asyncio.run()`` per test (each with a fresh, then-closed loop) crashes with
+``RuntimeError: Event loop is closed`` on Windows/ProactorEventLoop — the
+issue that previously made test_ws.py/test_history.py fail locally.
+"""
+import os
+
+import pytest
+import redis as sync_redis
+
+
+def _clean_redis():
+    url = os.environ.get("REDIS_URL", "redis://localhost:6379")
+    r = sync_redis.Redis.from_url(url, decode_responses=True)
+    keys = ["agentscope:events", "agentscope:traces", "agentscope:worker:last_id"]
+    keys += r.keys("agentscope:trace:*")
+    if keys:
+        r.delete(*keys)
+    r.close()
+
+
+@pytest.fixture(autouse=True)
+def clean_redis():
+    _clean_redis()
+    yield
+    _clean_redis()

@@ -1,0 +1,3 @@
+
+=== Event-to-dashboard latency (ingest->WS), n=300 ===
+  p50=78.0ms  p95=156.0ms  p99=218.0ms  min=15.0ms  max=282.0ms  mean=83.0ms

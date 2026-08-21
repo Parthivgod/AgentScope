@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 import os
 
 from app.ingest import app
-from app.redis_client import redis_client
 
 client = TestClient(app)
 
@@ -14,14 +13,6 @@ def set_env():
     yield
     if "AGENTSCOPE_API_KEY" in os.environ:
         del os.environ["AGENTSCOPE_API_KEY"]
-
-import asyncio
-
-@pytest.fixture(autouse=True)
-def clear_redis():
-    asyncio.run(redis_client.delete("agentscope:events"))
-    yield
-    asyncio.run(redis_client.delete("agentscope:events"))
 
 def get_valid_span_payload(span_id):
     return {

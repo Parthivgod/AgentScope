@@ -4,7 +4,6 @@ import os
 from fastapi.testclient import TestClient
 from datetime import datetime, timezone
 from app.ingest import app
-from app.redis_client import redis_client
 
 @pytest.fixture(autouse=True)
 def set_env():
@@ -12,12 +11,6 @@ def set_env():
     yield
     if "AGENTSCOPE_API_KEY" in os.environ:
         del os.environ["AGENTSCOPE_API_KEY"]
-
-@pytest.fixture(autouse=True)
-async def clear_redis():
-    await redis_client.delete("agentscope:events")
-    yield
-    await redis_client.delete("agentscope:events")
 
 def test_ws_order_and_complex_payloads():
     client = TestClient(app)
