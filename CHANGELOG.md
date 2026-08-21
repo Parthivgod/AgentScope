@@ -1,5 +1,28 @@
 # AgentScope Changelog
 
+## [2026-08-22 01:40] — Week 10 Track C: Closing Week 9 Accessibility Findings — Track C — Eshan
+
+**What changed:**
+- `Track C / A11y`: InspectPanel now closes on Escape (previously mouse-only via Close button/backdrop click), giving keyboard users full open→inspect→dismiss parity. Added `dashboard/scripts/escape-close-test.mjs` as a repeatable programmatic check.
+
+**Measured results:**
+- Escape test: panel opens on Enter (verified) and closes on Escape (verified) — PASS.
+- axe-core re-scan: still 0 violations (29 passes) after the change.
+
+**Why:**
+- Closes the follow-up logged in the Week 9 Track C entry.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- Production-build Lighthouse measurement remains scheduled for Week 12 hardening.
+
+**Tests added/run:**
+- `escape-close-test.mjs`: PASS. `npm run build` clean. axe re-scan: 0 violations.
+
+---
+
 ## [2026-08-22 00:20] — Week 9 Track C: Accessibility & UX Pass (axe-core + Lighthouse, real scans) — Track C — Eshan
 
 **What changed:**

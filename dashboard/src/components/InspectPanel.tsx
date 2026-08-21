@@ -14,6 +14,7 @@
  *   - Flow 4 Step 4: click-to-inspect anomaly detail (future extension)
  */
 
+import { useEffect } from 'react';
 import { type SpanEvent, type AnomalyEvent } from '../hooks/useEventSource';
 import './InspectPanel.css';
 
@@ -61,6 +62,16 @@ const SPAN_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function InspectPanel({ span, anomaly, onClose }: InspectPanelProps) {
+  // Escape closes the panel (keyboard parity with the Close button — Week 10 a11y)
+  useEffect(() => {
+    if (!span) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [span, onClose]);
+
   if (!span) return null;
 
   const duration = computeDuration(span.start_time, span.end_time);
