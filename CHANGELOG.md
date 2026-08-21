@@ -1,5 +1,32 @@
 # AgentScope Changelog
 
+## [2026-08-22 00:20] — Week 9 Track C: Accessibility & UX Pass (axe-core + Lighthouse, real scans) — Track C — Eshan
+
+**What changed:**
+- `Track C / Tooling`: Added real accessibility scanning: `dashboard/scripts/a11y-scan.mjs` (axe-core via playwright-core driving system Chrome, plus a Tab-order probe) and `dashboard/scripts/keyboard-nav-test.mjs` (focuses a graph node and verifies Enter opens the InspectPanel). No visual-eyeball substitutes.
+- `Track C / A11y fixes`: (1) Node states now carry non-hue cues — status glyphs (⟳ active / ✓ complete / ✖ error / ⚠ anomalous) rendered next to the span type, and anomalous nodes use a dashed border — because error-red vs complete-green was hue-only and indistinguishable under red-green color-vision deficiency (FR-6). (2) Graph nodes are now keyboard-accessible: `tabIndex=0`, `role="button"`, descriptive `aria-label` (name, type, status), Enter/Space opens the InspectPanel, `:focus-visible` outline added; previously nodes were unreachable by keyboard and the InspectPanel could only be opened with a mouse. (3) Color-contrast fixes: active mode-toggle background #3b82f6→#1d4ed8, redaction badge #ef4444→#b91c1c, stat labels and node meta text #64748b→#94a3b8 (all now ≥4.5:1).
+
+**Measured results (real scans, local dashboard):**
+- axe-core BEFORE fixes: 1 serious violation (color-contrast, 4 nodes: active toggle button, stat labels), 29 passes; Tab probe showed graph nodes unreachable by keyboard.
+- axe-core AFTER fixes: **0 violations**, 29 passes.
+- Lighthouse: accessibility 95 → **100**; best-practices 96 (unchanged); performance 30 → 39 — measured on the Vite DEV server (unminified, no bundling), so the performance number is not representative of a production build; recorded as-is, flagged accordingly.
+- Keyboard test: focused node announces `delegation node "LangGraph", status active. Press Enter to inspect.`; Enter opens the InspectPanel (verified programmatically).
+
+**Why:**
+- Fulfills Build Plan §4 Track C Week 9 (accessibility/performance pass) with concrete, specific findings rather than a "polish complete" claim.
+
+**Assumptions made (if any):**
+- Status glyphs + dashed border are considered sufficient non-hue differentiation for the four node states; hue cues are retained for users with normal color vision.
+
+**Open questions / follow-ups (if any):**
+- InspectPanel closes only via its Close button; adding Escape-to-close is a small Week 10 candidate.
+- The Lighthouse performance score should be re-measured against a production build (`npm run build && vite preview`) during Week 12 hardening.
+
+**Tests added/run:**
+- `dashboard/scripts/a11y-scan.mjs` and `keyboard-nav-test.mjs` added as repeatable checks; `npm run build` clean; scans re-run post-fix (0 violations).
+
+---
+
 ## [2026-08-21 23:00] — M2 Verification Run + Historical Replay UI Fix — Shared (pre-Weeks 9-12)
 
 **What changed:**

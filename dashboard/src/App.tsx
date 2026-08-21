@@ -143,6 +143,8 @@ export default function App() {
           tokenUsage: latestEvent.token_usage,
           duration: computeDuration(latestEvent.start_time, latestEvent.end_time),
           anomaly: anomalyData,
+          // Keyboard path into the InspectPanel (Week 9 a11y pass)
+          onSelect: (spanId: string) => setSelectedSpanId(spanId),
         };
 
         if (existingNode) {
@@ -255,7 +257,7 @@ export default function App() {
             {isConnected ? 'Live' : mode === 'historical' ? 'Historical' : 'Disconnected'}
           </span>
           {isRedacted && (
-            <span className="app__badge app__badge--redacted" style={{ background: '#ef4444', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, marginLeft: '8px' }}>
+            <span className="app__badge app__badge--redacted" style={{ background: '#b91c1c', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, marginLeft: '8px' }}>
               🔒 Redacted Data
             </span>
           )}
@@ -264,14 +266,14 @@ export default function App() {
             <button 
               className={`app__toggle-btn ${mode === 'live' ? 'app__toggle-btn--active' : ''}`}
               onClick={() => setMode('live')}
-              style={{ background: mode === 'live' ? '#3b82f6' : '#1e293b', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}
+              style={{ background: mode === 'live' ? '#1d4ed8' : '#1e293b', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}
             >
               Live
             </button>
             <button 
               className={`app__toggle-btn ${mode === 'historical' ? 'app__toggle-btn--active' : ''}`}
               onClick={() => setMode('historical')}
-              style={{ background: mode === 'historical' ? '#3b82f6' : '#1e293b', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}
+              style={{ background: mode === 'historical' ? '#1d4ed8' : '#1e293b', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}
             >
               Historical Replay
             </button>
