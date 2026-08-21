@@ -70,3 +70,23 @@ def test_history_endpoint():
 def test_history_not_found():
     response = client.get("/history/unknown-trace")
     assert response.status_code == 404
+
+def test_traces_lists_distinct_trace_ids_most_recent_first():
+    headers = {"Authorization": "Bearer test-secret-key"}
+
+    for trace_id, span_id in [("tr-a", "a1"), ("tr-b", "b1"), ("tr-a", "a2")]:
+        payload = get_valid_span_payload(span_id)
+        payload["trace_id"] = trace_id
+        client.post("/ingest", json=payload, headers=headers)
+
+    response = client.get("/traces")
+    assert response.status_code == 200
+    trace_ids = response.json()["trace_ids"]
+    assert set(trace_ids) == {"tr-a", "tr-b"}
+    # tr-a has the most recent event, so it must be listed first
+    assert trace_ids[0] == "tr-a"
+
+def test_traces_empty_stream():
+    response = client.get("/traces")
+    assert response.status_code == 200
+    assert response.json()["trace_ids"] == []

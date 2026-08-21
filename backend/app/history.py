@@ -6,6 +6,28 @@ from app.redis_client import redis_client
 
 router = APIRouter()
 
+@router.get("/traces")
+async def list_traces():
+    """List distinct trace IDs present in the event stream, most recently active first."""
+    events = await redis_client.xrange("agentscope:events", min="-", max="+")
+
+    last_seen: dict[str, str] = {}
+    for message_id, message in events:
+        payload = message.get(b"payload") or message.get("payload")
+        if not payload:
+            continue
+        try:
+            span_data = json.loads(payload)
+            trace_id = span_data.get("trace_id")
+            if trace_id:
+                last_seen[trace_id] = message_id
+        except Exception:
+            pass
+
+    trace_ids = sorted(last_seen.keys(), key=lambda t: last_seen[t], reverse=True)
+    return {"trace_ids": trace_ids}
+
+
 @router.get("/history/{trace_id}", response_model=Trace)
 async def get_trace_history(
     trace_id: str,

@@ -59,11 +59,44 @@ function computeDuration(start: string, end: string | null): number | null {
 
 export default function App() {
   const [mode, setMode] = useState<'live' | 'historical'>('live');
-  const [historicalTraceId, setHistoricalTraceId] = useState<string | null>('t-history-001');
+  const [historicalTraceId, setHistoricalTraceId] = useState<string | null>(null);
+  const [traceIds, setTraceIds] = useState<string[]>([]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const { events, anomalies, isConnected } = useEventSource('ws://localhost:8000/ws', mode, historicalTraceId);
+  const { events, anomalies, isConnected, error } = useEventSource('ws://localhost:5173/ws', mode, historicalTraceId);
+
+  // ── Reset the graph when switching modes or selecting another trace ─
+  useEffect(() => {
+    setNodes([]);
+    setEdges([]);
+    setSpanMap(new Map());
+    setSelectedSpanId(null);
+  }, [mode, mode === 'historical' ? historicalTraceId : null, setNodes, setEdges]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Load available trace IDs when entering historical mode ────────
+  useEffect(() => {
+    if (mode !== 'historical') return;
+
+    const controller = new AbortController();
+    fetch('/traces', { signal: controller.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error(`Trace list request failed (HTTP ${res.status}).`);
+        return res.json();
+      })
+      .then((data) => {
+        const ids: string[] = data.trace_ids || [];
+        setTraceIds(ids);
+        setHistoricalTraceId((current) =>
+          current && ids.includes(current) ? current : ids[0] ?? null
+        );
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') console.error('Error fetching trace list:', err);
+      });
+
+    return () => controller.abort();
+  }, [mode]);
 
   // Track the raw span data keyed by span_id for InspectPanel lookups
   const [spanMap, setSpanMap] = useState<Map<string, SpanEvent>>(new Map());
@@ -243,14 +276,15 @@ export default function App() {
               Historical Replay
             </button>
             {mode === 'historical' && (
-              <select 
-                value={historicalTraceId || ''} 
+              <select
+                value={historicalTraceId || ''}
                 onChange={(e) => setHistoricalTraceId(e.target.value)}
                 style={{ background: '#0f172a', color: '#cbd5e1', border: '1px solid #334155', padding: '4px 8px', borderRadius: '4px', fontSize: '0.875rem', marginLeft: '0.5rem', cursor: 'pointer' }}
               >
-                <option value="trace-branching-001">Trace: trace-branching-001</option>
-                <option value="t-history-001">Trace: t-history-001</option>
-                <option value="t-history-002">Trace: t-history-002</option>
+                {traceIds.length === 0 && <option value="">No traces recorded</option>}
+                {traceIds.map((id) => (
+                  <option key={id} value={id}>Trace: {id}</option>
+                ))}
               </select>
             )}
           </div>
@@ -282,6 +316,13 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {/* ── Historical-load error banner ─────────────────────────── */}
+      {mode === 'historical' && error && (
+        <div role="alert" style={{ background: '#7f1d1d', color: '#fecaca', padding: '8px 16px', fontSize: '0.875rem' }}>
+          Historical replay unavailable: {error}
+        </div>
+      )}
 
       {/* ── Graph canvas ───────────────────────────────────────── */}
       <div className="app__canvas" id="graph-canvas">
