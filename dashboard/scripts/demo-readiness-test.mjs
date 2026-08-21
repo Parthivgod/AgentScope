@@ -33,7 +33,7 @@ const inj = await page.evaluate(async () => {
   }
   return 'ok';
 });
-await page.waitForTimeout(3500);
+await page.waitForTimeout(6000); // allow for cold worker detection delay
 const liveNodes = await page.locator('.react-flow__node').count();
 const anomalous = await page.locator('.agent-node--anomalous').count();
 const alertBadge = await page.locator('.alert-badge, [class*="alert"]').count();
