@@ -1,5 +1,24 @@
 # AgentScope Changelog
 
+## [2026-08-22 03:00] — Week 12 Track A: Packaging Polish — Track A — Nilay
+
+**What changed:**
+- `Track A / Packaging`: Polished `sdk/pyproject.toml` — added readme/license metadata, an `include` package allowlist, package data, and optional-dependency extras: `[langgraph]` (adapter path deps: langchain-core, typing_extensions) and `[dev]` (pytest). Created `sdk/README.md` (install variants, both integration paths, env vars, pointer to the quickstart). Publishing/release-tagging intentionally deferred to the final merge per the Weeks 9-12 plan.
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 12 (packaging only).
+
+**Assumptions made (if any):**
+- Base install intentionally excludes langchain-core; the adapter path is opt-in via the extra.
+
+**Open questions / follow-ups (if any):**
+- Note for the team: pip-installing `arize-phoenix` on Python 3.11 breaks pytest collection globally (its auto-loaded plugin hits a dataclass incompatibility); the Docker Phoenix image avoids this. The pip package was uninstalled locally after the Week 10 baseline.
+
+**Tests added/run:**
+- `pip install -e .` and `pip install -e .[langgraph]` verified importable; SDK suite 25/25 pass.
+
+---
+
 ## [2026-08-22 02:20] — Week 11 Track A: SDK Quickstart Finalized + Instrumentation Methodology Manuscript Section — Track A — Nilay
 
 **What changed:**
