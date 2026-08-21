@@ -1,5 +1,25 @@
 # AgentScope Changelog
 
+## [2026-08-22 02:40] — Week 11 Track C: Dashboard Docs + Usability Test #9 Preparation (prep only, no session) — Track C — Eshan
+
+**What changed:**
+- `Track C / Docs`: Created `docs/dashboard.md` — running instructions, live/replay usage, accessibility design rules to preserve, and the repeatable a11y check scripts.
+- `Track C / Usability prep`: Created `docs/usability-test-prep.md` — the Test #9 scenario pack: which failure to inject (repeated tool failures; verified live against the local stack — the `crashes` rule fires within seconds, failure-loops engages at 4+/60s), the verbatim observer question, secondary prompts, a results-recording table, and the Flow 3 success criterion. **The actual session with a real observer has NOT happened and must be scheduled by the team; no usability findings exist, and the manuscript section stays unwritten until real observations are recorded.**
+
+**Why:**
+- Fulfills Build Plan §4 Track C Week 11. A coding agent cannot conduct Test #9; per the Weeks 9-12 prompt this is preparation only — no plausible-sounding observer reaction was fabricated.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- Team to schedule the observer session; findings drafted only afterwards from the recorded answers.
+
+**Tests added/run:**
+- Injection validated live: 8 error spans over ~12s produced crashes-rule anomalies on the local stack (verified in the anomalies stream and worker logs).
+
+---
+
 ## [2026-08-22 01:40] — Week 10 Track C: Closing Week 9 Accessibility Findings — Track C — Eshan
 
 **What changed:**
