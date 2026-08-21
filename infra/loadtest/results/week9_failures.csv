@@ -1,0 +1,3 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+POST,POST /ingest (no key),HTTPError('401 Client Error: Unauthorized for url: POST /ingest (no key)'),151,2026-08-21T17:23:20Z,2026-08-21T17:24:15Z
+POST,POST /ingest (auth),HTTPError('502 Server Error: Bad Gateway for url: POST /ingest (auth)'),2,2026-08-21T17:23:43Z,2026-08-21T17:23:50Z

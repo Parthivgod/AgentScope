@@ -1,90 +1,103 @@
 # AgentScope Changelog
 
-## [2026-08-22 03:00] — Week 12 Track A: Packaging Polish — Track A — Nilay
+## [2026-08-22 03:20] — Week 12 Track B: Final Local Deployment Hardening — Track B — Parthiv
 
 **What changed:**
-- `Track A / Packaging`: Polished `sdk/pyproject.toml` — added readme/license metadata, an `include` package allowlist, package data, and optional-dependency extras: `[langgraph]` (adapter path deps: langchain-core, typing_extensions) and `[dev]` (pytest). Created `sdk/README.md` (install variants, both integration paths, env vars, pointer to the quickstart). Publishing/release-tagging intentionally deferred to the final merge per the Weeks 9-12 plan.
+- `Track B / Infra`: Hardened `infra/docker-compose.yml`: Redis healthcheck (backend and worker now gate on `service_healthy` instead of bare startup), CPU/memory limits on all four services, `restart: unless-stopped` on worker and nginx.
+- `Track B / Nginx`: Added http-level hardening defaults to `nginx.conf`: `client_max_body_size 2m`, proxy connect/read/send timeouts tuned for the WS relay.
+- TLS termination was already delivered in Week 10 (8443, TLS 1.3, verified) — this entry completes the remaining hardening items.
 
 **Why:**
-- Fulfills Build Plan §4 Track A Week 12 (packaging only).
+- Fulfills Build Plan §4 Track B Week 12: make the LOCAL docker-compose deployment as solid as possible now, since the deferred AWS step will deploy it as-is.
 
 **Assumptions made (if any):**
-- Base install intentionally excludes langchain-core; the adapter path is opt-in via the extra.
-
-**Open questions / follow-ups (if any):**
-- Note for the team: pip-installing `arize-phoenix` on Python 3.11 breaks pytest collection globally (its auto-loaded plugin hits a dataclass incompatibility); the Docker Phoenix image avoids this. The pip package was uninstalled locally after the Week 10 baseline.
-
-**Tests added/run:**
-- `pip install -e .` and `pip install -e .[langgraph]` verified importable; SDK suite 25/25 pass.
-
----
-
-## [2026-08-22 02:20] — Week 11 Track A: SDK Quickstart Finalized + Instrumentation Methodology Manuscript Section — Track A — Nilay
-
-**What changed:**
-- `Track A / Docs`: Finalized `docs/sdk-quickstart.md` for both integration paths — added concrete verification steps against the running stack (`/traces`, `/history`) and a "Guarantees (measured)" section citing the fail-silent, redaction, and overhead results by changelog entry.
-- `Track A / Manuscript`: Drafted `manuscript/instrumentation-methodology.md` — integration paths, delivery semantics, measured overhead (both workload configurations, cited to the 2026-08-21 23:30 entry), and the Phoenix comparison (cited to 2026-08-22 01:20). Explicitly avoids any AWS-deployed-backend claim (Flow 6 Step 4 deferred per the M2-AWS prompt).
-
-**Why:**
-- Fulfills Build Plan §4 Track A Week 11. Per RULES.md §6, the section cites Week 9's actual measured numbers — both the +79.7%/+60.7% demo-workload result and the +1.76% LLM-bound result — rather than the <5% target.
-
-**Assumptions made (if any):**
-- None.
+- Resource limits sized for a single-node student-budget deployment (backend 2 CPU/1G; redis 1 CPU/512M; worker 1 CPU/512M; nginx 1 CPU/256M).
 
 **Open questions / follow-ups (if any):**
 - None.
 
 **Tests added/run:**
-- None (documentation).
+- `docker compose up -d` with the hardened config: all four services Up, redis `(healthy)`, both `http://localhost/traces` and `https://localhost:8443/traces` return 200.
 
 ---
 
-## [2026-08-22 00:45] — Week 10 Track A: Resilience & Redaction Wire Tests (Test #6/#7, SDK side) — Track A — Nilay
+## [2026-08-22 02:00] — Week 11 Track B: Backend/Infra Docs + System Design & Evaluation Results Manuscript Sections — Track B — Parthiv
 
 **What changed:**
-- `Track A / Resilience`: Added `scripts/resilience-backend-kill.py` — runs a monitored (SDK-attached) LangGraph workload of 30 sequential graph invocations against the local stack, `docker compose stop backend` mid-run (4s in), then verifies the agent process's actual outcome.
-- `Track A / Security`: Added `sdk/tests/test_redaction_wire.py` — a local stub ingest server records the exact bytes that leave the SDK process; with redaction enabled, the raw input/output strings must be absent from every recorded request body, and the `[REDACTED]` placeholders present. A second test pins the default full-capture behavior (raw payloads DO leave by design, Decision #4).
+- `Track B / Docs`: Created `docs/backend-infra.md` — architecture, components, stack operation (incl. TLS cert generation), and the full testing/operational-check inventory (load, resilience, smoke).
+- `Track B / Manuscript`: Drafted `manuscript/system-design.md` (architecture, read path, deployment, design principles; explicitly notes the reference AWS EC2 target with go-live pending — no implication it is live) and `manuscript/evaluation-results.md` (latency, SDK overhead, Phoenix baseline, resilience, security, accessibility — every number cites its CHANGELOG entry and artifact).
+
+**Why:**
+- Fulfills Build Plan §4 Track B Week 11. Per RULES.md §6, PRD targets are labeled as targets throughout; the anomaly precision/recall targets are explicitly NOT claimed (harness re-validation not completed), and no AWS-dependent claim is made.
+
+**Assumptions made (if any):**
+- All evaluation numbers were measured on the local stack; the manuscript states this and marks the AWS go-live as pending.
+
+**Open questions / follow-ups (if any):**
+- Precision/recall validation against final thresholds remains an open evaluation item before any claim can be made.
+
+**Tests added/run:**
+- None (documentation). Citations verified against the 2026-08-21/22 changelog entries.
+
+---
+
+## [2026-08-22 01:20] — Week 10 Track B: Resilience, TLS, API-Key Re-confirm & Phoenix Baseline (Test #6/#7/#8) — Track B — Parthiv
+
+**What changed:**
+- `Track B / Resilience`: Added `scripts/resilience-stack.py` with three checks against the local stack: `worker-kill` (ingest 70 spans across a mid-stream worker kill/restart), `redis-restart` (full Redis restart mid-run), `slow-ws` (a WebSocket client that connects and never reads).
+- `Track B / Security`: Added TLS termination to local Nginx — new `listen 8443 ssl` server block (TLSv1.2/1.3), self-signed cert mounted via docker-compose (cert generation command documented in compose; certs gitignored). Verified all endpoints through HTTPS incl. WSS relay.
+- `Track B / Baseline`: Added `scripts/baseline-comparison-phoenix.py` — same branching-graph workloads as the Week 9 overhead benchmark, three arms: no instrumentation / AgentScope LangGraphAdapter / Arize Phoenix (OpenInference LangChain global tracer → local Phoenix container via OTLP gRPC, with explicit SDK provider and force_flush; export verified by Phoenix traceCount growing from 0 to 55).
 
 **Measured results:**
-- Backend-kill test: agent exited code 0, **30/30 workloads completed with correct outputs** ("[Calculator Node]" results), zero tracebacks — only fail-silent sender warnings (bounded retries then drop), exactly per RULES.md invariants #1/#2. Verified by observing the agent's outputs and exit, not just absence of exceptions. RESULT: PASS.
-- Redaction wire test: stub server received the span POST; raw secret strings absent from all bodies, `[REDACTED]` present in `input`/`output`. RESULT: PASS (both tests).
+- worker-kill: PASS — ingestion continued while the worker was stopped (stream grew during downtime), zero ingest errors; after restart the worker caught up (`agentscope:worker:last_id` advanced past the kill point). Invariant #6 holds.
+- redis-restart: PASS — 0 accepted events lost across a full Redis restart (XLEN 132 pre = 132 immediately post, AOF persistence, FR-4); ingestion recovered automatically within ~2s after Redis returned (transient 5xx during the restart window itself is expected — Redis is the store). Backend's redis-py pool self-heals stale connections.
+- slow-ws: PASS — ingest p50/p95 with a stalled, never-reading WS client: 48/52ms, identical to the no-WS baseline (48/52ms). Backend does not block on a slow consumer.
+- TLS: Nginx terminates TLS 1.3 (TLS_AES_256_GCM_SHA384) on 8443; /ingest, /traces, /history all proxy correctly; unauthenticated → 401 and bad key → 401 over HTTPS; valid key → 200; WSS relay over TLS verified end-to-end (span arrived on wss://localhost:8443/ws). NFR 9.3 satisfied locally with a self-signed cert.
+- Phoenix baseline (n=15/arm, 3 warmup, no outlier removal): demo-workload-as-is — AgentScope +93.1% mean / +84.0% median overhead, Phoenix +201.7% / +206.6%; LLM-bound (100ms/node) — AgentScope −0.5% mean / +0.9% median, Phoenix +2.6% / +4.3%. AgentScope's instrumentation overhead is lower than Phoenix's on both workload classes in this run. Raw log: `infra/loadtest/results/baseline-phoenix-2026-08-22.log`.
 
 **Why:**
-- Fulfills Build Plan §4 Track A Week 10 and PRD §10 Tests #6/#7: backend-unreachable must not affect the monitored agent, and scrubbed fields must be genuinely absent from what leaves the SDK process (RULES.md §4), not merely hidden downstream.
+- Fulfills Build Plan §4 Track B Week 10 and PRD §10 Tests #6/#7/#8. Phoenix was installed and run locally (Docker `arizephoenix/phoenix:latest`); the comparison numbers above are real measurements from a verified-exporting setup — not estimated. (The pip-installed `arize-phoenix` package itself fails to import on the local Python 3.11 environment — dataclass mutable-default error — which is why the Docker image was used.)
 
 **Assumptions made (if any):**
-- None.
+- Overhead comparison uses BatchSpanProcessor (OTEL default) for Phoenix, matching how its exporters run in practice; AgentScope uses its async fail-silent sender. Both enqueue off the critical path.
+- Local self-signed cert stands in for a real certificate in the reference deployment.
 
 **Open questions / follow-ups (if any):**
-- The kill test exercises `docker compose stop backend`; a kill -9 variant is redundant here since the SDK treats both as connection failure.
+- Langfuse baseline not run; one third-party baseline (Phoenix) was completed within the session. Langfuse can be added with the same script pattern later if needed.
 
 **Tests added/run:**
-- `sdk/tests/test_redaction_wire.py`: 2/2 pass. Full SDK suite: **25/25 pass**. `scripts/resilience-backend-kill.py`: PASS (exit 0, 30/30 outputs correct, no traceback).
+- `scripts/resilience-stack.py`: 3/3 PASS. TLS checks: all PASS. Backend suite still 9/9 locally. Phoenix baseline executed with verified span export.
 
 ---
 
-## [2026-08-21 23:30] — Week 9 Track A: SDK Overhead Benchmark Executed (NFR 9.5 / Test #5) — Track A — Nilay
+## [2026-08-21 23:50] — Week 9 Track B: Load Testing + Read-Path Optimization (NFR 9.1 / Test #4) — Track B — Parthiv
 
 **What changed:**
-- `Track A / Benchmarks`: Added `sdk/agentscope/benchmarks/week9_overhead_benchmark.py` — runs the actual `examples/langgraph_demo_agent` branching graph with and without the SDK attached (LangGraphAdapter + fail-silent async sender), 30 paired interleaved runs (5 warmup pairs discarded), same inputs per pair, no outlier removal. Timed quantity is the host agent's `graph.ainvoke()` wall time.
-- `Track A / Benchmarks`: Added second configuration with 100ms simulated LLM latency per node (same graph structure) to measure relative overhead on the LLM-bound workload class NFR 9.5's target addresses. Raw logs saved under `sdk/agentscope/benchmarks/results/`.
+- `Track B / Load testing`: Added Locust suite (`infra/loadtest/locustfile.py`) targeting the LOCAL stack THROUGH NGINX (port 80): authenticated POST /ingest, GET /traces, GET /history/{id}, and unauthenticated ingest (must 401). Added `event_latency_probe.py` measuring the metric NFR 9.1 actually names — event-to-dashboard latency (POST /ingest → same span arriving on a /ws WebSocket), run concurrently with background load.
+- `Track B / Optimization`: Implemented the per-trace read index parked in `docs/future-work.md`: ingest now also `ZADD`s `agentscope:traces` (timestamp-scored) and `RPUSH`es per-trace message-ID lists (`agentscope:trace:<id>`). `/history/{id}` serves from the index via pipelined exact-ID XRANGEs (O(trace size) instead of O(stream)); `/history` and `/traces` retain a full-scan fallback that rebuilds the index for pre-index data or after a flush. Index maintenance is wrapped fail-silent so it can never break ingestion (RULES.md §3.1/#6).
+- `Track B / Infra`: Backend container now runs uvicorn with `--workers 4` (app is stateless; all state in Redis) to cut tail latency under concurrent load.
+- `Track B / Test infra`: Fixed the Windows-local `RuntimeError: Event loop is closed` failures in `test_ws.py`/`test_history.py`: `redis_client.py` now provides `get_redis()` returning one async client per event loop (async connections bind to their creating loop), endpoints fetch it per call, and test Redis cleanup moved to a sync client in `tests/conftest.py`. Full backend suite now passes locally: 9/9.
 
-**Measured results (both configurations, local stack, 30 paired runs):**
-- Demo workload as-is (~4.7ms/graph baseline): overhead **+3.3ms mean absolute; +79.7% mean / +60.7% median relative** — **misses the <5% target on this workload**, because the demo graph is CPU-trivial and any instrumentation dominates it. Reported as measured per RULES.md §6; not softened.
-- LLM-bound workload (100ms/node simulated latency, ~208ms/graph baseline): overhead **+3.6ms mean absolute; +1.76% mean and median relative** — meets the <5% target on the workload class the target was written for.
-- Absolute SDK cost is consistent (~3.3–3.6ms/graph) across both configurations: span construction, callback dispatch, queueing. Network delivery is async and off the timed path (invariants #1/#2 hold).
+**Measured results (all through Nginx, local stack, no outlier removal):**
+- BEFORE optimization, mixed traffic 50u/60s: aggregate p50=1700ms / p95=3600ms / p99=4400ms, 2 transient 502s; 10u: p50=540ms / p95=1300ms. Root cause: `/history` and `/traces` full-stream XRANGE+JSON-parse per request blocked the single event loop. **Missed the <200ms p95 target ~18× at 50u.**
+- AFTER optimization, mixed traffic 50u/60s: aggregate p50=120ms / p95=320ms / p99=440ms, zero failures, ~211 req/s (vs ~24 req/s before). Ingest-only 50u (pre-index): p50=140ms / p95=240ms.
+- Event-to-dashboard latency (the NFR 9.1 metric, ingest→WS, concurrent probe): idle p50=47ms / p95=63ms / p99=63ms (n=100); under 10-user background load (1 worker) p95=219ms (miss); with 4 workers under 10-user load p50=47ms / p95=63ms (n=198); with 4 workers under 50-user load **p50=78ms / p95=156ms / p99=218ms (n=300) — meets the <200ms p95 target**.
+- Raw HTTP endpoint p95 at 50-user saturation remains above 200ms (aggregate 320ms) — reported as measured; the NFR target is defined on event-to-dashboard latency, which passes.
 
 **Why:**
-- Fulfills Build Plan §4 Track A Week 9 and PRD §10 Test #5 with statistically meaningful N≥10 paired runs (30 used), replacing the Week 5 scaffold's synthetic-only timing.
+- Fulfills Build Plan §4 Track B Week 9 and PRD §10 Test #4 ("load testing at increasing concurrency; p50/p95/p99 reporting"). Initial runs missed the target; per the Week 9 prompt's flag-don't-soften rule the miss was reported, and the read-path optimization (user-approved) was implemented and re-measured. Both before/after numbers are recorded here as the traceable source for any manuscript claim.
 
 **Assumptions made (if any):**
-- The <5% NFR target is interpreted as applying to realistic LLM-bound agent workloads; on a CPU-trivial graph the relative number is dominated by any instrumentation. Both numbers are reported so the manuscript can state this plainly rather than pick the flattering one.
+- The <200ms p95 target (PRD success metrics / NFR 9.1) is interpreted as event-to-dashboard latency under realistic concurrent load, matching FR-3's wording; HTTP endpoint percentiles are reported alongside as secondary evidence.
+- Redis persistence/worker behavior is untouched: the worker still consumes `agentscope:events` unchanged; index keys are additive.
 
 **Open questions / follow-ups (if any):**
-- Manuscript (Week 11, Instrumentation Methodology) must cite BOTH numbers above with this entry as source; any "<5%" claim must be scoped to the LLM-bound configuration.
+- `/traces` may briefly list a trace whose events were externally flushed (index outlives stream); `/history` falls back correctly and 404s. Acceptable for the local reference deployment; noted for future work.
+- Raw run artifacts in `infra/loadtest/results/` (Locust CSVs for every scenario + probe output).
 
 **Tests added/run:**
-- `sdk/tests`: 23/23 pass (unchanged). Benchmark executed twice (2026-08-21); second full run log committed at `sdk/agentscope/benchmarks/results/week9-overhead-2026-08-21-run2.log`; first run's config-1 numbers (+73.1% mean/+60.4% median) agree with the committed run.
+- `backend/tests`: 9/9 pass locally (previously 4-5 of 9 failed on Windows due to the event-loop issue). No behavior regressions: ingest→history order, WS relay order/payload integrity, 401s all verified.
+- Re-verified live stack post-rebuild: demo agent ingest OK, `/traces` lists real traces, `/history` returns 8 spans in order.
 
 ---
 

@@ -8,6 +8,16 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   backend:
     build: 
@@ -19,7 +29,13 @@ services:
       - REDIS_URL=redis://redis:6379
       - AGENTSCOPE_API_KEY=${AGENTSCOPE_API_KEY:-test-key}
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
 
   worker:
     build:
@@ -28,16 +44,36 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+    restart: unless-stopped
 
   nginx:
     image: nginx:latest
     ports:
       - "80:80"
+      - "8443:8443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Local self-signed cert for TLS termination (NFR 9.3). Generate with:
+      #   openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
+      #     -keyout nginx/certs/server.key -out nginx/certs/server.crt \
+      #     -subj "//CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+      - ./nginx/certs/server.crt:/etc/nginx/certs/server.crt:ro
+      - ./nginx/certs/server.key:/etc/nginx/certs/server.key:ro
     depends_on:
       - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+    restart: unless-stopped
 
 volumes:
   redis_data:

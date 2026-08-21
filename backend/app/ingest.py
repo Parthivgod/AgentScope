@@ -2,7 +2,7 @@ import os
 import json
 from fastapi import FastAPI, HTTPException, Request, Depends
 from agentscope.schema import Span
-from app.redis_client import redis_client
+from app.redis_client import get_redis
 from app.ws import router as ws_router
 from app.history import router as history_router
 
@@ -29,5 +29,15 @@ async def ingest_span(span: Span):
     # Validates incoming payloads against the Span schema from sdk/agentscope/schema.py
     # Write to Redis Streams (durable, ordered)
     payload = span.model_dump_json()
-    await redis_client.xadd("agentscope:events", {"payload": payload})
+    message_id = await get_redis().xadd("agentscope:events", {"payload": payload})
+    # Per-trace read index: lets /history and /traces serve in O(trace size)
+    # instead of scanning the whole event stream (Week 9 load-test finding).
+    # Additive keys only — the worker still reads agentscope:events unchanged.
+    try:
+        ts_ms = int(str(message_id).split("-")[0])
+        await get_redis().zadd("agentscope:traces", {span.trace_id: ts_ms})
+        await get_redis().rpush(f"agentscope:trace:{span.trace_id}", str(message_id))
+    except Exception:
+        # Index maintenance must never break ingestion (RULES.md §3.1/#6)
+        pass
     return {"status": "accepted", "span_id": span.span_id}
