@@ -89,7 +89,7 @@
 }
 
 .agent-node__tokens {
-  color: #64748b;
+  color: #94a3b8;
 }
 
 /* ── Handles ─────────────────────────────────────────────────────── */
@@ -164,9 +164,34 @@
 }
 
 /* ── Anomalous — amber glow (Overrides normal states) ──────────────── */
+/* Dashed border = non-hue cue so anomalous stays distinguishable under
+   color-vision deficiency (Week 9 a11y pass, FR-6). */
 .agent-node--anomalous {
   border-color: rgba(251, 191, 36, 0.6) !important;
+  border-style: dashed !important;
   animation: anomalousGlow 2s ease-in-out infinite !important;
+}
+
+/* ── Status glyphs (non-hue state cue for colorblind users) ────────── */
+.agent-node__status-glyph {
+  font-size: 12px;
+  line-height: 1;
+  margin-left: auto;
+}
+
+.agent-node__status-glyph + .agent-node__live-dot {
+  margin-left: 4px;
+}
+
+.agent-node__status-glyph--complete { color: #bbf7d0; }
+.agent-node__status-glyph--error { color: #fca5a5; }
+.agent-node__status-glyph--active { color: #a5f3fc; }
+.agent-node__status-glyph--anomalous { color: #fde68a; }
+
+/* ── Keyboard focus (Week 9 a11y pass) ─────────────────────────────── */
+.agent-node:focus-visible {
+  outline: 2px solid #e2e8f0;
+  outline-offset: 2px;
 }
 
 @keyframes anomalousGlow {

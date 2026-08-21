@@ -90,6 +90,102 @@
 
 ---
 
+## [2026-08-22 03:45] — Week 12 Track C: Demo-Ready State + Demo Script — Track C — Eshan
+
+**What changed:**
+- `Track C / Reliability`: Live WebSocket now auto-reconnects with exponential backoff in `useEventSource.ts` — a dropped connection previously froze the dashboard silently (found by the demo-readiness check when a mid-test stack restart killed the WS; anomaly flags never rendered).
+- `Track C / Cleanup`: Deleted the dead `dashboard/src/hooks/mockHistory.ts` (unreferenced since the 2026-08-19 mock removal; pre-merge mock-grep hygiene).
+- `Track C / Demo`: Added `scripts/demo-readiness-test.mjs` (headless check: zero console errors, replay renders a linked trace, live failure injection renders anomalous nodes + alert badges) and `docs/demo-script.md` (talking points against the LOCAL stack: zero-rewrite moment, live anomaly alert, replay parity, 401/TLS close). The video recording itself is a team task; nothing in the script assumes AWS.
+
+**Measured results:**
+- Demo-readiness check: replay `trace-linear-demo-1` renders 4 nodes / 3 edges; live injection of 3 failing spans renders 3 anomalous nodes with alert badges; console errors: 0. DEMO-READY: PASS.
+
+**Why:**
+- Fulfills Build Plan §4 Track C Week 12 (demo-ready local system + script; no autonomous video recording).
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- None.
+
+**Tests added/run:**
+- `demo-readiness-test.mjs`: PASS. `npm run build` clean.
+
+---
+
+## [2026-08-22 02:40] — Week 11 Track C: Dashboard Docs + Usability Test #9 Preparation (prep only, no session) — Track C — Eshan
+
+**What changed:**
+- `Track C / Docs`: Created `docs/dashboard.md` — running instructions, live/replay usage, accessibility design rules to preserve, and the repeatable a11y check scripts.
+- `Track C / Usability prep`: Created `docs/usability-test-prep.md` — the Test #9 scenario pack: which failure to inject (repeated tool failures; verified live against the local stack — the `crashes` rule fires within seconds, failure-loops engages at 4+/60s), the verbatim observer question, secondary prompts, a results-recording table, and the Flow 3 success criterion. **The actual session with a real observer has NOT happened and must be scheduled by the team; no usability findings exist, and the manuscript section stays unwritten until real observations are recorded.**
+
+**Why:**
+- Fulfills Build Plan §4 Track C Week 11. A coding agent cannot conduct Test #9; per the Weeks 9-12 prompt this is preparation only — no plausible-sounding observer reaction was fabricated.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- Team to schedule the observer session; findings drafted only afterwards from the recorded answers.
+
+**Tests added/run:**
+- Injection validated live: 8 error spans over ~12s produced crashes-rule anomalies on the local stack (verified in the anomalies stream and worker logs).
+
+---
+
+## [2026-08-22 01:40] — Week 10 Track C: Closing Week 9 Accessibility Findings — Track C — Eshan
+
+**What changed:**
+- `Track C / A11y`: InspectPanel now closes on Escape (previously mouse-only via Close button/backdrop click), giving keyboard users full open→inspect→dismiss parity. Added `dashboard/scripts/escape-close-test.mjs` as a repeatable programmatic check.
+
+**Measured results:**
+- Escape test: panel opens on Enter (verified) and closes on Escape (verified) — PASS.
+- axe-core re-scan: still 0 violations (29 passes) after the change.
+
+**Why:**
+- Closes the follow-up logged in the Week 9 Track C entry.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- Production-build Lighthouse measurement remains scheduled for Week 12 hardening.
+
+**Tests added/run:**
+- `escape-close-test.mjs`: PASS. `npm run build` clean. axe re-scan: 0 violations.
+
+---
+
+## [2026-08-22 00:20] — Week 9 Track C: Accessibility & UX Pass (axe-core + Lighthouse, real scans) — Track C — Eshan
+
+**What changed:**
+- `Track C / Tooling`: Added real accessibility scanning: `dashboard/scripts/a11y-scan.mjs` (axe-core via playwright-core driving system Chrome, plus a Tab-order probe) and `dashboard/scripts/keyboard-nav-test.mjs` (focuses a graph node and verifies Enter opens the InspectPanel). No visual-eyeball substitutes.
+- `Track C / A11y fixes`: (1) Node states now carry non-hue cues — status glyphs (⟳ active / ✓ complete / ✖ error / ⚠ anomalous) rendered next to the span type, and anomalous nodes use a dashed border — because error-red vs complete-green was hue-only and indistinguishable under red-green color-vision deficiency (FR-6). (2) Graph nodes are now keyboard-accessible: `tabIndex=0`, `role="button"`, descriptive `aria-label` (name, type, status), Enter/Space opens the InspectPanel, `:focus-visible` outline added; previously nodes were unreachable by keyboard and the InspectPanel could only be opened with a mouse. (3) Color-contrast fixes: active mode-toggle background #3b82f6→#1d4ed8, redaction badge #ef4444→#b91c1c, stat labels and node meta text #64748b→#94a3b8 (all now ≥4.5:1).
+
+**Measured results (real scans, local dashboard):**
+- axe-core BEFORE fixes: 1 serious violation (color-contrast, 4 nodes: active toggle button, stat labels), 29 passes; Tab probe showed graph nodes unreachable by keyboard.
+- axe-core AFTER fixes: **0 violations**, 29 passes.
+- Lighthouse: accessibility 95 → **100**; best-practices 96 (unchanged); performance 30 → 39 — measured on the Vite DEV server (unminified, no bundling), so the performance number is not representative of a production build; recorded as-is, flagged accordingly.
+- Keyboard test: focused node announces `delegation node "LangGraph", status active. Press Enter to inspect.`; Enter opens the InspectPanel (verified programmatically).
+
+**Why:**
+- Fulfills Build Plan §4 Track C Week 9 (accessibility/performance pass) with concrete, specific findings rather than a "polish complete" claim.
+
+**Assumptions made (if any):**
+- Status glyphs + dashed border are considered sufficient non-hue differentiation for the four node states; hue cues are retained for users with normal color vision.
+
+**Open questions / follow-ups (if any):**
+- InspectPanel closes only via its Close button; adding Escape-to-close is a small Week 10 candidate.
+- The Lighthouse performance score should be re-measured against a production build (`npm run build && vite preview`) during Week 12 hardening.
+
+**Tests added/run:**
+- `dashboard/scripts/a11y-scan.mjs` and `keyboard-nav-test.mjs` added as repeatable checks; `npm run build` clean; scans re-run post-fix (0 violations).
+
+---
+
+---
+
 ## [2026-08-22 03:20] — Week 12 Track B: Final Local Deployment Hardening — Track B — Parthiv
 
 **What changed:**

@@ -12,7 +12,7 @@
  *   - FR-6: visually distinguishing active/idle/anomalous nodes
  */
 
-import { memo } from 'react';
+import { memo, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import AlertBadge from './AlertBadge';
 
@@ -45,6 +45,17 @@ const SPAN_TYPE_ICONS: Record<string, string> = {
   state_update: '📝',
 };
 
+/**
+ * Status glyphs: non-color cue so node states stay distinguishable for
+ * colorblind users (error-red vs complete-green is indistinguishable under
+ * red-green CVD when hue is the only signal). FR-6 / Week 9 a11y pass.
+ */
+const STATUS_GLYPH: Record<string, string> = {
+  active: '⟳',
+  complete: '✓',
+  error: '✖',
+};
+
 /** CSS class suffix per node status */
 const STATUS_CLASS: Record<string, string> = {
   active: 'agent-node--active',
@@ -52,24 +63,50 @@ const STATUS_CLASS: Record<string, string> = {
   error: 'agent-node--error',
 };
 
-function AgentNode({ data }: NodeProps) {
+function AgentNode({ data, id }: NodeProps) {
   const nodeData = data as unknown as AgentNodeData;
   const icon = SPAN_TYPE_ICONS[nodeData.spanType] ?? '⚙️';
   let statusClass = STATUS_CLASS[nodeData.status] ?? '';
-  
+
   if (nodeData.anomaly) {
     statusClass += ' agent-node--anomalous';
   }
 
+  const statusText = nodeData.anomaly
+    ? `anomalous (${nodeData.anomaly.rule})`
+    : nodeData.status;
+
+  const onKeyDown = (e: ReactKeyboardEvent) => {
+    // Keyboard access to the InspectPanel (Week 9 a11y pass, Flow 3 Step 4)
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      const onSelect = nodeData.onSelect as ((spanId: string) => void) | undefined;
+      onSelect?.(id);
+    }
+  };
+
   return (
-    <div className={`agent-node ${statusClass}`} id={`node-${nodeData.label}`}>
+    <div
+      className={`agent-node ${statusClass}`}
+      id={`node-${nodeData.label}`}
+      role="button"
+      tabIndex={0}
+      aria-label={`${nodeData.spanType} node "${nodeData.label}", status ${statusText}. Press Enter to inspect.`}
+      onKeyDown={onKeyDown}
+    >
       {nodeData.anomaly && <AlertBadge rule={nodeData.anomaly.rule} />}
-      
+
       <Handle type="target" position={Position.Top} className="agent-node__handle" />
 
       <div className="agent-node__header">
-        <span className="agent-node__icon">{icon}</span>
+        <span className="agent-node__icon" aria-hidden="true">{icon}</span>
         <span className="agent-node__type">{nodeData.spanType.replace('_', ' ')}</span>
+        <span
+          className={`agent-node__status-glyph agent-node__status-glyph--${nodeData.anomaly ? 'anomalous' : nodeData.status}`}
+          aria-hidden="true"
+        >
+          {nodeData.anomaly ? '⚠' : STATUS_GLYPH[nodeData.status] ?? ''}
+        </span>
         {nodeData.status === 'active' && !nodeData.anomaly && (
           <span className="agent-node__live-dot" />
         )}

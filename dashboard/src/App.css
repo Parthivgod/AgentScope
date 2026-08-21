@@ -108,7 +108,7 @@
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: #64748b;
+  color: #94a3b8; /* >=4.5:1 on header bg (Week 9 a11y pass) */
 }
 
 /* ── Canvas ──────────────────────────────────────────────────────── */
