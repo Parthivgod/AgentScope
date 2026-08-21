@@ -17,7 +17,7 @@ import { Handle, Position, type NodeProps } from '@xyflow/react';
 import AlertBadge from './AlertBadge';
 
 /**
- * Anomaly definition (Mocked for Week 6, matching expected structure)
+ * Anomaly data shape, matching the worker's WS payload
  */
 export interface AnomalyData {
   rule: string;
