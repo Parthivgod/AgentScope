@@ -1,5 +1,28 @@
 # AgentScope Changelog
 
+## [2026-08-22 04:20] — Weeks 9-12 Integration Merge + m3-pending-aws — All Tracks
+
+**What changed:**
+- `Integration`: Pre-merge mock/stub/TODO grep across all three track branches (only benign `unittest.mock` usage in test files plus one stale doc comment, removed). Sequential merge A→B→C into main; CHANGELOG union-resolved, timestamp-sorted, deduplicated (34 unique entries). Dead `dashboard/src/hooks/mockHistory.ts` removed pre-merge (invariant #8 hygiene).
+- `Shared / Manuscript`: Assembled the manuscript working set (`manuscript/README.md`) with the RULES.md §6 number-tracing audit table — every quantitative claim mapped to its producing CHANGELOG entry; precision/recall and sustainability percentages explicitly carry no claim.
+- `Verification`: Rebuilt the full stack from merged main and re-ran end-to-end checks: zero-rewrite demo (20/20 spans accepted through Nginx), unauthenticated rejection 401 on both :80 and :8443 (TLS 1.3), replay parity (8 parent-linked spans via `/history`), demo-readiness test PASS (replay 4 nodes/3 edges, live anomaly injection renders anomalous nodes + alert badges, zero console errors), SDK 25/25, backend 9/9, dashboard build clean.
+- `Git`: Tagged `m3-pending-aws`. **This is NOT the final release tag** — Build Plan §5's M3 includes public release, which per Flow 6 assumes a live deployment. The AWS Go-Live prompt (to be run once cloud access is confirmed) handles the EC2 push, re-verification against the live instance, and only then the final release tag.
+
+**Why:**
+- Fulfills the Weeks 9-12 merge checkpoint (local-complete, pre-AWS).
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- Usability Test #9 observer session still to be scheduled by the team (prep pack ready at `docs/usability-test-prep.md`); manuscript Usability Findings section intentionally unwritten.
+- Demo video recording is a team task; demo script ready at `docs/demo-script.md`.
+
+**Tests added/run:**
+- See verification list above; all green on merged main.
+
+---
+
 ## [2026-08-22 03:45] — Week 12 Track C: Demo-Ready State + Demo Script — Track C — Eshan
 
 **What changed:**
