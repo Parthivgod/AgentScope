@@ -47,22 +47,25 @@ export function useEventSource(url: string, mode: 'live' | 'historical', traceId
   const [events, setEvents] = useState<SpanEvent[]>([]);
   const [anomalies, setAnomalies] = useState<Record<string, AnomalyEvent>>({});
   const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Clear state when mode or trace ID changes
     setEvents([]);
     setAnomalies({});
+    setError(null);
 
     if (mode === 'historical') {
       setIsConnected(false); // Not a live connection
-      
+
       if (traceId) {
         const controller = new AbortController();
-        fetch(`http://localhost:80/history/${traceId}`, {
+        fetch(`/history/${traceId}`, {
           signal: controller.signal
         })
           .then(res => {
-            if (!res.ok) throw new Error('Failed to fetch history');
+            if (res.status === 404) throw new Error(`Trace "${traceId}" not found — no spans recorded for it.`);
+            if (!res.ok) throw new Error(`History request failed (HTTP ${res.status}).`);
             return res.json();
           })
           .then(data => {
@@ -73,9 +76,10 @@ export function useEventSource(url: string, mode: 'live' | 'historical', traceId
           .catch(err => {
             if (err.name !== 'AbortError') {
               console.error('Error fetching historical trace:', err);
+              setError(err.message || 'Failed to load historical trace.');
             }
           });
-          
+
         return () => controller.abort();
       }
       return;
@@ -119,5 +123,5 @@ export function useEventSource(url: string, mode: 'live' | 'historical', traceId
     };
   }, [url, mode, traceId]);
 
-  return { events, anomalies, isConnected };
+  return { events, anomalies, isConnected, error };
 }

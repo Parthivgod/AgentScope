@@ -1,5 +1,29 @@
 # AgentScope Changelog
 
+## [2026-08-21 23:00] — M2 Verification Run + Historical Replay UI Fix — Shared (pre-Weeks 9-12)
+
+**What changed:**
+- `Shared / Verification`: Ran the six-check end-to-end verification against main `2bcb997` on a fresh local docker-compose stack: (a) fresh `up --build -d` with all four services healthy — PASS; (b) live nodes+edges from `examples/langgraph_demo_agent` (linear + branching) rendered in the dashboard (11 nodes / 7 edges observed) — PASS; (c) historical replay — **FAILED initially, fixed in this entry** (details below); (d) unauthenticated-request rejection through Nginx port 80 (no key → 401, bad key → 401, valid key → 200) — PASS; (e) redaction with `AGENTSCOPE_REDACT_ENABLED=true`: all 20 streamed events contained `[REDACTED]` input/output, zero original payload strings present, and the dashboard 🔒 Redacted Data badge rendered — PASS; (f) CI-equivalent suites: SDK 23/23, backend `test_ingest.py -k "not valid_api_key"` 2/2, dashboard `npm run build` clean — PASS.
+- `Backend`: Added `GET /traces` endpoint (`backend/app/history.py`) listing distinct trace IDs in the event stream, most recently active first. Added `/traces` proxy location in `infra/nginx/nginx.conf`. Added tests `test_traces_lists_distinct_trace_ids_most_recent_first` and `test_traces_empty_stream` in `backend/tests/test_history.py`.
+- `Dashboard`: `App.tsx` historical-mode trace dropdown is now populated from the real `GET /traces` endpoint instead of hardcoded IDs; graph state resets on mode/trace change; a `role="alert"` error banner surfaces failed history fetches. `useEventSource.ts` exposes an `error` state and distinguishes 404 ("trace not found") from other HTTP failures. `vite.config.ts` adds a dev proxy (`/history`, `/traces`, `/ingest`, `/ws`) to the Nginx front door; the live WebSocket and history fetches now use same-origin paths through Nginx instead of bypassing it (previously the WS went direct to `:8000` and history fetches cross-origin to `:80`, which failed silently in the browser due to missing CORS headers).
+
+**Why:**
+- Verification check (c) failed: the replay dropdown only offered stale hardcoded trace IDs (`trace-branching-001`, `t-history-001`, `t-history-002`) that don't exist after a fresh volume, and a 404 on `/history` was swallowed — the UI silently kept showing the stale live graph, so no real trace could be replayed through the UI. Fixed before tagging per the m2 gating decision. After the fix, replay of `trace-linear-demo-1` renders 4 nodes / 3 edges via the same rendering path as live (invariant #5), selecting a deleted trace shows an explicit error banner with a cleared graph, and live mode still works through the proxied path (12 nodes / 9 edges observed).
+- The `m2-local-integration` tag is applied retroactively to the post-fix main HEAD on the basis of this entry's verification run; it was not created at Week 7-8 merge time.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- `backend/tests/test_history.py` and `test_ws.py` fail on Windows-local runs with `RuntimeError: Event loop is closed` (asyncio proactor teardown on the shared redis connection pool). CI does not run these files, and the same failure predates this entry. Fixing the test-fixture loop handling is parked for Track B (Weeks 9-12).
+- Running backend pytest locally targets `localhost:6379`, which is the dockerized Redis — local test runs flush/replace the demo stack's `agentscope:events` stream. Parked for Track B: isolate test Redis (e.g., separate DB or test container).
+
+**Tests added/run:**
+- `backend/tests/test_history.py`: added `/traces` tests (pass on the same Linux pattern as existing tests; blocked locally on Windows by the pre-existing event-loop issue above — endpoint behavior verified live via curl and the dashboard).
+- SDK suite 23/23 passed; dashboard `npm run build` clean; browser-verified replay (success + 404-error paths) and live mode through the new proxy.
+
+---
+
 ## [2026-08-19 15:00] — Gap-closing: Anthropic Target Confirmation & Schema Identity — Track A
 
 **What changed:**
