@@ -1,5 +1,29 @@
 # AgentScope Changelog
 
+## [2026-08-22 00:45] — Week 10 Track A: Resilience & Redaction Wire Tests (Test #6/#7, SDK side) — Track A — Nilay
+
+**What changed:**
+- `Track A / Resilience`: Added `scripts/resilience-backend-kill.py` — runs a monitored (SDK-attached) LangGraph workload of 30 sequential graph invocations against the local stack, `docker compose stop backend` mid-run (4s in), then verifies the agent process's actual outcome.
+- `Track A / Security`: Added `sdk/tests/test_redaction_wire.py` — a local stub ingest server records the exact bytes that leave the SDK process; with redaction enabled, the raw input/output strings must be absent from every recorded request body, and the `[REDACTED]` placeholders present. A second test pins the default full-capture behavior (raw payloads DO leave by design, Decision #4).
+
+**Measured results:**
+- Backend-kill test: agent exited code 0, **30/30 workloads completed with correct outputs** ("[Calculator Node]" results), zero tracebacks — only fail-silent sender warnings (bounded retries then drop), exactly per RULES.md invariants #1/#2. Verified by observing the agent's outputs and exit, not just absence of exceptions. RESULT: PASS.
+- Redaction wire test: stub server received the span POST; raw secret strings absent from all bodies, `[REDACTED]` present in `input`/`output`. RESULT: PASS (both tests).
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 10 and PRD §10 Tests #6/#7: backend-unreachable must not affect the monitored agent, and scrubbed fields must be genuinely absent from what leaves the SDK process (RULES.md §4), not merely hidden downstream.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- The kill test exercises `docker compose stop backend`; a kill -9 variant is redundant here since the SDK treats both as connection failure.
+
+**Tests added/run:**
+- `sdk/tests/test_redaction_wire.py`: 2/2 pass. Full SDK suite: **25/25 pass**. `scripts/resilience-backend-kill.py`: PASS (exit 0, 30/30 outputs correct, no traceback).
+
+---
+
 ## [2026-08-21 23:30] — Week 9 Track A: SDK Overhead Benchmark Executed (NFR 9.5 / Test #5) — Track A — Nilay
 
 **What changed:**
