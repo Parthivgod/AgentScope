@@ -1,5 +1,25 @@
 # AgentScope Changelog
 
+## [2026-08-22 02:20] — Week 11 Track A: SDK Quickstart Finalized + Instrumentation Methodology Manuscript Section — Track A — Nilay
+
+**What changed:**
+- `Track A / Docs`: Finalized `docs/sdk-quickstart.md` for both integration paths — added concrete verification steps against the running stack (`/traces`, `/history`) and a "Guarantees (measured)" section citing the fail-silent, redaction, and overhead results by changelog entry.
+- `Track A / Manuscript`: Drafted `manuscript/instrumentation-methodology.md` — integration paths, delivery semantics, measured overhead (both workload configurations, cited to the 2026-08-21 23:30 entry), and the Phoenix comparison (cited to 2026-08-22 01:20). Explicitly avoids any AWS-deployed-backend claim (Flow 6 Step 4 deferred per the M2-AWS prompt).
+
+**Why:**
+- Fulfills Build Plan §4 Track A Week 11. Per RULES.md §6, the section cites Week 9's actual measured numbers — both the +79.7%/+60.7% demo-workload result and the +1.76% LLM-bound result — rather than the <5% target.
+
+**Assumptions made (if any):**
+- None.
+
+**Open questions / follow-ups (if any):**
+- None.
+
+**Tests added/run:**
+- None (documentation).
+
+---
+
 ## [2026-08-22 00:45] — Week 10 Track A: Resilience & Redaction Wire Tests (Test #6/#7, SDK side) — Track A — Nilay
 
 **What changed:**

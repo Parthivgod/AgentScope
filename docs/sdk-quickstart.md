@@ -93,4 +93,20 @@ async def run_research(user_query: str):
 
 When your agent executes, telemetry spans are asynchronously sent to the AgentScope ingestion backend without blocking your host process or throwing exceptions into your agent code.
 
-You can view the live DAG visualization and anomaly alerts at `http://localhost:3000`.
+Quick checks against a running local stack:
+
+```bash
+# Spans arriving? (through the Nginx front door)
+curl http://localhost/traces
+
+# Full span list for one trace, in arrival order
+curl http://localhost/history/<trace_id-from-above>
+```
+
+The dashboard (Vite dev server) shows the live DAG and anomaly alerts at `http://localhost:5173`; in a deployment the dashboard is served behind the same Nginx front door as the API.
+
+## 5. Guarantees (measured)
+
+- **Fail-silent delivery:** if the backend is unreachable, the agent is unaffected — verified by killing the backend mid-run and observing the monitored agent complete 30/30 workloads with correct outputs and exit 0 (CHANGELOG 2026-08-22 00:45).
+- **Client-side redaction:** with `AGENTSCOPE_REDACT_ENABLED=true`, raw `input`/`output` never leave your process — verified at the wire level (same changelog entry).
+- **Overhead:** ~3.3–3.6ms per graph invocation (+1.76% mean on a 100ms/node LLM-bound workload; see CHANGELOG 2026-08-21 23:30 for both workload configurations).
