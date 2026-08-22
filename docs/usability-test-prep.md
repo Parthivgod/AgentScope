@@ -16,7 +16,7 @@ The injection ingests a repeating sequence of failing `tool_call` spans for one 
 
 Run this during the session, from the repo root, AFTER telling the observer "an agent is about to misbehave; watch the screen":
 
-```bash
+```powershell
 python -c "
 import json, time, uuid, httpx
 from datetime import datetime, timezone

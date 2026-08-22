@@ -44,10 +44,12 @@ Note: `TIMEOUT-003` takes ~35s to run by design.
 
 ## Running
 
-```bash
-export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_REGION=us-east-1
-export AGENTSCOPE_API_KEY=test-key
-export AGENTSCOPE_INGEST_URL=http://localhost:8000/ingest
+```powershell
+$env:AWS_ACCESS_KEY_ID = "..."
+$env:AWS_SECRET_ACCESS_KEY = "..."
+$env:AWS_REGION = "us-east-1"
+$env:AGENTSCOPE_API_KEY = "test-key"
+$env:AGENTSCOPE_INGEST_URL = "http://localhost:8000/ingest"
 
 python main.py happy    # false-positive check first
 python main.py poison   # the four triggers

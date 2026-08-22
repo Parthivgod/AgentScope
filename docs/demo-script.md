@@ -16,9 +16,11 @@ Show `examples/langgraph_demo_agent/main.py` and `branching_agent.py` — the on
 
 **2. Live execution graph (~1.5 min).**
 With the dashboard in Live mode, run:
-```bash
+```powershell
 cd examples/langgraph_demo_agent
-AGENTSCOPE_API_KEY=test-key AGENTSCOPE_INGEST_URL=http://localhost/ingest python main.py
+$env:AGENTSCOPE_API_KEY = "test-key"
+$env:AGENTSCOPE_INGEST_URL = "http://localhost/ingest"
+python main.py
 ```
 Talking points: nodes appear as spans start (⟳ pulsing), edges show parent/child delegation, dagre lays out the hierarchy top-to-bottom; click a node to open the InspectPanel (inputs, outputs, tokens, timing — everything keyboard-accessible).
 
@@ -30,7 +32,7 @@ Talking points: the agent's flaky tool fires the crashes rule — the node flips
 Switch the dashboard to Historical Replay; the dropdown lists the real traces just recorded; select `trace-linear-demo-1` — identical rendering to live, because it is the same rendering path with a different event source.
 
 **5. Security close (~30s).**
-```bash
+```powershell
 curl -i -X POST http://localhost/ingest -H 'Content-Type: application/json' -d '{}'   # 401
 curl -sk https://localhost:8443/traces                                                # TLS-terminated
 ```

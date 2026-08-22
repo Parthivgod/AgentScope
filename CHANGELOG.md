@@ -1,5 +1,24 @@
 # AgentScope Changelog
 
+## [2026-08-22 15:00] — Docs: Run Instructions Converted to PowerShell — demo-stepped-up-showcase
+
+**What changed:**
+- `Docs`: All run-instruction code blocks across the repo converted from bash to PowerShell syntax (```powershell fences, `$env:VAR = "value"` instead of `export`, `;` instead of `&&`, line-continuation commands joined to single lines, `pip install -e "./sdk[langgraph]"` quoted for PowerShell). Files: root README, docs/backend-infra.md, docs/sdk-quickstart.md, docs/dashboard.md, docs/demo-script.md, docs/usability-test-prep.md, examples/support_triage_demo/{README,RUN_ORDER}.md, examples/custom_demo_agent/README.md, examples/langgraph_demo_agent/README.md, sdk/README.md.
+
+**Why:**
+- The team runs on Windows/PowerShell; bash-style `export`/`&&` instructions don't work there.
+
+**Assumptions made (if any):**
+- CHANGELOG history entries were left as-is (historical record); only living documentation was converted.
+
+**Open questions / follow-ups (if any):**
+- `scripts/dev-preflight.sh` still targets bash (a .ps1 variant already exists); Git Bash users can keep using it.
+
+**Tests added/run:**
+- Automated sweep confirms no bash-isms remain inside any powershell block.
+
+---
+
 ## [2026-08-22 14:10] — Support-Triage Demo: Bedrock GPT-OSS 120B + Live Verification Complete — demo-stepped-up-showcase
 
 **What changed:**

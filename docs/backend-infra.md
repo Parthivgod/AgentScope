@@ -34,25 +34,24 @@ Key invariants (RULES.md §3): the worker is independently killable — ingestio
 
 ## Running the stack
 
-```bash
+```powershell
 cd infra
-AGENTSCOPE_API_KEY=<your-key> docker compose up --build -d
+$env:AGENTSCOPE_API_KEY = "<your-key>"
+docker compose up --build -d
 docker compose ps   # redis, backend, worker, nginx all Up
 ```
 
 TLS (local, self-signed — generate once; certs are gitignored):
 
-```bash
-openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
-  -keyout nginx/certs/server.key -out nginx/certs/server.crt \
-  -subj "//CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+```powershell
+openssl req -x509 -nodes -newkey rsa:2048 -days 365    -keyout nginx/certs/server.key -out nginx/certs/server.crt    -subj "//CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
 ```
 
 Endpoints: `http://localhost/{ingest,traces,history,ws}` and the same over `https://localhost:8443` (self-signed).
 
 ## Testing & operational checks
 
-- Unit/integration: `cd backend && python -m pytest tests` (9 tests; uses a local Redis on `localhost:6379` — point `REDIS_URL` elsewhere to avoid touching a running stack's data).
+- Unit/integration: `cd backend; python -m pytest tests` (9 tests; uses a local Redis on `localhost:6379` — point `REDIS_URL` elsewhere to avoid touching a running stack's data).
 - End-to-end smoke: `python scripts/smoke-test.py` (ingest → Redis → WS relay → anomaly flag).
 - Load testing: `infra/loadtest/` — `locustfile.py` (mixed traffic), `locustfile_ingest_only.py`, and `event_latency_probe.py` (event-to-dashboard latency; run alongside background load).
 - Resilience: `scripts/resilience-stack.py {worker-kill|redis-restart|slow-ws}`.

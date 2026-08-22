@@ -13,10 +13,10 @@ This example demonstrates **User Flow 2 (Custom Agent Path)** for non-LangGraph 
 
 ## Running the Demo
 
-```bash
+```powershell
 # 1. Set environment variables
-export AGENTSCOPE_API_KEY="your-api-key"
-export AGENTSCOPE_INGEST_URL="http://localhost:8000/ingest"
+$env:AGENTSCOPE_API_KEY = "your-api-key"
+$env:AGENTSCOPE_INGEST_URL = "http://localhost:8000/ingest"
 
 # 2. Run main script
 python main.py
@@ -24,6 +24,6 @@ python main.py
 
 ## Running Tests
 
-```bash
+```powershell
 python -m pytest test_demo_e2e.py
 ```

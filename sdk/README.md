@@ -9,9 +9,9 @@ Both paths emit schema-identical spans and deliver them asynchronously, fail-sil
 
 ## Install
 
-```bash
+```powershell
 pip install -e ./sdk            # base (decorator + patch paths)
-pip install -e ./sdk[langgraph] # + LangGraph adapter path
+pip install -e "./sdk[langgraph]" # + LangGraph adapter path
 ```
 
 See `docs/sdk-quickstart.md` in the repository root for a five-minute guide, environment variables (`AGENTSCOPE_INGEST_URL`, `AGENTSCOPE_API_KEY`, `AGENTSCOPE_REDACT_ENABLED`), and verification steps.

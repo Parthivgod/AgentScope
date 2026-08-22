@@ -11,16 +11,16 @@ Before running any components, ensure Docker Desktop is running and port 8000 is
 
 ### 2. Start Infrastructure & Backend
 Start the Redis container and the FastAPI backend:
-```bash
-cd infra && docker-compose up -d
+```powershell
+cd infra; docker-compose up -d
 cd ../backend
-export AGENTSCOPE_API_KEY="test-key"
+$env:AGENTSCOPE_API_KEY = "test-key"
 uvicorn app.ingest:app --host 0.0.0.0 --port 8000
 ```
 
 ### 3. Start Dashboard
 In a new terminal:
-```bash
+```powershell
 cd dashboard
 npm install
 npm run dev
@@ -28,10 +28,10 @@ npm run dev
 
 ### 4. Run Example Agent
 In a new terminal:
-```bash
+```powershell
 cd examples/langgraph_demo_agent
 pip install -r requirements.txt
-export AGENTSCOPE_API_KEY="test-key"
+$env:AGENTSCOPE_API_KEY = "test-key"
 python main.py
 ```
 

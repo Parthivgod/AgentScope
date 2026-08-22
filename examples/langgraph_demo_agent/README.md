@@ -15,12 +15,12 @@ This directory contains example LangGraph agents instrumented with AgentScope's 
 ## Usage
 
 Set environment variables (optional, defaults to `http://localhost:8000/ingest`):
-```bash
-export AGENTSCOPE_API_KEY="your-api-key"
-export AGENTSCOPE_INGEST_URL="http://localhost:8000/ingest"
+```powershell
+$env:AGENTSCOPE_API_KEY = "your-api-key"
+$env:AGENTSCOPE_INGEST_URL = "http://localhost:8000/ingest"
 ```
 
 Run the demo suite:
-```bash
+```powershell
 python main.py
 ```

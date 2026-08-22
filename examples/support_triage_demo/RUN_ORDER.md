@@ -7,7 +7,7 @@ audience can watch each graph build live.
 
 ## 1. Establish normalcy — two happy-path tickets
 
-```bash
+```powershell
 python main.py HAPPY-BILLING-001
 python main.py HAPPY-TECH-002
 ```
@@ -20,7 +20,7 @@ AgentScope." *(Zero false positives is part of the credibility.)*
 
 ## 2. Delegation cycle — strongest visual opener
 
-```bash
+```powershell
 python main.py DELEGATION-CYCLE-001
 ```
 
@@ -33,7 +33,7 @@ live.)*
 
 ## 3. Failure loop
 
-```bash
+```powershell
 python main.py FAIL-LOOP-002
 ```
 
@@ -44,7 +44,7 @@ the retries in the span detail.)*
 
 ## 4. Token spike
 
-```bash
+```powershell
 python main.py TOKEN-SPIKE-004
 ```
 
@@ -55,7 +55,7 @@ node's token usage.)*
 
 ## 5. Timeout — closer (takes ~35s, so run it last)
 
-```bash
+```powershell
 python main.py TIMEOUT-003
 ```
 
@@ -66,6 +66,6 @@ detection, not enforcement."
 
 ## Optional encore
 
-```bash
+```powershell
 python main.py happy   # remaining happy-path tickets — system still normal
 ```
