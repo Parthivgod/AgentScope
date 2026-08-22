@@ -1,5 +1,27 @@
 # AgentScope Changelog
 
+## [2026-08-22 13:10] — New Demo: Support-Triage Multi-Agent Showcase (real LLM calls) — demo-stepped-up-showcase
+
+**What changed:**
+- `Examples`: Added `examples/support_triage_demo/` — a genuinely multi-agent support-triage system (router + billing/technical/account specialists + response composer as a LangGraph StateGraph) with REAL OpenAI LLM calls doing classification, specialist reasoning, and response drafting. Local synthetic tools; four deterministic poison tickets (DELEGATION-CYCLE-001, FAIL-LOOP-002, TIMEOUT-003, TOKEN-SPIKE-004) trigger four distinct anomaly rules at the TOOL layer (flaky account store, hung diagnostic, ambiguous/no-record lookups, ~100KB history) — the failure modes that cause the corresponding real anomalies; the LLM calls are not rigged. Four HAPPY-* tickets are the false-positive check. Includes README (OPENAI_API_KEY requirement, model tier, cost guardrails) and RUN_ORDER.md (scripted demo sequence: happy first, then Delegation Cycle → Failure Loop → Token Spike → Timeout last).
+- `SDK / Adapter`: Added optional `agent_id_by_run` to `LangGraphAdapter` (dict or callable mapping run name → per-agent span identity, fallback to the shared agent_id). Additive; default behavior unchanged. Rationale: a single shared agent_id makes the delegation_cycles rule trivially fire on any nested run — distinct per-agent ids are what make cycle detection meaningful in a multi-agent graph (and keep happy paths false-positive-free).
+- `Demo-app guardrails` (the example's own design, not AgentScope enforcement): model tier gpt-4o-mini (cheap/fast, stated assumption per INSTRUCTIONS.md §2; override via TRIAGE_MODEL), hard per-run ceiling of 15 LLM calls (CallBudget aborts the run), OPENAI_API_KEY checked with a clear error.
+
+**Why:**
+- New demo content (not a Build Plan week deliverable), additive to examples/ — the existing langgraph_demo_agent and custom_demo_agent are untouched. Demonstrates Flow 1 (zero-rewrite: agent.py imports nothing from AgentScope; attachment happens only in main.py), Flow 3 (live hierarchical monitoring), Flow 4 (anomaly detection and click-to-inspect alert response).
+
+**Assumptions made (if any):**
+- Model tier: gpt-4o-mini (stated, overridable) — chosen as cheapest tier sufficient for classification/drafting; a full run costs on the order of a few cents.
+- Live verification against the local stack is pending a real OPENAI_API_KEY (not present in the dev environment); offline unit tests cover the deterministic tool conditions, token-spike sizing (tiktoken-verified >8k), adapter mapping, and the call ceiling.
+
+**Open questions / follow-ups (if any):**
+- Live run of the 8 tickets + dashboard verification to be executed once OPENAI_API_KEY is provided.
+
+**Tests added/run:**
+- `examples/support_triage_demo/test_support_demo.py`: 6/6 pass (offline). SDK suite after the adapter change: 25/25 pass.
+
+---
+
 ## [2026-08-22 04:20] — Weeks 9-12 Integration Merge + m3-pending-aws — All Tracks
 
 **What changed:**

@@ -16,11 +16,26 @@ class LangGraphAdapter(AsyncBaseTracer):
     Args:
         agent_id: Agent identifier assigned to generated spans.
         trace_id: Trace identifier associated with the full run.
+        agent_id_by_run: Optional mapping (dict or callable) from run name to
+            a per-run agent identifier. In a multi-agent graph, assigning each
+            agent/node its own identity makes anomaly rules meaningful (e.g.
+            delegation-cycle detection compares agent_ids along the parent
+            chain; a single shared agent_id trivially "cycles" on any nested
+            run). Runs not present in the mapping fall back to `agent_id`.
+            Additive option — default behavior is unchanged.
     """
-    def __init__(self, agent_id: str, trace_id: str, **kwargs):
+    def __init__(self, agent_id: str, trace_id: str, agent_id_by_run=None, **kwargs):
         super().__init__(**kwargs)
         self.agent_id = agent_id
         self.trace_id = trace_id
+        self.agent_id_by_run = agent_id_by_run
+
+    def _resolve_agent_id(self, run_name: str) -> str:
+        if self.agent_id_by_run is None:
+            return self.agent_id
+        if callable(self.agent_id_by_run):
+            return self.agent_id_by_run(run_name) or self.agent_id
+        return self.agent_id_by_run.get(run_name, self.agent_id)
 
     def _convert_run_to_span(self, run: Run) -> Span:
         span_type = "state_update"
@@ -66,7 +81,7 @@ class LangGraphAdapter(AsyncBaseTracer):
             end_time=run.end_time,
             status=status,
             token_usage=token_usage,
-            agent_id=self.agent_id
+            agent_id=self._resolve_agent_id(run.name)
         )
 
     async def _on_run_create(self, run: Run) -> None:
