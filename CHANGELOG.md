@@ -1,5 +1,25 @@
 # AgentScope Changelog
 
+## [2026-08-22 15:30] — Docs: Single Consolidated Root README — demo-stepped-up-showcase
+
+**What changed:**
+- `Docs`: Consolidated the five scattered READMEs (root, `sdk/README.md`, and the three `examples/*/README.md`) into ONE comprehensive root `README.md`: quick start (preflight, compose stack, TLS, dashboard), SDK integration (both flows, env vars, verification, measured guarantees), all three demo agents including the full support-triage setup + ticket table, the testing/operational-check inventory, project layout, and contributing pointers. Deleted the redundant per-directory READMEs. `sdk/pyproject.toml` readme field removed accordingly (editable install re-verified). `RUN_ORDER.md` now points to the root README §3.3 for setup.
+- Kept (not READMEs): `sdk/agentscope/benchmarks/README.md` (measurement methodology inside the benchmarks package) and the `docs/` deep guides, all now linked from the root README's project-layout section.
+
+**Why:**
+- Five READMEs with overlapping partial instructions were hard to maintain; one combined file holds all the necessary run details.
+
+**Assumptions made (if any):**
+- `docs/` guides stay as deep-dive material; the root README is the single entry point with everything needed to run the system.
+
+**Open questions / follow-ups (if any):**
+- None.
+
+**Tests added/run:**
+- No broken references to the deleted files (repo-wide grep). SDK 25/25; support-triage offline tests 6/6; `pip install -e ./sdk` works without the readme field.
+
+---
+
 ## [2026-08-22 15:00] — Docs: Run Instructions Converted to PowerShell — demo-stepped-up-showcase
 
 **What changed:**
