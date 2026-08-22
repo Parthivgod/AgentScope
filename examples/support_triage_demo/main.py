@@ -31,7 +31,7 @@ from tickets import TICKETS, HAPPY_PATH, POISON
 # Per-run-name agent identity for spans. Distinct ids per agent make the
 # delegation-cycle rule meaningful (a shared id would trivially "cycle" on
 # any nested run). Unknown run names fall back to the graph-level id.
-AGENT_ID_BY_RUN = {
+_AGENT_MAP = {
     "LangGraph": "support-triage",
     "router": "triage-router",
     "billing": "billing-agent",
@@ -41,21 +41,31 @@ AGENT_ID_BY_RUN = {
     "account": "account-agent",
     "AccountAgent": "account-agent",
     "composer": "response-composer",
-    "ChatOpenAI": "llm",  # leaf spans; never an ancestor, so no false cycles
-    "check_billing_history": "billing-agent",
-    "run_diagnostic": "technical-agent",
-    "lookup_account": "account-agent",
+    "ChatOpenAI": "llm", "ChatBedrockConverse": "llm",  # leaf spans; never ancestors, so no false cycles
+    # Tools get their OWN identities: a tool span's parent is its owning
+    # agent's span, so sharing the agent's id would read as an instant cycle.
+    "check_billing_history": "billing-history-tool",
+    "run_diagnostic": "diagnostic-tool",
+    "lookup_account": "account-lookup-tool",
 }
 
 
+def agent_id_by_run(name: str) -> str:
+    # Unknown run names (e.g. LangGraph's internal "Unnamed" edge lambdas) get
+    # a unique id per name — falling back to the ROOT id would make the
+    # delegation-cycle rule trivially fire on every such span.
+    return _AGENT_MAP.get(name, f"graph-internal-{name or 'anonymous'}")
+
+
+AGENT_ID_BY_RUN = agent_id_by_run
+
+
 def check_env():
-    if not os.environ.get("OPENAI_API_KEY"):
-        print("ERROR: OPENAI_API_KEY is not set. This demo makes REAL LLM calls "
-              "(default model: gpt-4o-mini).\nSet it and retry.", file=sys.stderr)
+    if not (os.environ.get("AWS_ACCESS_KEY_ID") and os.environ.get("AWS_SECRET_ACCESS_KEY")):
+        print("ERROR: AWS credentials not set. This demo makes REAL LLM calls "
+              "(GPT-OSS 120B on Amazon Bedrock). Set AWS_ACCESS_KEY_ID, "
+              "AWS_SECRET_ACCESS_KEY and AWS_REGION, then retry.", file=sys.stderr)
         sys.exit(2)
-    if not os.environ.get("AGENTSCOPE_API_KEY"):
-        print("WARNING: AGENTSCOPE_API_KEY not set — spans will be rejected (401) "
-              "by the local stack (default expects 'test-key').", file=sys.stderr)
 
 
 async def run_ticket(graph, ticket_id: str) -> None:

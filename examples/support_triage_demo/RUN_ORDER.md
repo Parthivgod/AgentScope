@@ -1,8 +1,8 @@
 # RUN_ORDER — scripted demo sequence
 
 Run with the dashboard open in Live mode (http://localhost:5173) and the
-local stack up. Each command from `examples/support_triage_demo/` (env per
-README). Wait for each run to finish before starting the next so the
+local stack up. Each command from `examples/support_triage_demo/` with
+AWS credentials + `AWS_REGION` exported (real Bedrock LLM calls — see README). Wait for each run to finish before starting the next so the
 audience can watch each graph build live.
 
 ## 1. Establish normalcy — two happy-path tickets

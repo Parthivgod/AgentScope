@@ -17,18 +17,26 @@ itself only observes):
     tiers.
 """
 
+import asyncio
 import os
 from typing import Any, Dict, List, TypedDict
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableLambda, RunnableConfig
-from langchain_openai import ChatOpenAI
+from langchain_aws import ChatBedrockConverse
 from langgraph.graph import StateGraph, START, END
 
 from tools import check_billing_history, run_diagnostic, lookup_account
 from tickets import TICKETS
 
-MODEL = os.environ.get("TRIAGE_MODEL", "gpt-4o-mini")
+# Model: GPT-OSS 120B on Amazon Bedrock (us-east-1 default), via
+# ChatBedrockConverse with standard IAM credentials (AWS_ACCESS_KEY_ID /
+# AWS_SECRET_ACCESS_KEY / AWS_REGION). Evaluated and chosen per the
+# 2026-08-22 model evaluation: plain text-in/text-out is all this demo needs
+# (tools are invoked by the graph code, not model-driven), so the unreliable
+# LangChain tool-calling paths for Bedrock gpt-oss are never exercised.
+MODEL = os.environ.get("TRIAGE_MODEL", "openai.gpt-oss-120b-1:0")
+AWS_REGION_DEFAULT = os.environ.get("AWS_REGION", "us-east-1")
 MAX_LLM_CALLS = 15  # hard ceiling: abort the run rather than burn budget on a bug
 
 
@@ -51,14 +59,35 @@ class CallBudget:
         self.used += 1
 
 
-llm = ChatOpenAI(model=MODEL, temperature=0)
+# gpt-oss is a reasoning model: cap output tokens so reasoning stays brief
+# (long reasoning pushes per-call latency toward the 30s timeout ceiling and
+# makes demo pacing sluggish). temperature 0 for deterministic-ish routing.
+llm = ChatBedrockConverse(
+    model=MODEL,
+    region_name=AWS_REGION_DEFAULT,
+    temperature=0,
+    max_tokens=1024,
+)
 budget = CallBudget()
+
+
+def _content_text(content) -> str:
+    """Bedrock Converse returns content blocks (list); join the text parts."""
+    if isinstance(content, str):
+        return content
+    parts = []
+    for block in content:
+        if isinstance(block, str):
+            parts.append(block)
+        elif isinstance(block, dict) and block.get("text"):
+            parts.append(block["text"])
+    return "".join(parts)
 
 
 async def ask_llm(system: str, user: str) -> str:
     budget.check()
     resp = await llm.ainvoke([SystemMessage(content=system), HumanMessage(content=user)])
-    return resp.content.strip()
+    return _content_text(resp.content).strip()
 
 
 # ── State ──────────────────────────────────────────────────────────────
@@ -124,37 +153,59 @@ _TICKET_CONTEXT = ("Subject: {subject}\n\n{body}\n\nTicket ID: {ticket_id}")
 
 
 async def _billing_work(state: TriageState, config: RunnableConfig, depth: int = 0) -> Dict[str, Any]:
-    history = await check_billing_history.ainvoke({"ticket_id": state["ticket_id"]}, config=config)
-    reply = await ask_llm(BILLING_SYSTEM, _TICKET_CONTEXT.format(**state) + f"\n\nBilling lookup: {history}")
-    if "REROUTE_TECHNICAL" in reply:
+    # Reuse a lookup already in the shared state (hand-offs carry context) —
+    # a specialist doesn't re-run a tool whose result the team already has.
+    history = state.get("billing_lookup")
+    if history is None:
+        history = await check_billing_history.ainvoke({"ticket_id": state["ticket_id"]}, config=config)
+        state["billing_lookup"] = history
+    thread = "\n".join(state.get("specialist_notes", []))
+    reply = await ask_llm(BILLING_SYSTEM, _TICKET_CONTEXT.format(**state)
+                          + f"\n\nBilling lookup: {history}"
+                          + (f"\n\nPrior correspondence in this thread:\n{thread}" if thread else ""))
+    # Reroute only when the DATA says it's not a billing issue AND the LLM
+    # agrees — keeps routing deterministic on happy-path tickets.
+    if "NO_BILLING_HISTORY" in history and "REROUTE_TECHNICAL" in reply:
         return await _reroute(state, config, "billing", "technical", reply, depth)
     return {"specialist_notes": [f"[billing] {reply}"]}
 
 
 async def _technical_work(state: TriageState, config: RunnableConfig, depth: int = 0) -> Dict[str, Any]:
-    diag = await run_diagnostic.ainvoke({"ticket_id": state["ticket_id"]}, config=config)
-    reply = await ask_llm(TECHNICAL_SYSTEM, _TICKET_CONTEXT.format(**state) + f"\n\nDiagnostic: {diag}")
-    if "REROUTE_BILLING" in reply:
+    diag = state.get("diagnostic_result")
+    if diag is None:
+        diag = await run_diagnostic.ainvoke({"ticket_id": state["ticket_id"]}, config=config)
+        state["diagnostic_result"] = diag
+    thread = "\n".join(state.get("specialist_notes", []))
+    reply = await ask_llm(TECHNICAL_SYSTEM, _TICKET_CONTEXT.format(**state)
+                          + f"\n\nDiagnostic: {diag}"
+                          + (f"\n\nPrior correspondence in this thread:\n{thread}" if thread else ""))
+    if "DIAG_CLEAN" in diag and "REROUTE_BILLING" in reply:
         return await _reroute(state, config, "technical", "billing", reply, depth)
     return {"specialist_notes": [f"[technical] {reply}"]}
 
 
+MAX_HANDOFF_DEPTH = 3  # app-level guardrail: cap total specialist hand-offs
+
 async def _reroute(state, config, from_agent: str, to_agent: str, reply: str, depth: int) -> Dict[str, Any]:
     """Hand off to the other specialist as a NESTED runnable so the parent/child
-    delegation structure is real (this is what makes a revisit visible as an
-    actual delegation cycle in the span tree)."""
-    visited = state.get("visited", []) + [from_agent]
-    if to_agent in visited or depth >= 2:
-        # App-level guardrail: stop bouncing, let the composer close it out.
-        return {"specialist_notes": state.get("specialist_notes", []) + [f"[{from_agent}] {reply}"],
-                "visited": visited}
-    payload = {**state, "visited": visited}
+    delegation structure is real. Each specialist genuinely believes the other
+    team owns the ticket, so they ping-pong — the app caps the hand-off depth
+    (plus the 15-call LLM budget); AgentScope flags the revisit the moment the
+    first agent appears twice in one delegation chain."""
+    if depth >= MAX_HANDOFF_DEPTH:
+        return {"specialist_notes": state.get("specialist_notes", []) + [f"[{from_agent}] {reply}"]}
+    await asyncio.sleep(1.0)  # hand-off latency between specialists
+    # Carry the accumulated correspondence so the next specialist reads the thread
+    payload = {**state, "specialist_notes": state.get("specialist_notes", []) + [f"[{from_agent}] {reply}"]}
 
     async def run_billing(p, cfg=None):
-        return await _billing_work(p, config, depth + 1)
+        # Use the nested runnable's own config (cfg) so inner spans chain to
+        # THIS agent's run, not back to the outer node — that chaining is what
+        # makes a revisit show up as a real delegation cycle in the span tree.
+        return await _billing_work(p, cfg or config, depth + 1)
 
     async def run_technical(p, cfg=None):
-        return await _technical_work(p, config, depth + 1)
+        return await _technical_work(p, cfg or config, depth + 1)
 
     if to_agent == "technical":
         agent = RunnableLambda(run_technical).with_config(run_name="TechnicalAgent")
@@ -162,8 +213,7 @@ async def _reroute(state, config, from_agent: str, to_agent: str, reply: str, de
         agent = RunnableLambda(run_billing).with_config(run_name="BillingAgent")
     result = await agent.ainvoke(payload, config=config)
     notes = state.get("specialist_notes", []) + [f"[{from_agent}] {reply}"]
-    return {"specialist_notes": notes + result.get("specialist_notes", []),
-            "visited": result.get("visited", visited)}
+    return {"specialist_notes": notes + result.get("specialist_notes", [])}
 
 
 async def billing_node(state: TriageState, config: RunnableConfig) -> Dict[str, Any]:
@@ -183,6 +233,10 @@ async def account_node(state: TriageState, config: RunnableConfig) -> Dict[str, 
         result = await lookup_account.ainvoke({"ticket_id": state["ticket_id"]}, config=config)
         if "AMBIGUOUS" not in result:
             break
+        # Brief backoff between retries: identical-call cadence stays well
+        # inside the failure-loop rule's 60s window without spiking the event
+        # rate past the message-storm threshold.
+        await asyncio.sleep(0.75)
     reply = await ask_llm(ACCOUNT_SYSTEM, _TICKET_CONTEXT.format(**state) + f"\n\nAccount lookup: {result}")
     return {"specialist_notes": [f"[account] {reply}"]}
 

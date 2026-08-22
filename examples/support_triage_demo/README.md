@@ -16,17 +16,15 @@ This example is **additive** — it does not modify the existing
 
 ## Requirements
 
-- **`OPENAI_API_KEY` must be set** — this demo makes real, billable LLM calls.
+- **AWS credentials must be set** (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`) — this demo makes real, billable LLM calls against **GPT-OSS 120B on Amazon Bedrock** (model `openai.gpt-oss-120b-1:0`), evaluated and selected for these roles on 2026-08-22 (plain text-in/text-out is all the demo needs; the specialists' tools are invoked by graph code, not model-driven tool calling, which sidesteps the unreliable LangChain-on-Bedrock tool-calling paths).
 - AgentScope local stack running (`infra/docker compose up -d`).
+- `pip install langchain-aws boto3` (in addition to `requirements.txt`).
 - `AGENTSCOPE_API_KEY=test-key` (local stack default).
 - `pip install -r requirements.txt && pip install -e ../../sdk`
 
 ## Model tier & cost guardrails (demo-app design, not AgentScope's)
 
-- **Model: `gpt-4o-mini`** (override with `TRIAGE_MODEL`). Chosen as the
-  cheapest/fastest tier that comfortably handles classification and short
-  drafting — roughly an order of magnitude cheaper than frontier tiers. A
-  full `all` run is on the order of a few cents.
+- **Model: GPT-OSS 120B on Bedrock** (`openai.gpt-oss-120b-1:0`, override with `TRIAGE_MODEL`), via `ChatBedrockConverse`. Open-weight model on pay-per-token Bedrock pricing; output tokens are capped at 1024 per call so reasoning stays brief (long reasoning both slows demo pacing and can push spans toward the 30s timeout ceiling). A full 8-ticket run costs on the order of a few cents.
 - **Hard per-run ceiling of 15 LLM calls** (`agent.py`, `CallBudget`) — if a
   bug ever causes a runaway loop, the demo aborts instead of burning budget.
   This is the demo application's own responsible design; AgentScope itself
@@ -47,7 +45,7 @@ Note: `TIMEOUT-003` takes ~35s to run by design.
 ## Running
 
 ```bash
-export OPENAI_API_KEY=sk-...
+export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_REGION=us-east-1
 export AGENTSCOPE_API_KEY=test-key
 export AGENTSCOPE_INGEST_URL=http://localhost:8000/ingest
 

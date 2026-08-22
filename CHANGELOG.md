@@ -1,5 +1,35 @@
 # AgentScope Changelog
 
+## [2026-08-22 14:10] — Support-Triage Demo: Bedrock GPT-OSS 120B + Live Verification Complete — demo-stepped-up-showcase
+
+**What changed:**
+- `Examples / Model`: Switched `examples/support_triage_demo` from OpenAI direct to **GPT-OSS 120B on Amazon Bedrock** (`openai.gpt-oss-120b-1:0`, us-east-1, `ChatBedrockConverse` with IAM credentials) per the 2026-08-22 model evaluation. Plain text-in/text-out only; the specialists' tools are invoked by graph code, so the unreliable LangChain-on-Bedrock tool-calling paths are never exercised. Output capped at 1024 tokens/call (long gpt-oss reasoning was pushing individual spans past the 30s timeout ceiling — 28.3s measured on a single happy-path LLM call before the cap).
+- `SDK / Adapter`: Token-usage extraction extended (additively, fail-silent) to also read `generations[0][0].message.kwargs.usage_metadata` — the shape `ChatBedrockConverse` serializes (OpenAI-style `llm_output.token_usage` is null for it). Verified live: token_spikes now fires on real Bedrock usage data.
+- `Examples / Reliability work` (all found by live verification, all fixed): unknown run names (LangGraph's internal "Unnamed" edge lambdas) and tools previously shared agent ids with ancestors/owners, causing trivial delegation-cycle false positives — the id mapping now gives every run name a unique identity; hand-offs carry the accumulated correspondence so each hop's LLM call has genuinely different input (identical prompts legitimately co-fired failure_loops during the ping-pong); retry loop paced (0.75s) and hand-off latency (1s) keep event bursts out of the message-storm window; the app-level no-revisit guard was replaced with a depth-capped ping-pong (MAX_HANDOFF_DEPTH=3) since preventing revisits prevented the very cycle the demo exists to show — the 15-call LLM ceiling remains the hard safety net.
+- `Docs`: README/RUN_ORDER/requirements updated for AWS credentials + region instead of OPENAI_API_KEY.
+
+**Measured results (live, local stack, real Bedrock LLM calls, 2026-08-22):**
+- **Happy path: 0 false positives** across all 4 HAPPY tickets (was 16 delegation_cycles FPs before the id-mapping fixes).
+- **DELEGATION-CYCLE-001 → delegation_cycles only** (4 flags, genuine paths e.g. technical-agent → billing-agent → technical-agent).
+- **FAIL-LOOP-002 → failure_loops only** (identical lookup_account signature seen 10× in 60s).
+- **TIMEOUT-003 → timeouts only** (tool sleeps 31s; parent spans cascade to 37.9s/41.4s).
+- **TOKEN-SPIKE-004 → token_spikes** (real Bedrock usage >8k tokens on the composer call).
+- **Dashboard (live):** 20 nodes / 18 edges — genuine router → specialist → composer hierarchy with nested hand-offs; anomalous node renders with ⚠ badge; click-to-inspect shows the failure_loops detail (reason, signature, timing, input/output) — Flow 4 Step 4 verified.
+
+**Why:**
+- Completes the demo's verification checklist (each poison ticket fires only its intended rule; happy path is false-positive-free; hierarchical graph confirmed) against the LOCAL stack with real LLM work.
+
+**Assumptions made (if any):**
+- None outstanding. Note: two bearer-style Bedrock API keys were tried first; the second contained a single corrupted character in its credential scope (paste corruption, flagged to the user), and the account was additionally under AWS verification — the IAM access key provided afterwards works and is what all results above used.
+
+**Open questions / follow-ups (if any):**
+- AWS credentials are short-term; regenerate before future demo runs (README documents the requirement).
+
+**Tests added/run:**
+- Offline demo tests 6/6; SDK suite 25/25 after the adapter change.
+
+---
+
 ## [2026-08-22 13:10] — New Demo: Support-Triage Multi-Agent Showcase (real LLM calls) — demo-stepped-up-showcase
 
 **What changed:**
