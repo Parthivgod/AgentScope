@@ -1,5 +1,29 @@
 # AgentScope Changelog
 
+## [2026-08-23 20:47] — STEP 0: Landed demo-stepped-up-showcase + bugfix-replay-anomaly-flags into main — Track Shared
+
+**What changed:**
+- Merged `demo-stepped-up-showcase` into main (`--no-ff`), then `bugfix-replay-anomaly-flags` into main (`--no-ff`) — both in one session, honoring the dependency both changelog entries record (the demo gives the fix something real to verify against; the fix un-breaks replay of the demo's traces). Both were linear descendants of main; no conflicts.
+- Pre-merge review run for EACH branch before merging (not skipped as "just old work"):
+  - Invariant #8 grep (`mock|stub|fake|placeholder|TODO|setInterval|hardcoded`) over each branch diff: only benign hits — `unittest.mock` imports and "The LLM is faked" docstrings inside `test_*.py` files (test-only, legitimate). Zero hits in production paths.
+  - RULES.md §2 locked-decision check: `Trace.anomalies` is an additive optional field in the single canonical schema location (no fork); the LangGraph adapter's `agent_id_by_run` param leaves the callback-tracer mechanism (Decision #5) untouched; dagre layout (Decision #1) untouched by both.
+- Post-merge regression on main: SDK 25/25, backend 11/11 (compose stack up), dashboard `npm run build` clean.
+
+**Why:**
+- Prerequisite for the dashboard UI redesign branch (`dashboard-ui-redesign`): the redesign touches the same anomaly-flag rendering path (AlertBadge, node status logic) the bugfix repaired — building on an unfixed path would restyle broken behavior and invite merge conflicts (per the redesign task's Step 0).
+
+**Assumptions made (if any):**
+- Merges recorded as `--no-ff` merge commits (matches the repo's existing merge-entry pattern); fast-forward would also have been safe given the linear ancestry.
+- Not pushing to origin (no instruction to publish; local main was already ahead 34 before these merges).
+
+**Open questions / follow-ups (if any):**
+- `dashboard-ui-redesign` branched off merged main immediately after this entry.
+
+**Tests added/run:**
+- SDK 25/25, backend 11/11, dashboard production build — all on merged main, compose stack running.
+
+---
+
 ## [2026-08-23 16:45] — Bugfix: Anomaly Flags Missing in Historical Replay (FR-8 / Flow 5) — bugfix-replay-anomaly-flags
 
 **BRANCH DEPENDENCY (per Step 0 of the fix prompt):** `demo-stepped-up-showcase` is NOT yet merged into main (verified: main has no `examples/support_triage_demo/`), so this branch is based on `demo-stepped-up-showcase`, not main — the bug is only reproducible with the demo's real anomaly data. **Both branches must reach main together**: the platform fix without the demo has nothing to verify against, and the demo without the fix still ships the bug. Do not merge either independently.
