@@ -16,11 +16,15 @@
 
 import { useEffect } from 'react';
 import { type SpanEvent, type AnomalyEvent } from '../hooks/useEventSource';
+import AnomalyPanel from './AnomalyPanel';
 import './InspectPanel.css';
 
 interface InspectPanelProps {
   span: SpanEvent | null;
   anomaly?: AnomalyEvent | null;
+  /** Full event list — AnomalyPanel reconstructs call patterns from it.
+   *  Same array in live and historical modes (invariant #5). */
+  events: SpanEvent[];
   onClose: () => void;
 }
 
@@ -61,7 +65,7 @@ const SPAN_TYPE_LABELS: Record<string, string> = {
   state_update: 'State Update',
 };
 
-export default function InspectPanel({ span, anomaly, onClose }: InspectPanelProps) {
+export default function InspectPanel({ span, anomaly, events, onClose }: InspectPanelProps) {
   // Escape closes the panel (keyboard parity with the Close button — Week 10 a11y)
   useEffect(() => {
     if (!span) return;
@@ -81,14 +85,19 @@ export default function InspectPanel({ span, anomaly, onClose }: InspectPanelPro
   return (
     <div className="inspect-panel" id="inspect-panel">
       {/* Backdrop */}
-      <div className="inspect-panel__backdrop" onClick={onClose} />
+      <div className="inspect-panel__backdrop" onClick={onClose} aria-hidden="true" />
 
       {/* Panel */}
-      <div className="inspect-panel__content">
+      <div
+        className="inspect-panel__content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="inspect-panel-title"
+      >
         {/* Header */}
         <div className="inspect-panel__header">
           <div className="inspect-panel__title-row">
-            <h2 className="inspect-panel__title">{span.name}</h2>
+            <h2 className="inspect-panel__title" id="inspect-panel-title">{span.name}</h2>
             <button
               className="inspect-panel__close"
               onClick={onClose}
@@ -124,13 +133,10 @@ export default function InspectPanel({ span, anomaly, onClose }: InspectPanelPro
 
         {/* Body */}
         <div className="inspect-panel__body">
-          {/* Anomaly section */}
-          {anomaly && (
-            <section className="inspect-panel__section inspect-panel__section--anomalous">
-              <h3 className="inspect-panel__section-title">Anomaly: {anomaly.rule}</h3>
-              <pre className="inspect-panel__anomaly-desc">{formatJSON(anomaly.details)}</pre>
-            </section>
-          )}
+          {/* Anomaly detail — plain-language description + per-rule
+              evidence (Flow 4 Step 4). Replaces the raw-details JSON
+              dump from the pre-redesign panel. */}
+          {anomaly && <AnomalyPanel anomaly={anomaly} events={events} />}
 
           {/* Timing section */}
           <section className="inspect-panel__section">

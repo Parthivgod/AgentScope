@@ -1,0 +1,294 @@
+/*
+ * AnomalyPanel.css — Anomaly detail section inside the InspectPanel.
+ * Orange (var(--status-anomaly)) is the anomaly accent dashboard-wide.
+ */
+
+.anomaly-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(251, 146, 60, 0.4);
+  border-left: 3px solid var(--status-anomaly);
+  border-radius: var(--radius-md);
+  background: rgba(251, 146, 60, 0.06);
+}
+
+.anomaly-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.anomaly-panel__header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(251, 146, 60, 0.15);
+  color: var(--status-anomaly);
+  flex-shrink: 0;
+}
+
+.anomaly-panel__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.2px;
+}
+
+.anomaly-panel__rule-chip {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--status-anomaly);
+  background: rgba(251, 146, 60, 0.12);
+  border: 1px solid rgba(251, 146, 60, 0.35);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.anomaly-panel__description {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.anomaly-panel__reason {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-inset);
+}
+
+.anomaly-panel__reason strong {
+  color: var(--status-anomaly);
+}
+
+.anomaly-panel__evidence {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.anomaly-panel__evidence-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+}
+
+/* ── Call pattern timeline ────────────────────────────────────────── */
+
+.anomaly-panel__pattern {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.anomaly-panel__step {
+  display: grid;
+  grid-template-columns: 20px 1fr auto 18px;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  border: 1px solid var(--border-subtle);
+  border-left: 2px solid var(--border-medium);
+}
+
+.anomaly-panel__step--error { border-left-color: var(--status-error); }
+.anomaly-panel__step--success { border-left-color: var(--status-complete); }
+.anomaly-panel__step--running { border-left-color: var(--status-running); }
+
+.anomaly-panel__step-index {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.anomaly-panel__step-name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.anomaly-panel__step-meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.anomaly-panel__outcome-icon {
+  justify-self: end;
+}
+
+.anomaly-panel__outcome-icon--error { color: var(--status-error); }
+.anomaly-panel__outcome-icon--success { color: var(--status-complete); }
+.anomaly-panel__outcome-icon--running { color: var(--status-running); }
+
+.anomaly-panel__pattern-footer {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.anomaly-panel__pattern-footer strong {
+  color: var(--status-anomaly);
+  font-family: var(--font-mono);
+}
+
+/* ── Threshold bar ────────────────────────────────────────────────── */
+
+.anomaly-panel__bar-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.anomaly-panel__bar-metric {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.anomaly-panel__bar-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.anomaly-panel__bar-value--over {
+  color: var(--status-anomaly);
+  font-weight: 700;
+}
+
+.anomaly-panel__bar {
+  position: relative;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border-subtle);
+  overflow: visible;
+}
+
+.anomaly-panel__bar-fill {
+  width: var(--evidence-value);
+  height: 100%;
+  max-width: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, rgba(251, 146, 60, 0.55), var(--status-anomaly));
+  transition: width 0.4s ease;
+}
+
+.anomaly-panel__bar-threshold {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: var(--evidence-threshold);
+  width: 2px;
+  transform: translateX(-1px);
+  border-radius: 2px;
+  background: var(--text-primary);
+  box-shadow: 0 0 0 1px var(--bg-primary);
+}
+
+.anomaly-panel__bar-threshold::after {
+  content: 'threshold';
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 4px);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--text-secondary);
+  transform: translateX(50%);
+}
+
+.anomaly-panel__note {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+/* ── Exception block ──────────────────────────────────────────────── */
+
+.anomaly-panel__exception {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: #fecaca;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+/* ── Delegation path ──────────────────────────────────────────────── */
+
+.anomaly-panel__path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.anomaly-panel__path-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.anomaly-panel__path-arrow {
+  color: var(--text-muted);
+}
+
+.anomaly-panel__path-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-inset);
+  border: 1px solid var(--border-medium);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.anomaly-panel__path-chip--repeat {
+  color: var(--status-anomaly);
+  border-color: rgba(251, 146, 60, 0.5);
+  background: rgba(251, 146, 60, 0.1);
+}
+
+.anomaly-panel__path-repeat {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--status-anomaly);
+}

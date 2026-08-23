@@ -1,59 +1,84 @@
 /**
  * AgentNode.tsx — Custom React Flow node for AgentScope.
  *
- * Renders a single span node with three visual states:
- *   - Active (pulsing border glow) — span in-flight, end_time === null
- *   - Complete (solid success) — span finished without error
- *   - Error (red glow) — span ended with status 'error'
+ * Card anatomy (UI redesign, FR-6):
+ *   - Top row: type icon (shape encodes type) + small-caps type label,
+ *     status chip top-right (shape encodes status: spinner/check/x/warning)
+ *   - Bold operation name as the dominant element
+ *   - Duration + token count as secondary metadata
  *
- * References:
- *   - Flow 3 Steps 2-3: pulsing active node, real-time appearance
- *   - Flow 4 Step 3: anomalous node has distinct visual state (future)
- *   - FR-6: visually distinguishing active/idle/anomalous nodes
+ * Visual states — distinguishable by icon SHAPE as well as color
+ * (colorblind-safe, Week 9 a11y pass):
+ *   - Running:   cyan pulsing border + spinning arc
+ *   - Complete:  calm green border + check
+ *   - Error:     red pulsing border + X
+ *   - Anomalous: orange dashed border + glow + warning triangle —
+ *     deliberately the loudest state; overrides the above.
+ *
+ * This component is identical for live and historical sources
+ * (RULES.md §3 invariant #5).
  */
 
 import { memo, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import AlertBadge from './AlertBadge';
+import {
+  IconLLM,
+  IconTool,
+  IconDelegation,
+  IconState,
+  IconFlow,
+  IconSpinner,
+  IconCheck,
+  IconX,
+  IconWarning,
+  IconClock,
+} from './icons';
 
-/**
- * Anomaly data shape, matching the worker's WS payload
- */
+/** Anomaly data shape, matching the worker's WS payload */
 export interface AnomalyData {
   rule: string;
   description: string;
   timestamp: string;
 }
 
+export type SpanType = 'llm_call' | 'tool_call' | 'delegation' | 'state_update';
+export type NodeStatus = 'active' | 'complete' | 'error';
+
 /** The data shape stored in each custom node */
 export interface AgentNodeData {
   label: string;
-  spanType: 'llm_call' | 'tool_call' | 'delegation' | 'state_update';
-  status: 'active' | 'complete' | 'error';
+  spanType: SpanType;
+  status: NodeStatus;
   agentId?: string;
   tokenUsage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number } | null;
   duration?: number | null;
   anomaly?: AnomalyData | null;
+  onSelect?: (spanId: string) => void;
   [key: string]: unknown;
 }
 
-/** Icons (emoji) per span type — lightweight, no icon library needed */
-const SPAN_TYPE_ICONS: Record<string, string> = {
-  llm_call: '🤖',
-  tool_call: '🔧',
-  delegation: '📡',
-  state_update: '📝',
+/** Type icons — SHAPE encodes type; tint stays neutral so color
+ *  communicates status only (FR-6 a11y). */
+const SPAN_TYPE_ICONS: Record<string, typeof IconLLM> = {
+  llm_call: IconLLM,
+  tool_call: IconTool,
+  delegation: IconDelegation,
+  state_update: IconState,
 };
 
-/**
- * Status glyphs: non-color cue so node states stay distinguishable for
- * colorblind users (error-red vs complete-green is indistinguishable under
- * red-green CVD when hue is the only signal). FR-6 / Week 9 a11y pass.
- */
-const STATUS_GLYPH: Record<string, string> = {
-  active: '⟳',
-  complete: '✓',
-  error: '✖',
+const SPAN_TYPE_LABELS: Record<string, string> = {
+  llm_call: 'LLM Call',
+  tool_call: 'Tool Call',
+  delegation: 'Delegation',
+  state_update: 'State Update',
+};
+
+/** Status icons — SHAPE encodes status (non-color cue, FR-6) */
+const STATUS_ICONS: Record<string, typeof IconCheck> = {
+  active: IconSpinner,
+  complete: IconCheck,
+  error: IconX,
 };
 
 /** CSS class suffix per node status */
@@ -63,17 +88,23 @@ const STATUS_CLASS: Record<string, string> = {
   error: 'agent-node--error',
 };
 
+function formatDuration(ms: number): string {
+  return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`;
+}
+
 function AgentNode({ data, id }: NodeProps) {
   const nodeData = data as unknown as AgentNodeData;
-  const icon = SPAN_TYPE_ICONS[nodeData.spanType] ?? '⚙️';
+
+  const TypeIcon = SPAN_TYPE_ICONS[nodeData.spanType] ?? IconFlow;
+  const isAnomalous = Boolean(nodeData.anomaly);
+  const StatusIcon = isAnomalous ? IconWarning : STATUS_ICONS[nodeData.status] ?? IconCheck;
+  const statusKey = isAnomalous ? 'anomalous' : nodeData.status;
+
   let statusClass = STATUS_CLASS[nodeData.status] ?? '';
+  if (isAnomalous) statusClass += ' agent-node--anomalous';
 
-  if (nodeData.anomaly) {
-    statusClass += ' agent-node--anomalous';
-  }
-
-  const statusText = nodeData.anomaly
-    ? `anomalous (${nodeData.anomaly.rule})`
+  const statusText = isAnomalous
+    ? `anomalous (${nodeData.anomaly?.rule})`
     : nodeData.status;
 
   const onKeyDown = (e: ReactKeyboardEvent) => {
@@ -91,41 +122,40 @@ function AgentNode({ data, id }: NodeProps) {
       id={`node-${nodeData.label}`}
       role="button"
       tabIndex={0}
-      aria-label={`${nodeData.spanType} node "${nodeData.label}", status ${statusText}. Press Enter to inspect.`}
+      aria-label={`${SPAN_TYPE_LABELS[nodeData.spanType] ?? nodeData.spanType} node "${nodeData.label}", status ${statusText}. Press Enter to inspect.`}
       onKeyDown={onKeyDown}
     >
-      {nodeData.anomaly && <AlertBadge rule={nodeData.anomaly.rule} />}
+      {isAnomalous && <AlertBadge rule={nodeData.anomaly!.rule} />}
 
       <Handle type="target" position={Position.Top} className="agent-node__handle" />
 
-      <div className="agent-node__header">
-        <span className="agent-node__icon" aria-hidden="true">{icon}</span>
-        <span className="agent-node__type">{nodeData.spanType.replace('_', ' ')}</span>
-        <span
-          className={`agent-node__status-glyph agent-node__status-glyph--${nodeData.anomaly ? 'anomalous' : nodeData.status}`}
-          aria-hidden="true"
-        >
-          {nodeData.anomaly ? '⚠' : STATUS_GLYPH[nodeData.status] ?? ''}
+      <div className="agent-node__top">
+        <span className="agent-node__type-icon" aria-hidden="true">
+          <TypeIcon size={13} />
         </span>
-        {nodeData.status === 'active' && !nodeData.anomaly && (
-          <span className="agent-node__live-dot" />
-        )}
+        <span className="agent-node__type">
+          {SPAN_TYPE_LABELS[nodeData.spanType] ?? nodeData.spanType}
+        </span>
+        <span className={`agent-node__status-chip agent-node__status-chip--${statusKey}`} aria-hidden="true">
+          <StatusIcon size={12} />
+        </span>
       </div>
 
-      <div className="agent-node__label">{nodeData.label}</div>
+      <div className="agent-node__name" title={nodeData.label}>{nodeData.label}</div>
 
-      {nodeData.duration != null && (
-        <div className="agent-node__meta">
-          {nodeData.duration >= 1000
-            ? `${(nodeData.duration / 1000).toFixed(1)}s`
-            : `${nodeData.duration}ms`}
-          {nodeData.tokenUsage?.total_tokens != null && (
-            <span className="agent-node__tokens">
-              · {nodeData.tokenUsage.total_tokens} tok
-            </span>
-          )}
-        </div>
-      )}
+      <div className="agent-node__meta">
+        <IconClock size={10} className="agent-node__meta-icon" aria-hidden="true" />
+        <span>
+          {nodeData.duration != null
+            ? formatDuration(nodeData.duration)
+            : nodeData.status === 'active'
+              ? 'in progress'
+              : '—'}
+        </span>
+        {nodeData.tokenUsage?.total_tokens != null && (
+          <span className="agent-node__tokens">{nodeData.tokenUsage.total_tokens.toLocaleString()} tok</span>
+        )}
+      </div>
 
       <Handle type="source" position={Position.Bottom} className="agent-node__handle" />
     </div>
@@ -133,4 +163,3 @@ function AgentNode({ data, id }: NodeProps) {
 }
 
 export default memo(AgentNode);
-

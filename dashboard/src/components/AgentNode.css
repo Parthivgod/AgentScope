@@ -1,26 +1,30 @@
 /*
- * AgentNode.css — Styles for the custom AgentScope graph node.
+ * AgentNode.css — Styles for the custom AgentScope graph node card.
  *
- * Three visual states:
- *   --active:   pulsing cyan/blue border glow (Flow 3, Step 2)
- *   --complete: solid green border, subtle success glow
- *   --error:    red border with a red glow pulse
+ * Card geometry mirrors the fixed dagre box (layout.ts /
+ * --node-card-*): 220×84. The anomalous state is deliberately the
+ * loudest — orange dashed border + glow — and overrides every normal
+ * state (FR-6: anomalous must be unmistakable vs running AND complete).
  *
- * Design uses a dark-themed glassmorphism card with micro-animations.
+ * Status is encoded by icon SHAPE (spinner/check/X/warning) as well as
+ * color so states stay distinguishable under color-vision deficiency.
  */
 
 /* ── Base node card ──────────────────────────────────────────────── */
 .agent-node {
-  min-width: 180px;
-  max-width: 240px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: rgba(22, 23, 34, 0.85);
+  width: var(--node-card-width);
+  height: var(--node-card-height);
+  padding: 10px 12px 8px 12px;
+  border-radius: var(--node-card-radius);
+  background: var(--bg-card);
   backdrop-filter: blur(12px);
   border: 1.5px solid rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   transition:
     border-color 0.3s ease,
     box-shadow 0.3s ease,
@@ -31,65 +35,118 @@
 
 .agent-node:hover {
   transform: translateY(-1px);
-  border-color: rgba(255, 255, 255, 0.16);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  border-color: var(--border-strong);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-/* ── Header row: icon + type + live dot ──────────────────────────── */
-.agent-node__header {
+/* ── Top row: type icon chip + type label + status chip ──────────── */
+.agent-node__top {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 7px;
+  min-height: 22px;
 }
 
-.agent-node__icon {
-  font-size: 14px;
-  line-height: 1;
+.agent-node__type-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 .agent-node__type {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: #94a3b8;
-}
-
-/* Live dot — small pulsing circle when node is active */
-.agent-node__live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #22d3ee;
-  margin-left: auto;
-  animation: liveDotPulse 1.4s ease-in-out infinite;
-}
-
-@keyframes liveDotPulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.5); }
-  50% { opacity: 0.6; box-shadow: 0 0 0 4px rgba(34, 211, 238, 0); }
-}
-
-/* ── Label ───────────────────────────────────────────────────────── */
-.agent-node__label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #f1f5f9;
+  letter-spacing: 0.7px;
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* Status chip — circular, tinted by status; contains the shape cue */
+.agent-node__status-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+}
+
+.agent-node__status-chip--active {
+  color: var(--status-running);
+  background: rgba(34, 211, 238, 0.12);
+  border-color: rgba(34, 211, 238, 0.35);
+}
+
+.agent-node__status-chip--complete {
+  color: var(--status-complete);
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.agent-node__status-chip--error {
+  color: var(--status-error);
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.agent-node__status-chip--anomalous {
+  color: var(--status-anomaly);
+  background: rgba(251, 146, 60, 0.15);
+  border-color: rgba(251, 146, 60, 0.5);
+}
+
+/* ── Name — dominant element ─────────────────────────────────────── */
+.agent-node__name {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.1px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
 /* ── Meta line (duration + tokens) ───────────────────────────────── */
 .agent-node__meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: auto;
+  font-family: var(--font-mono);
   font-size: 10px;
-  color: #64748b;
-  margin-top: 4px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.agent-node__meta-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .agent-node__tokens {
-  color: #94a3b8;
+  color: var(--text-secondary);
+  margin-left: 6px;
+}
+
+.agent-node__tokens::before {
+  content: '·';
+  margin-right: 6px;
+  color: var(--text-muted);
 }
 
 /* ── Handles ─────────────────────────────────────────────────────── */
@@ -106,12 +163,11 @@
   background: #94a3b8 !important;
 }
 
-
 /* ═══════════════════════════════════════════════════════════════════
  *  STATE VARIANTS
  * ═══════════════════════════════════════════════════════════════════ */
 
-/* ── Active (in-flight) — pulsing cyan glow ──────────────────────── */
+/* ── Running (in-flight) — pulsing cyan glow ─────────────────────── */
 .agent-node--active {
   border-color: rgba(34, 211, 238, 0.5);
   animation: activeGlow 2s ease-in-out infinite;
@@ -130,14 +186,10 @@
   }
 }
 
-/* ── Complete — green accent ─────────────────────────────────────── */
+/* ── Complete — calm green accent ────────────────────────────────── */
 .agent-node--complete {
   border-color: rgba(74, 222, 128, 0.35);
   box-shadow: 0 0 8px rgba(74, 222, 128, 0.08);
-}
-
-.agent-node--complete .agent-node__label {
-  color: #bbf7d0;
 }
 
 /* ── Error — red glow ────────────────────────────────────────────── */
@@ -159,50 +211,31 @@
   }
 }
 
-.agent-node--error .agent-node__label {
-  color: #fca5a5;
-}
-
-/* ── Anomalous — amber glow (Overrides normal states) ──────────────── */
-/* Dashed border = non-hue cue so anomalous stays distinguishable under
-   color-vision deficiency (Week 9 a11y pass, FR-6). */
+/* ── Anomalous — orange dashed border + glow; OVERRIDES normal states.
+     Dashed border = non-hue cue so anomalous stays distinguishable under
+     color-vision deficiency (Week 9 a11y pass, FR-6). ────────────────── */
 .agent-node--anomalous {
-  border-color: rgba(251, 191, 36, 0.6) !important;
+  border-color: var(--status-anomaly) !important;
   border-style: dashed !important;
-  animation: anomalousGlow 2s ease-in-out infinite !important;
-}
-
-/* ── Status glyphs (non-hue state cue for colorblind users) ────────── */
-.agent-node__status-glyph {
-  font-size: 12px;
-  line-height: 1;
-  margin-left: auto;
-}
-
-.agent-node__status-glyph + .agent-node__live-dot {
-  margin-left: 4px;
-}
-
-.agent-node__status-glyph--complete { color: #bbf7d0; }
-.agent-node__status-glyph--error { color: #fca5a5; }
-.agent-node__status-glyph--active { color: #a5f3fc; }
-.agent-node__status-glyph--anomalous { color: #fde68a; }
-
-/* ── Keyboard focus (Week 9 a11y pass) ─────────────────────────────── */
-.agent-node:focus-visible {
-  outline: 2px solid #e2e8f0;
-  outline-offset: 2px;
+  background: rgba(251, 146, 60, 0.06) !important;
+  animation: anomalousGlow 1.8s ease-in-out infinite !important;
 }
 
 @keyframes anomalousGlow {
   0%, 100% {
     box-shadow:
-      0 0 8px rgba(251, 191, 36, 0.2),
-      0 0 20px rgba(251, 191, 36, 0.1);
+      0 0 10px rgba(251, 146, 60, 0.25),
+      0 0 24px rgba(251, 146, 60, 0.1);
   }
   50% {
     box-shadow:
-      0 0 14px rgba(251, 191, 36, 0.4),
-      0 0 36px rgba(251, 191, 36, 0.15);
+      0 0 16px rgba(251, 146, 60, 0.45),
+      0 0 40px rgba(251, 146, 60, 0.18);
   }
+}
+
+/* ── Keyboard focus (Week 9 a11y pass) ─────────────────────────────── */
+.agent-node:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
 }

@@ -7,13 +7,13 @@ from typing import Dict, Any
 # Ensure SDK is in path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../sdk")))
 
-import agentscope
-from agentscope import trace, patch
+from agentscope.trace import trace
+from agentscope.patch import patch
 
 logger = logging.getLogger(__name__)
 
 # Manual instrumentation for custom functions/tools using @agentscope.trace
-@trace(name="fetch_web_data", span_type="tool_call", agent_id="custom-demo-agent")
+@trace(name="fetch_web_data", span_type="tool_call", agent_id="web-data-tool")
 async def fetch_web_data(query: str) -> Dict[str, Any]:
     """Simulates fetching web data as a custom tool call."""
     await asyncio.sleep(0.05)
@@ -25,7 +25,7 @@ async def fetch_web_data(query: str) -> Dict[str, Any]:
         ]
     }
 
-@trace(name="process_search_results", span_type="tool_call", agent_id="custom-demo-agent")
+@trace(name="process_search_results", span_type="tool_call", agent_id="result-processor")
 async def process_search_results(data: Dict[str, Any]) -> str:
     """Processes and formats raw search results into a text prompt."""
     await asyncio.sleep(0.02)
@@ -33,12 +33,13 @@ async def process_search_results(data: Dict[str, Any]) -> str:
     snippets = [f"- {item['title']}: {item['snippet']}" for item in results]
     return "Retrieved context:\n" + "\n".join(snippets)
 
-@trace(name="generate_summary", span_type="llm_call", agent_id="custom-demo-agent")
+@trace(name="generate_summary", span_type="llm_call", agent_id="summary-generator")
 async def generate_summary(context: str, query: str) -> str:
     """Simulates generating a response summary."""
     await asyncio.sleep(0.05)
     return f"Summary for '{query}': AgentScope enables visibility across custom agents via manual instrumentation."
 
+@trace(name="custom_agent_run", span_type="delegation", agent_id="custom-demo-agent")
 async def run_custom_agent(query: str = "Explain AgentScope instrumentation", agent_id: str = "custom-demo-agent", trace_id: str = "custom-trace-001") -> Dict[str, Any]:
     """
     Executes the custom agent workflow.

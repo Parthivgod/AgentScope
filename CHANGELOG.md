@@ -1,5 +1,32 @@
 # AgentScope Changelog
 
+## [2026-08-23 21:39] — Dashboard UI Redesign + Anomaly Evidence — Track C/Shared — Codex
+
+**What changed:**
+- `dashboard/`: completed the screenshot-led dark dashboard redesign with shared design tokens; run/agent context; always-visible anomaly, capture-state, connection, and live/replay controls; a dedicated five-metric stats row; a collapsible status/node-type legend; shape-distinct inline SVG icons; fixed-size dagre-aligned node cards; orange dashed/glowing anomaly states; anomaly-aware minimap colors; and responsive header behavior. Live and historical modes still feed the same graph-rendering path, and dagre remains the only layout engine.
+- `dashboard/`: added rule-specific anomaly evidence inside the existing InspectPanel: reconstructed failure-loop call timelines, correctly scaled timeout/token/message-storm threshold bars, crash exception details, delegation-cycle path chips, and a raw-details fallback. Corrected the old `details.message` lookup to `details.reason`, fixed threshold parsing so token-spike observed values are not mistaken for thresholds, and added plain-language rule descriptions alongside observed detector evidence.
+- `dashboard/`: preserved and strengthened keyboard/ARIA behavior (Enter/Space node inspection, Escape close, dialog semantics, page landmarks, heading order, reduced-motion handling, non-color status cues) and corrected active-toggle/anomaly-badge contrast.
+- `examples/custom_demo_agent/`: repaired the example's decorator/patch imports, added a traced parent delegation plus distinct child agent identities, and added a bounded shutdown queue flush so the no-LLM demo produces a real four-node/three-edge hierarchy without false delegation-cycle flags. Updated its test for the current `get_redis()` backend boundary.
+- `examples/langgraph_demo_agent/test_demo_e2e.py`: updated the stale Redis mock target to the current `get_redis()` boundary; production LangGraph code is unchanged.
+- `docs/future-work.md`: explicitly recorded why the reference image's “Terminate Agent” control is omitted (RULES.md §1 / invariant #7) and the missing process-identity contract that would be prerequisite to reconsidering it.
+
+**Why:**
+- Completes the Phase 2 dashboard redesign against FR-6, FR-8, User Flow 3 (live graph), User Flow 4 (anomaly alerting/inspection), and User Flow 5 (replay consistency), while keeping detection strictly observational and SDK-side redaction read-only in the dashboard.
+
+**Assumptions made (if any):**
+- The reference image is a visual target, not authorization for its remediation control. The human-confirmed scope keeps “Terminate Agent” absent and represents redaction only as a read-only Full Capture/Redacted indicator.
+- The example-only fixes were included because the requested live/replay parity check could not start with the stale public-import path; no SDK, backend, worker, schema, dependency, or deployment code changed.
+
+**Open questions / follow-ups (if any):**
+- The same no-LLM trace rendered the same 4 nodes, 3 edges, names, and zero-anomaly state live and in replay; however, the observed live WebSocket session missed two final completion updates that were durably present in `/history` (replay showed 4 complete, live showed 2 complete/2 active). This is recorded rather than hidden; WebSocket/deployment rework was an explicit redesign non-goal. The independent demo-readiness live anomaly check passed.
+
+**Tests added/run:**
+- Dashboard: production build PASS; oxlint PASS; axe-core 0 violations / 34 passes; keyboard node inspection PASS; Escape-to-close PASS; demo-readiness PASS (replay 4 nodes/3 edges, live anomaly rendered, zero console errors).
+- Browser verification at the 1920×875 reference viewport: failure-loop call pattern, delegation-cycle path, timeout and token-spike bars, happy-path zero state, and read-only capture/connection indicators all PASS; historical checks reported zero console errors.
+- Full suites: SDK 25/25, backend 11/11, support-triage 6/6, custom demo 1/1, LangGraph demo 1/1. Unauthenticated `/ingest` returned 401 through HTTP :80 and HTTPS :8443; HTTPS `/traces` returned 200.
+
+---
+
 ## [2026-08-23 20:47] — STEP 0: Landed demo-stepped-up-showcase + bugfix-replay-anomaly-flags into main — Track Shared
 
 **What changed:**

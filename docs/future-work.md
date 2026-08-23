@@ -9,6 +9,11 @@ Any idea that's plausible but out of current scope (RULES.md §1), or that's in-
 - **What it would take:** <brief note, optional>
 -->
 
+## Monitored-Agent Termination Affordance
+- **Proposed by:** Dashboard UI redesign / 2026-08-23
+- **Why it's deferred:** Out of scope under RULES.md §1 and §3 invariant #7. AgentScope detects and explains anomalies; it must not terminate or otherwise remediate the monitored agent automatically or through a dashboard control.
+- **What it would take:** An explicit product-scope and safety-policy change, plus a trustworthy process identity/control contract (the current span schema has no PID or equivalent termination target). Until then, the reference image's “Terminate Agent” control is intentionally omitted.
+
 ## Trace-Indexed Lookup (Sorted Set per Trace)
 - **Proposed by:** Track B / Week 7
 - **Why it's deferred:** Premature optimization at Sprint 1 scale. Current `/history` relies on scanning XRANGE and in-memory filtering.

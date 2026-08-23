@@ -1,11 +1,11 @@
 /*
  * App.css — Chrome styles for the AgentScope dashboard shell.
  *
- * Covers the header bar, connection indicator, stat counters,
- * graph canvas container, and React Flow overrides.
+ * UI redesign (FR-6): header carries run context + a prominent anomaly
+ * badge; a dedicated stats bar sits under it; the segmented LIVE/
+ * HISTORICAL toggle replaces the old loose buttons. Everything consumes
+ * the design tokens in index.css.
  */
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
 /* ── App layout ──────────────────────────────────────────────────── */
 .app {
@@ -13,10 +13,17 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #0b0c14;
-  color: #e2e8f0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
   overflow: hidden;
+}
+
+.app__main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Header ──────────────────────────────────────────────────────── */
@@ -24,91 +31,316 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  gap: 16px;
+  padding: 0 20px;
   height: 56px;
   min-height: 56px;
-  background: rgba(15, 16, 25, 0.8);
+  background: var(--bg-surface);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-subtle);
   z-index: 20;
 }
 
 .app__header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
+  min-width: 0;
 }
 
 .app__header-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 /* ── Logo ────────────────────────────────────────────────────────── */
 .app__logo {
   font-size: 16px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text-primary);
   margin: 0;
   display: flex;
   align-items: center;
   gap: 8px;
   letter-spacing: -0.3px;
+  white-space: nowrap;
 }
 
 .app__logo-icon {
-  color: #8b5cf6;
+  color: var(--accent-purple);
   font-size: 18px;
 }
 
-/* ── Connection status pill ──────────────────────────────────────── */
+/* ── Run context: trace id + agent names ─────────────────────────── */
+.app__run-context {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+  border-left: 1px solid var(--border-subtle);
+  padding-left: 14px;
+}
+
+.app__run-id {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app__run-agents {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+/* ── Anomaly-count badge — prominent, impossible to miss (Flow 4) ── */
+.app__anomaly-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  border: 1px solid var(--border-medium);
+  background: transparent;
+  white-space: nowrap;
+}
+
+.app__anomaly-badge--active {
+  color: var(--status-anomaly);
+  background: rgba(251, 146, 60, 0.12);
+  border-color: rgba(251, 146, 60, 0.55);
+  box-shadow: 0 0 14px rgba(251, 146, 60, 0.35);
+  animation: anomalyBadgePulse 2s ease-in-out infinite;
+}
+
+@keyframes anomalyBadgePulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(251, 146, 60, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(251, 146, 60, 0.55); }
+}
+
+/* ── Connection status indicator ─────────────────────────────────── */
 .app__connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  padding: 3px 10px;
-  border-radius: 10px;
-  background: rgba(248, 113, 113, 0.12);
-  color: #f87171;
-  transition: all 0.3s ease;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.app__connection-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .app__connection--on {
-  background: rgba(74, 222, 128, 0.12);
-  color: #4ade80;
+  color: var(--status-complete);
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.3);
 }
 
-/* ── Stat badges ─────────────────────────────────────────────────── */
-.app__stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
+.app__connection--off {
+  color: var(--status-error);
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.3);
 }
+
+.app__connection--replay {
+  color: var(--accent-purple);
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+/* ── Redaction indicator — READ-ONLY (Decision #4) ───────────────── */
+.app__redaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: help;
+  white-space: nowrap;
+}
+
+.app__redaction--on {
+  color: var(--status-complete);
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+/* ── Segmented LIVE / HISTORICAL toggle ──────────────────────────── */
+.app__segmented {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-inset);
+}
+
+.app__segment {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 5px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.app__segment:hover {
+  color: var(--text-primary);
+}
+
+.app__segment:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 1px;
+}
+
+.app__segment--active {
+  background: #5b21b6;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.35);
+}
+
+/* ── Trace select (historical mode) ──────────────────────────────── */
+.app__trace-select {
+  background: var(--bg-inset);
+  color: var(--text-primary);
+  border: 1px solid var(--border-medium);
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  max-width: 260px;
+}
+
+.app__trace-select:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 1px;
+}
+
+/* ── Stats bar — the run at a glance ─────────────────────────────── */
+.app__statsbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 10px 20px;
+  height: 68px;
+  min-height: 68px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  z-index: 19;
+  overflow-x: auto;
+}
+
+.app__stat {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 1fr 1fr;
+  align-items: center;
+  column-gap: 7px;
+  width: 92px;
+  height: 48px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  white-space: nowrap;
+}
+
+.app__stat--muted {
+  opacity: 0.75;
+}
+
+.app__stat-icon {
+  display: flex;
+  align-items: center;
+  grid-row: 1 / 3;
+  color: var(--text-muted);
+}
+
+.app__stat-icon--active { color: var(--status-running); }
+.app__stat-icon--complete { color: var(--status-complete); }
+.app__stat-icon--error { color: var(--status-error); }
+.app__stat-icon--anomalous { color: var(--status-anomaly); }
 
 .app__stat-value {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 16px;
+  font-family: var(--font-mono);
+  font-size: 15px;
   font-weight: 700;
-  color: #e2e8f0;
+  color: var(--text-primary);
   line-height: 1;
+  align-self: end;
 }
 
-.app__stat-value--active {
-  color: #22d3ee;
-}
-
-.app__stat-value--error {
-  color: #f87171;
-}
+.app__stat-value--active { color: var(--status-running); }
+.app__stat-value--error { color: var(--status-error); }
+.app__stat-value--anomalous { color: var(--status-anomaly); }
 
 .app__stat-label {
   font-size: 9px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: #94a3b8; /* >=4.5:1 on header bg (Week 9 a11y pass) */
+  color: var(--text-secondary); /* >=4.5:1 on stats bar bg (a11y) */
+  align-self: start;
+}
+
+@media (max-width: 1220px) {
+  .app__run-agents,
+  .app__redaction {
+    display: none;
+  }
+
+  .app__run-id {
+    max-width: 180px;
+  }
+}
+
+/* ── Error banner (historical load failure) ──────────────────────── */
+.app__error-banner {
+  background: #7f1d1d;
+  color: #fecaca;
+  padding: 8px 20px;
+  font-size: 0.875rem;
 }
 
 /* ── Canvas ──────────────────────────────────────────────────────── */
@@ -157,18 +389,18 @@
 
 /* Controls */
 .app__controls {
-  background: rgba(15, 16, 25, 0.8) !important;
+  background: var(--bg-surface) !important;
   backdrop-filter: blur(8px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.06) !important;
-  border-radius: 8px !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-md) !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
 }
 
 .app__controls button {
   background: transparent !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
-  color: #94a3b8 !important;
-  fill: #94a3b8 !important;
+  color: var(--text-secondary) !important;
+  fill: var(--text-secondary) !important;
 }
 
 .app__controls button:hover {
@@ -176,14 +408,14 @@
 }
 
 .app__controls button svg {
-  fill: #94a3b8 !important;
+  fill: var(--text-secondary) !important;
 }
 
 /* MiniMap */
 .app__minimap {
-  background: rgba(15, 16, 25, 0.8) !important;
-  border: 1px solid rgba(255, 255, 255, 0.06) !important;
-  border-radius: 8px !important;
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--radius-md) !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
 }
 
@@ -194,5 +426,5 @@
 
 /* React Flow background */
 .react-flow__background {
-  background: #0b0c14 !important;
+  background: var(--bg-primary) !important;
 }

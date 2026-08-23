@@ -1,0 +1,106 @@
+/*
+ * Legend.css — STATUS / NODE TYPE legend overlay on the graph canvas.
+ * Positioned above the React Flow pane; collapses to a small tab.
+ */
+
+.legend {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 5;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.legend__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  backdrop-filter: blur(8px);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  margin-top: 2px;
+}
+
+.legend__toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--border-medium);
+}
+
+.legend__toggle:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 1px;
+}
+
+.legend__chevron {
+  transition: transform 0.2s ease;
+}
+
+.legend__chevron--open {
+  transform: rotate(180deg);
+}
+
+.legend__body {
+  min-width: 150px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.legend__title {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.legend__title + .legend__title,
+.legend__list + .legend__title {
+  margin-top: 10px;
+}
+
+.legend__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.legend__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend__swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+
+.legend__swatch--running { color: var(--status-running); background: rgba(34, 211, 238, 0.1); }
+.legend__swatch--complete { color: var(--status-complete); background: rgba(74, 222, 128, 0.1); }
+.legend__swatch--error { color: var(--status-error); background: rgba(248, 113, 113, 0.1); }
+.legend__swatch--anomaly { color: var(--status-anomaly); background: rgba(251, 146, 60, 0.12); }
+.legend__swatch--type { color: var(--text-secondary); background: rgba(255, 255, 255, 0.06); }
+
+.legend__label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}

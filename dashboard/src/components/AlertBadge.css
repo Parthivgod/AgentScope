@@ -1,25 +1,33 @@
+/*
+ * AlertBadge.css — anomaly chip pinned to a flagged node's corner.
+ * Orange (var(--status-anomaly)) is the dashboard-wide anomaly accent.
+ */
+
 .alert-badge {
   position: absolute;
-  top: -12px;
-  right: -12px;
-  background: rgba(43, 20, 20, 0.95);
-  border: 1px solid #fbbf24;
-  border-radius: 12px;
-  padding: 4px 8px;
+  top: -11px;
+  right: -10px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(43, 22, 12, 0.95);
+  border: 1px solid var(--status-anomaly);
   font-size: 10px;
-  font-weight: 600;
-  color: #fbbf24;
-  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--status-anomaly);
+  box-shadow: 0 4px 12px rgba(251, 146, 60, 0.25);
   z-index: 10;
   backdrop-filter: blur(4px);
+  white-space: nowrap;
   animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 .alert-badge__icon {
-  font-size: 11px;
+  display: flex;
+  align-items: center;
 }
 
 @keyframes popIn {

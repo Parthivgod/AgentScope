@@ -26,7 +26,9 @@ async def test_custom_demo_agent_spans_sent_to_ingest():
             received_spans.append(json)
         return response
 
-    with mock_patch("backend.app.ingest.redis_client.xadd", new_callable=AsyncMock) as mock_xadd, \
+    mock_redis = AsyncMock()
+
+    with mock_patch("app.ingest.get_redis", return_value=mock_redis), \
          mock_patch("httpx.AsyncClient.post", side_effect=mock_post):
 
         # Run custom demo agent
@@ -45,7 +47,13 @@ async def test_custom_demo_agent_spans_sent_to_ingest():
             assert "span_id" in span_json
             assert "span_type" in span_json
             assert "name" in span_json
-            assert span_json["agent_id"] in ["custom-e2e-agent", "custom-demo-agent"]
+            assert span_json["agent_id"] in {
+                "custom-e2e-agent",
+                "custom-demo-agent",
+                "web-data-tool",
+                "result-processor",
+                "summary-generator",
+            }
             assert span_json["status"]["status"] == "success"
 
-        assert mock_xadd.called
+        assert mock_redis.xadd.called

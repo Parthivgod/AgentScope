@@ -2,8 +2,13 @@
  * index.css — Global base styles for the AgentScope dashboard.
  *
  * Sets up the dark theme foundation: background, reset,
- * font import, and selection colors. All component-specific
- * styles live in their own CSS files next to their components.
+ * font import, design tokens, and selection colors. All
+ * component-specific styles live in their own CSS files next
+ * to their components.
+ *
+ * UI-redesign note: the token block below is the single source of
+ * truth for the visual language (FR-6). Components consume
+ * var(--*) instead of hardcoding hexes.
  */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
@@ -17,21 +22,51 @@
   padding: 0;
 }
 
-/* ── Root ────────────────────────────────────────────────────────── */
+/* ── Root / design tokens ────────────────────────────────────────── */
 :root {
+  /* Surfaces */
   --bg-primary: #0b0c14;
-  --bg-surface: rgba(15, 16, 25, 0.95);
-  --bg-elevated: rgba(22, 23, 34, 0.85);
+  --bg-surface: rgba(15, 16, 25, 0.92);
+  --bg-elevated: rgba(22, 23, 34, 0.92);
+  --bg-card: rgba(22, 23, 34, 0.92);
+  --bg-inset: rgba(11, 12, 20, 0.6);
+
+  /* Borders */
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-medium: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  /* Text */
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-muted: #8492a6;
+
+  /* Node status colors — color encodes STATUS only; node TYPE is
+     encoded by icon shape (FR-6 a11y: never color alone). */
+  --status-running: #22d3ee;
+  --status-complete: #4ade80;
+  --status-error: #f87171;
+  --status-anomaly: #fb923c;
+
+  /* Legacy accents (kept for existing references) */
   --accent-purple: #8b5cf6;
   --accent-cyan: #22d3ee;
   --accent-green: #4ade80;
   --accent-red: #f87171;
   --accent-amber: #fbbf24;
+  --accent-orange: #fb923c;
+
+  /* Node card geometry — mirrors dagre's fixed box (layout.ts) */
+  --node-card-width: 220px;
+  --node-card-height: 84px;
+  --node-card-radius: 12px;
+
+  /* Radii + typography */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --font-ui: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
   color-scheme: dark;
 }
@@ -44,7 +79,7 @@ body {
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-ui);
   font-size: 14px;
   line-height: 1.5;
   color: var(--text-primary);
@@ -81,4 +116,15 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Reduced motion: decorative pulses/spins become static ───────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

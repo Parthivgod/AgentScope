@@ -12,10 +12,17 @@
  * historical event sources (RULES.md §3 invariant #5). The only
  * difference between modes is the event source passed to the hook.
  *
+ * Shell (UI redesign, FR-6 / Flow 3 / Flow 4): header with run context,
+ * prominent anomaly-count badge, segmented LIVE/HISTORICAL toggle,
+ * connection-status and redaction indicators (read-only — redaction is
+ * decided client-side in the SDK, Decision #4), and an at-a-glance
+ * stats bar. Every element renders identically in both modes.
+ *
  * References:
  *   - FR-6:  live hierarchical graph, active/idle/anomalous states
  *   - Flow 3: first live monitoring session
- *   - Flow 5: historical replay (same component, different source — future)
+ *   - Flow 4: anomaly alerting at a glance
+ *   - Flow 5: historical replay (same component, different source)
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -37,6 +44,16 @@ import { useEventSource, type SpanEvent } from './hooks/useEventSource';
 import { getLayoutedElements } from './layout';
 import AgentNode, { type AgentNodeData } from './components/AgentNode';
 import InspectPanel from './components/InspectPanel';
+import Legend from './components/Legend';
+import {
+  IconGraph,
+  IconCheckCircle,
+  IconActivity,
+  IconXCircle,
+  IconWarning,
+  IconLock,
+  IconEye,
+} from './components/icons';
 
 import './components/AgentNode.css';
 import './App.css';
@@ -124,13 +141,16 @@ export default function App() {
 
       for (const [spanId, latestEvent] of latestSpans.entries()) {
         const existingNode = currentNodesMap.get(spanId);
-        
+
         const anomalyEvent = anomalies[spanId];
         let anomalyData = null;
         if (anomalyEvent) {
           anomalyData = {
             rule: anomalyEvent.rule,
-            description: anomalyEvent.details?.message || 'Anomaly detected',
+            // Every rule emits details.reason (worker/rules/*) — the old
+            // `details?.message` read never matched, so descriptions always
+            // fell back to the generic string. Fixed in the UI redesign.
+            description: anomalyEvent.details?.reason || 'Anomaly detected',
             timestamp: new Date().toISOString(),
           };
         }
@@ -224,26 +244,51 @@ export default function App() {
     setSelectedSpanId(null);
   }, []);
 
-  // ── Count stats for the header bar ────────────────────────────────
+  // ── Count stats for the stats bar ─────────────────────────────────
   const stats = useMemo(() => {
     let active = 0;
+    let complete = 0;
     let errors = 0;
     let anomaliesCount = 0;
     nodes.forEach((n) => {
       const data = n.data as AgentNodeData;
       if (data.status === 'active') active++;
+      if (data.status === 'complete') complete++;
       if (data.status === 'error') errors++;
       if (data.anomaly) anomaliesCount++;
     });
-    return { total: nodes.length, active, errors, anomalies: anomaliesCount };
+    return { total: nodes.length, complete, active, errors, anomalies: anomaliesCount };
   }, [nodes]);
 
+  // ── Run context for the header (trace + agents) ───────────────────
+  const runContext = useMemo(() => {
+    const traceId = mode === 'historical' ? historicalTraceId : events[0]?.trace_id ?? null;
+    const agents = [...new Set(events.map((e) => e.agent_id))];
+    return { traceId, agents };
+  }, [events, mode, historicalTraceId]);
+
+  const agentsLabel =
+    runContext.agents.length === 0
+      ? null
+      : runContext.agents.length <= 3
+        ? runContext.agents.join(' · ')
+        : `${runContext.agents.length} agents`;
+
+  // ── Redaction state — READ-ONLY indicator (Decision #4): redaction
+  //    is decided client-side in the SDK; the dashboard only reports
+  //    what it received (inferred from [REDACTED] markers). ──────────
   const isRedacted = useMemo(() => {
-    return events.some(e => 
+    return events.some((e) =>
       (e.input && JSON.stringify(e.input).includes('[REDACTED]')) ||
       (e.output && JSON.stringify(e.output).includes('[REDACTED]'))
     );
   }, [events]);
+
+  const connection = mode === 'historical'
+    ? { label: 'Replay', state: 'replay' as const }
+    : isConnected
+      ? { label: 'Connected', state: 'on' as const }
+      : { label: 'Disconnected', state: 'off' as const };
 
   return (
     <div className="app" id="agentscope-dashboard">
@@ -253,82 +298,124 @@ export default function App() {
           <h1 className="app__logo">
             <span className="app__logo-icon">◉</span> AgentScope
           </h1>
-          <span className={`app__connection ${isConnected ? 'app__connection--on' : ''}`}>
-            {isConnected ? 'Live' : mode === 'historical' ? 'Historical' : 'Disconnected'}
-          </span>
-          {isRedacted && (
-            <span className="app__badge app__badge--redacted" style={{ background: '#b91c1c', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, marginLeft: '8px' }}>
-              🔒 Redacted Data
-            </span>
-          )}
 
-          <div className="app__mode-toggles" style={{ marginLeft: '1.5rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <button 
-              className={`app__toggle-btn ${mode === 'live' ? 'app__toggle-btn--active' : ''}`}
+          {/* Run context — which run and which agents are on screen */}
+          <div className="app__run-context">
+            <span className="app__run-id" title={runContext.traceId ?? undefined}>
+              {runContext.traceId ?? 'awaiting events…'}
+            </span>
+            {agentsLabel && <span className="app__run-agents">{agentsLabel}</span>}
+          </div>
+
+        </div>
+
+        <div className="app__header-right">
+          {/* Prominent anomaly-count badge (Flow 4 Step 3) */}
+          <span
+            className={`app__anomaly-badge ${stats.anomalies > 0 ? 'app__anomaly-badge--active' : ''}`}
+            aria-label={`${stats.anomalies} anomalous ${stats.anomalies === 1 ? 'node' : 'nodes'}`}
+            aria-live="polite"
+          >
+            <IconWarning size={13} />
+            {stats.anomalies} {stats.anomalies === 1 ? 'Anomaly' : 'Anomalies'}
+          </span>
+
+          {/* Segmented LIVE / HISTORICAL toggle */}
+          <div className="app__segmented" role="group" aria-label="View mode">
+            <button
+              type="button"
+              className={`app__segment ${mode === 'live' ? 'app__segment--active' : ''}`}
               onClick={() => setMode('live')}
-              style={{ background: mode === 'live' ? '#1d4ed8' : '#1e293b', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}
+              aria-pressed={mode === 'live'}
             >
               Live
             </button>
-            <button 
-              className={`app__toggle-btn ${mode === 'historical' ? 'app__toggle-btn--active' : ''}`}
+            <button
+              type="button"
+              className={`app__segment ${mode === 'historical' ? 'app__segment--active' : ''}`}
               onClick={() => setMode('historical')}
-              style={{ background: mode === 'historical' ? '#1d4ed8' : '#1e293b', color: '#fff', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}
+              aria-pressed={mode === 'historical'}
             >
               Historical Replay
             </button>
-            {mode === 'historical' && (
-              <select
-                value={historicalTraceId || ''}
-                onChange={(e) => setHistoricalTraceId(e.target.value)}
-                style={{ background: '#0f172a', color: '#cbd5e1', border: '1px solid #334155', padding: '4px 8px', borderRadius: '4px', fontSize: '0.875rem', marginLeft: '0.5rem', cursor: 'pointer' }}
-              >
-                {traceIds.length === 0 && <option value="">No traces recorded</option>}
-                {traceIds.map((id) => (
-                  <option key={id} value={id}>Trace: {id}</option>
-                ))}
-              </select>
-            )}
           </div>
-        </div>
-        <div className="app__header-right">
-          <div className="app__stat">
-            <span className="app__stat-value">{stats.total}</span>
-            <span className="app__stat-label">Nodes</span>
-          </div>
-          <div className="app__stat">
-            <span className="app__stat-value app__stat-value--active">{stats.active}</span>
-            <span className="app__stat-label">Active</span>
-          </div>
-          {stats.errors > 0 && (
-            <div className="app__stat">
-              <span className="app__stat-value app__stat-value--error">{stats.errors}</span>
-              <span className="app__stat-label">Errors</span>
-            </div>
+
+          {mode === 'historical' && (
+            <select
+              className="app__trace-select"
+              value={historicalTraceId || ''}
+              onChange={(e) => setHistoricalTraceId(e.target.value)}
+              aria-label="Trace to replay"
+            >
+              {traceIds.length === 0 && <option value="">No traces recorded</option>}
+              {traceIds.map((id) => (
+                <option key={id} value={id}>Trace: {id}</option>
+              ))}
+            </select>
           )}
-          {stats.anomalies > 0 && (
-            <div className="app__stat">
-              <span className="app__stat-value app__stat-value--anomalous" style={{ color: '#fbbf24' }}>{stats.anomalies}</span>
-              <span className="app__stat-label">Anomalies</span>
-            </div>
-          )}
-          <div className="app__stat">
-            <span className="app__stat-value">{events.length}</span>
-            <span className="app__stat-label">Events</span>
-          </div>
+
+          {/* Read-only redaction indicator (Decision #4) */}
+          <span
+            className={`app__redaction ${isRedacted ? 'app__redaction--on' : ''}`}
+            title={
+              isRedacted
+                ? 'SDK-side redaction is ON: inputs/outputs were scrubbed before leaving the agent process. The dashboard cannot toggle this.'
+                : 'SDK-side redaction is OFF: full I/O capture. Redaction is configured in the SDK (Decision #4), not here.'
+            }
+          >
+            {isRedacted ? <IconLock size={12} /> : <IconEye size={12} />}
+            {isRedacted ? 'Redacted' : 'Full Capture'}
+          </span>
+
+          {/* Connection status */}
+          <span className={`app__connection app__connection--${connection.state}`} aria-live="polite">
+            <span className="app__connection-dot" aria-hidden="true" />
+            {connection.label}
+          </span>
         </div>
       </header>
 
-      {/* ── Historical-load error banner ─────────────────────────── */}
-      {mode === 'historical' && error && (
-        <div role="alert" style={{ background: '#7f1d1d', color: '#fecaca', padding: '8px 16px', fontSize: '0.875rem' }}>
-          Historical replay unavailable: {error}
+      <main className="app__main">
+        {/* ── Stats bar — the run at a glance (Flow 3/4, no clicking) ── */}
+        <div className="app__statsbar">
+        <div className="app__stat">
+          <span className="app__stat-icon"><IconGraph size={14} /></span>
+          <span className="app__stat-value">{stats.total}</span>
+          <span className="app__stat-label">Nodes</span>
         </div>
-      )}
+        <div className="app__stat">
+          <span className="app__stat-icon app__stat-icon--complete"><IconCheckCircle size={14} /></span>
+          <span className="app__stat-value">{stats.complete}</span>
+          <span className="app__stat-label">Complete</span>
+        </div>
+        <div className="app__stat">
+          <span className="app__stat-icon app__stat-icon--active"><IconActivity size={14} /></span>
+          <span className={`app__stat-value ${stats.active > 0 ? 'app__stat-value--active' : ''}`}>{stats.active}</span>
+          <span className="app__stat-label">Active</span>
+        </div>
+        <div className={`app__stat ${stats.errors === 0 ? 'app__stat--muted' : ''}`}>
+          <span className="app__stat-icon app__stat-icon--error"><IconXCircle size={14} /></span>
+          <span className={`app__stat-value ${stats.errors > 0 ? 'app__stat-value--error' : ''}`}>{stats.errors}</span>
+          <span className="app__stat-label">Errors</span>
+        </div>
+        <div className={`app__stat ${stats.anomalies === 0 ? 'app__stat--muted' : ''}`}>
+          <span className="app__stat-icon app__stat-icon--anomalous"><IconWarning size={14} /></span>
+          <span className={`app__stat-value ${stats.anomalies > 0 ? 'app__stat-value--anomalous' : ''}`}>{stats.anomalies}</span>
+          <span className="app__stat-label">Anomalous</span>
+        </div>
+        </div>
 
-      {/* ── Graph canvas ───────────────────────────────────────── */}
-      <div className="app__canvas" id="graph-canvas">
-        <ReactFlow
+        {/* ── Historical-load error banner ─────────────────────────── */}
+        {mode === 'historical' && error && (
+          <div role="alert" className="app__error-banner">
+            Historical replay unavailable: {error}
+          </div>
+        )}
+
+        {/* ── Graph canvas ───────────────────────────────────────── */}
+        <div className="app__canvas" id="graph-canvas">
+          <Legend />
+          <ReactFlow
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
@@ -347,6 +434,7 @@ export default function App() {
             className="app__minimap"
             nodeColor={(node) => {
               const data = node.data as AgentNodeData;
+              if (data.anomaly) return '#fb923c';
               if (data.status === 'error') return '#f87171';
               if (data.status === 'active') return '#22d3ee';
               return '#4ade80';
@@ -359,12 +447,12 @@ export default function App() {
             size={1}
             color="rgba(255, 255, 255, 0.04)"
           />
-        </ReactFlow>
-      </div>
+          </ReactFlow>
+        </div>
+      </main>
 
       {/* ── Inspect panel (shown on node click) ────────────────── */}
-      <InspectPanel span={selectedSpan} anomaly={selectedAnomaly} onClose={onPanelClose} />
+      <InspectPanel span={selectedSpan} anomaly={selectedAnomaly} events={events} onClose={onPanelClose} />
     </div>
   );
 }
-

@@ -206,15 +206,15 @@
 }
 
 .inspect-panel__section--anomalous {
-  background: rgba(251, 191, 36, 0.05);
-  border: 1px solid rgba(251, 191, 36, 0.2);
+  background: rgba(251, 146, 60, 0.05);
+  border: 1px solid rgba(251, 146, 60, 0.2);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
 }
 
 .inspect-panel__section--anomalous .inspect-panel__section-title {
-  color: #fbbf24;
+  color: var(--status-anomaly, #fb923c);
 }
 
 .inspect-panel__anomaly-desc {
@@ -225,7 +225,7 @@
 }
 
 .inspect-panel__status--anomalous {
-  color: #fbbf24;
+  color: var(--status-anomaly, #fb923c);
   animation: statusPulse 1.5s ease-in-out infinite;
 }
 

@@ -1,0 +1,14 @@
+/*
+ * icons.css — behavior shared by all inline SVG icons.
+ * Colors come from `currentColor`; only motion lives here.
+ */
+
+.icon--spin {
+  animation: iconSpin 1.1s linear infinite;
+}
+
+@keyframes iconSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -6,6 +6,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../sdk")))
 
 from custom_agent import run_custom_agent
+from agentscope.sender import sender
 
 async def main():
     print("==================================================")
@@ -18,6 +19,13 @@ async def main():
     print(f"User Query: {query}\n")
 
     result = await run_custom_agent(query=query, agent_id="custom-demo-agent", trace_id="demo-custom-trace-001")
+
+    # This short-lived demo performs an explicit bounded shutdown flush so
+    # its final completion events are visible before the process exits.
+    try:
+        await asyncio.wait_for(sender.queue.join(), timeout=10)
+    except asyncio.TimeoutError:
+        pass
     
     print("\nExecution Completed Successfully!")
     print(f"Final Summary: {result['summary']}")

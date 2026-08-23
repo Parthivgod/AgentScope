@@ -14,9 +14,11 @@
 import dagre from '@dagrejs/dagre';
 import type { Node, Edge } from '@xyflow/react';
 
-/** Default dimensions used for dagre node sizing */
+/** Default dimensions used for dagre node sizing.
+ *  Must mirror the rendered card size (AgentNode.css --node-card-*) so
+ *  dagre's spacing matches what's actually on screen. */
 const NODE_WIDTH = 220;
-const NODE_HEIGHT = 72;
+const NODE_HEIGHT = 84;
 
 export interface LayoutOptions {
   /** Layout direction: TB = top-to-bottom, LR = left-to-right */

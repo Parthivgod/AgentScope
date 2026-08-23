@@ -27,7 +27,9 @@ async def test_langgraph_demo_spans_sent_to_real_ingest():
             received_spans.append(json)
         return response
 
-    with mock_patch("backend.app.ingest.redis_client.xadd", new_callable=AsyncMock) as mock_xadd, \
+    mock_redis = AsyncMock()
+
+    with mock_patch("app.ingest.get_redis", return_value=mock_redis), \
          mock_patch("httpx.AsyncClient.post", side_effect=mock_post):
 
         # Run linear demo agent
@@ -46,4 +48,4 @@ async def test_langgraph_demo_spans_sent_to_real_ingest():
             assert "span_type" in span_json
             assert span_json["agent_id"] in ["e2e-linear-agent", "e2e-branching-agent"]
             
-        assert mock_xadd.called
+        assert mock_redis.xadd.called
