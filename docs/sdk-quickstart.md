@@ -8,13 +8,13 @@ Welcome to AgentScope! This quickstart covers setting up AgentScope SDK in your 
 
 Install the AgentScope SDK directly via `pip`:
 
-```bash
+```powershell
 pip install agentscope-sdk
 ```
 
 Or for local development inside the monorepo:
 
-```bash
+```powershell
 pip install -e ./sdk
 ```
 
@@ -24,16 +24,16 @@ pip install -e ./sdk
 
 Configure the SDK using environment variables (or fall back to defaults):
 
-```bash
+```powershell
 # AgentScope Ingestion Endpoint (Default: http://localhost:8000/ingest)
-export AGENTSCOPE_INGEST_URL="http://localhost:8000/ingest"
+$env:AGENTSCOPE_INGEST_URL = "http://localhost:8000/ingest"
 
 # AgentScope API Key (Required for authenticated ingestion)
-export AGENTSCOPE_API_KEY="your-secret-api-key"
+$env:AGENTSCOPE_API_KEY = "your-secret-api-key"
 
 # Client-Side Redaction Toggle (Default: false)
 # Set to "true" to redact all input/output payloads client-side before sending
-export AGENTSCOPE_REDACT_ENABLED="false"
+$env:AGENTSCOPE_REDACT_ENABLED = "false"
 ```
 
 ---
@@ -95,7 +95,7 @@ When your agent executes, telemetry spans are asynchronously sent to the AgentSc
 
 Quick checks against a running local stack:
 
-```bash
+```powershell
 # Spans arriving? (through the Nginx front door)
 curl http://localhost/traces
 

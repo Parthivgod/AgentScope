@@ -1,5 +1,96 @@
 # AgentScope Changelog
 
+## [2026-08-22 15:30] — Docs: Single Consolidated Root README — demo-stepped-up-showcase
+
+**What changed:**
+- `Docs`: Consolidated the five scattered READMEs (root, `sdk/README.md`, and the three `examples/*/README.md`) into ONE comprehensive root `README.md`: quick start (preflight, compose stack, TLS, dashboard), SDK integration (both flows, env vars, verification, measured guarantees), all three demo agents including the full support-triage setup + ticket table, the testing/operational-check inventory, project layout, and contributing pointers. Deleted the redundant per-directory READMEs. `sdk/pyproject.toml` readme field removed accordingly (editable install re-verified). `RUN_ORDER.md` now points to the root README §3.3 for setup.
+- Kept (not READMEs): `sdk/agentscope/benchmarks/README.md` (measurement methodology inside the benchmarks package) and the `docs/` deep guides, all now linked from the root README's project-layout section.
+
+**Why:**
+- Five READMEs with overlapping partial instructions were hard to maintain; one combined file holds all the necessary run details.
+
+**Assumptions made (if any):**
+- `docs/` guides stay as deep-dive material; the root README is the single entry point with everything needed to run the system.
+
+**Open questions / follow-ups (if any):**
+- None.
+
+**Tests added/run:**
+- No broken references to the deleted files (repo-wide grep). SDK 25/25; support-triage offline tests 6/6; `pip install -e ./sdk` works without the readme field.
+
+---
+
+## [2026-08-22 15:00] — Docs: Run Instructions Converted to PowerShell — demo-stepped-up-showcase
+
+**What changed:**
+- `Docs`: All run-instruction code blocks across the repo converted from bash to PowerShell syntax (```powershell fences, `$env:VAR = "value"` instead of `export`, `;` instead of `&&`, line-continuation commands joined to single lines, `pip install -e "./sdk[langgraph]"` quoted for PowerShell). Files: root README, docs/backend-infra.md, docs/sdk-quickstart.md, docs/dashboard.md, docs/demo-script.md, docs/usability-test-prep.md, examples/support_triage_demo/{README,RUN_ORDER}.md, examples/custom_demo_agent/README.md, examples/langgraph_demo_agent/README.md, sdk/README.md.
+
+**Why:**
+- The team runs on Windows/PowerShell; bash-style `export`/`&&` instructions don't work there.
+
+**Assumptions made (if any):**
+- CHANGELOG history entries were left as-is (historical record); only living documentation was converted.
+
+**Open questions / follow-ups (if any):**
+- `scripts/dev-preflight.sh` still targets bash (a .ps1 variant already exists); Git Bash users can keep using it.
+
+**Tests added/run:**
+- Automated sweep confirms no bash-isms remain inside any powershell block.
+
+---
+
+## [2026-08-22 14:10] — Support-Triage Demo: Bedrock GPT-OSS 120B + Live Verification Complete — demo-stepped-up-showcase
+
+**What changed:**
+- `Examples / Model`: Switched `examples/support_triage_demo` from OpenAI direct to **GPT-OSS 120B on Amazon Bedrock** (`openai.gpt-oss-120b-1:0`, us-east-1, `ChatBedrockConverse` with IAM credentials) per the 2026-08-22 model evaluation. Plain text-in/text-out only; the specialists' tools are invoked by graph code, so the unreliable LangChain-on-Bedrock tool-calling paths are never exercised. Output capped at 1024 tokens/call (long gpt-oss reasoning was pushing individual spans past the 30s timeout ceiling — 28.3s measured on a single happy-path LLM call before the cap).
+- `SDK / Adapter`: Token-usage extraction extended (additively, fail-silent) to also read `generations[0][0].message.kwargs.usage_metadata` — the shape `ChatBedrockConverse` serializes (OpenAI-style `llm_output.token_usage` is null for it). Verified live: token_spikes now fires on real Bedrock usage data.
+- `Examples / Reliability work` (all found by live verification, all fixed): unknown run names (LangGraph's internal "Unnamed" edge lambdas) and tools previously shared agent ids with ancestors/owners, causing trivial delegation-cycle false positives — the id mapping now gives every run name a unique identity; hand-offs carry the accumulated correspondence so each hop's LLM call has genuinely different input (identical prompts legitimately co-fired failure_loops during the ping-pong); retry loop paced (0.75s) and hand-off latency (1s) keep event bursts out of the message-storm window; the app-level no-revisit guard was replaced with a depth-capped ping-pong (MAX_HANDOFF_DEPTH=3) since preventing revisits prevented the very cycle the demo exists to show — the 15-call LLM ceiling remains the hard safety net.
+- `Docs`: README/RUN_ORDER/requirements updated for AWS credentials + region instead of OPENAI_API_KEY.
+
+**Measured results (live, local stack, real Bedrock LLM calls, 2026-08-22):**
+- **Happy path: 0 false positives** across all 4 HAPPY tickets (was 16 delegation_cycles FPs before the id-mapping fixes).
+- **DELEGATION-CYCLE-001 → delegation_cycles only** (4 flags, genuine paths e.g. technical-agent → billing-agent → technical-agent).
+- **FAIL-LOOP-002 → failure_loops only** (identical lookup_account signature seen 10× in 60s).
+- **TIMEOUT-003 → timeouts only** (tool sleeps 31s; parent spans cascade to 37.9s/41.4s).
+- **TOKEN-SPIKE-004 → token_spikes** (real Bedrock usage >8k tokens on the composer call).
+- **Dashboard (live):** 20 nodes / 18 edges — genuine router → specialist → composer hierarchy with nested hand-offs; anomalous node renders with ⚠ badge; click-to-inspect shows the failure_loops detail (reason, signature, timing, input/output) — Flow 4 Step 4 verified.
+
+**Why:**
+- Completes the demo's verification checklist (each poison ticket fires only its intended rule; happy path is false-positive-free; hierarchical graph confirmed) against the LOCAL stack with real LLM work.
+
+**Assumptions made (if any):**
+- None outstanding. Note: two bearer-style Bedrock API keys were tried first; the second contained a single corrupted character in its credential scope (paste corruption, flagged to the user), and the account was additionally under AWS verification — the IAM access key provided afterwards works and is what all results above used.
+
+**Open questions / follow-ups (if any):**
+- AWS credentials are short-term; regenerate before future demo runs (README documents the requirement).
+
+**Tests added/run:**
+- Offline demo tests 6/6; SDK suite 25/25 after the adapter change.
+
+---
+
+## [2026-08-22 13:10] — New Demo: Support-Triage Multi-Agent Showcase (real LLM calls) — demo-stepped-up-showcase
+
+**What changed:**
+- `Examples`: Added `examples/support_triage_demo/` — a genuinely multi-agent support-triage system (router + billing/technical/account specialists + response composer as a LangGraph StateGraph) with REAL OpenAI LLM calls doing classification, specialist reasoning, and response drafting. Local synthetic tools; four deterministic poison tickets (DELEGATION-CYCLE-001, FAIL-LOOP-002, TIMEOUT-003, TOKEN-SPIKE-004) trigger four distinct anomaly rules at the TOOL layer (flaky account store, hung diagnostic, ambiguous/no-record lookups, ~100KB history) — the failure modes that cause the corresponding real anomalies; the LLM calls are not rigged. Four HAPPY-* tickets are the false-positive check. Includes README (OPENAI_API_KEY requirement, model tier, cost guardrails) and RUN_ORDER.md (scripted demo sequence: happy first, then Delegation Cycle → Failure Loop → Token Spike → Timeout last).
+- `SDK / Adapter`: Added optional `agent_id_by_run` to `LangGraphAdapter` (dict or callable mapping run name → per-agent span identity, fallback to the shared agent_id). Additive; default behavior unchanged. Rationale: a single shared agent_id makes the delegation_cycles rule trivially fire on any nested run — distinct per-agent ids are what make cycle detection meaningful in a multi-agent graph (and keep happy paths false-positive-free).
+- `Demo-app guardrails` (the example's own design, not AgentScope enforcement): model tier gpt-4o-mini (cheap/fast, stated assumption per INSTRUCTIONS.md §2; override via TRIAGE_MODEL), hard per-run ceiling of 15 LLM calls (CallBudget aborts the run), OPENAI_API_KEY checked with a clear error.
+
+**Why:**
+- New demo content (not a Build Plan week deliverable), additive to examples/ — the existing langgraph_demo_agent and custom_demo_agent are untouched. Demonstrates Flow 1 (zero-rewrite: agent.py imports nothing from AgentScope; attachment happens only in main.py), Flow 3 (live hierarchical monitoring), Flow 4 (anomaly detection and click-to-inspect alert response).
+
+**Assumptions made (if any):**
+- Model tier: gpt-4o-mini (stated, overridable) — chosen as cheapest tier sufficient for classification/drafting; a full run costs on the order of a few cents.
+- Live verification against the local stack is pending a real OPENAI_API_KEY (not present in the dev environment); offline unit tests cover the deterministic tool conditions, token-spike sizing (tiktoken-verified >8k), adapter mapping, and the call ceiling.
+
+**Open questions / follow-ups (if any):**
+- Live run of the 8 tickets + dashboard verification to be executed once OPENAI_API_KEY is provided.
+
+**Tests added/run:**
+- `examples/support_triage_demo/test_support_demo.py`: 6/6 pass (offline). SDK suite after the adapter change: 25/25 pass.
+
+---
+
 ## [2026-08-22 04:20] — Weeks 9-12 Integration Merge + m3-pending-aws — All Tracks
 
 **What changed:**

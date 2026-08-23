@@ -6,7 +6,6 @@ build-backend = "setuptools.build_meta"
 name = "agentscope-sdk"
 version = "0.1.0"
 description = "AgentScope Python SDK for Multi-Agent Observability"
-readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.9"
 dependencies = [

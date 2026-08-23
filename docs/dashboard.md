@@ -4,7 +4,7 @@ Live execution-graph visualization and historical replay for AgentScope.
 
 ## Running
 
-```bash
+```powershell
 cd dashboard
 npm install
 npm run dev        # http://localhost:5173
@@ -28,7 +28,7 @@ Verified with axe-core (0 violations) and Lighthouse (accessibility 100) — see
 
 ## Repeatable checks
 
-```bash
+```powershell
 node scripts/a11y-scan.mjs          # axe-core scan + Tab-order probe
 node scripts/keyboard-nav-test.mjs  # Enter opens InspectPanel from keyboard
 node scripts/escape-close-test.mjs  # Escape closes InspectPanel
