@@ -1,3 +1,4 @@
+import json
 import pytest
 from fastapi.testclient import TestClient
 from datetime import datetime, timezone
@@ -81,3 +82,45 @@ def test_traces_empty_stream():
     response = client.get("/traces")
     assert response.status_code == 200
     assert response.json()["trace_ids"] == []
+
+def test_history_includes_persisted_anomaly_flags():
+    """FR-8 / Flow 5: replay must carry the worker-persisted anomaly flags."""
+    import asyncio
+    from app.redis_client import get_redis
+
+    headers = {"Authorization": "Bearer test-secret-key"}
+    span = get_valid_span_payload("an-1")
+    span["trace_id"] = "tr-anomaly"
+    client.post("/ingest", json=span, headers=headers)
+
+    # Worker-shaped flag in the anomaly stream (same shape ws.py relays live)
+    async def _write_flag():
+        r = get_redis()
+        await r.xadd("agentscope:anomalies", {"payload": json.dumps({
+            "rule": "failure_loops", "span_id": "an-1", "trace_id": "tr-anomaly",
+            "agent_id": "agent-1",
+            "details": {"reason": "Identical call signature seen 4 times within 60s"},
+            "is_anomaly": True,
+        })})
+
+    asyncio.run(_write_flag())
+
+    response = client.get("/history/tr-anomaly")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["anomalies"] and len(data["anomalies"]) == 1
+    flag = data["anomalies"][0]
+    assert flag["rule"] == "failure_loops"
+    assert flag["span_id"] == "an-1"
+    assert flag["is_anomaly"] is True
+
+def test_history_without_anomalies_omits_field():
+    headers = {"Authorization": "Bearer test-secret-key"}
+    span = get_valid_span_payload("clean-1")
+    span["trace_id"] = "tr-clean"
+    client.post("/ingest", json=span, headers=headers)
+
+    response = client.get("/history/tr-clean")
+    assert response.status_code == 200
+    # No flags persisted -> field stays absent (additive schema, old shape intact)
+    assert response.json().get("anomalies") is None

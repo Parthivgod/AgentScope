@@ -1,5 +1,39 @@
 # AgentScope Changelog
 
+## [2026-08-23 16:45] — Bugfix: Anomaly Flags Missing in Historical Replay (FR-8 / Flow 5) — bugfix-replay-anomaly-flags
+
+**BRANCH DEPENDENCY (per Step 0 of the fix prompt):** `demo-stepped-up-showcase` is NOT yet merged into main (verified: main has no `examples/support_triage_demo/`), so this branch is based on `demo-stepped-up-showcase`, not main — the bug is only reproducible with the demo's real anomaly data. **Both branches must reach main together**: the platform fix without the demo has nothing to verify against, and the demo without the fix still ships the bug. Do not merge either independently.
+
+**What changed:**
+- `Backend / history.py` (root cause): `/history/{trace_id}` queried ONLY the spans stream. The worker persists anomaly flags durably — but in the SEPARATE `agentscope:anomalies` stream (verified live: 48 persisted flags across traces) — so replay responses simply never contained them. `history.py` now also reads the anomaly stream, filters by trace_id, preserves arrival order (RULES.md invariant #4), and returns flags in the response.
+- `SDK / schema.py`: `Trace` gains an optional `anomalies` field (default None) — additive, in the single canonical schema location (Decision #2 respected; no fork). Old payloads remain valid: producers that report only spans simply omit it.
+- `Dashboard / useEventSource.ts`: historical mode maps `/history`'s `anomalies` into the SAME `Record<span_id, AnomalyEvent>` state the live WS path produces — downstream node-state computation is shared, satisfying invariant #5 (one rendering path; no replay-specific anomaly logic was added).
+- `Backend / tests`: conftest now isolates tests onto Redis DB 15 (`REDIS_URL` set before app import) — the default DB 0 is the live stack, where the real worker races with tests (it correctly flagged test traffic, breaking determinism) and test cleanup had been flushing live data (it wiped the stack's persisted flags once during this session — the exact hazard now eliminated). New tests: `test_history_includes_persisted_anomaly_flags`, `test_history_without_anomalies_omits_field`.
+
+**Diagnosis trail (observed, not inferred):** pre-fix, replay of `triage-delegation-cycle-001` in the RUNNING dashboard rendered 48 nodes / 45 edges with 0 anomalous nodes and 0 alert badges while the live run of the same trace showed them — the exact reported symptom. API confirmed `/history` responses had no anomalies field.
+
+**Verification (observed in the running dashboard at :5173, post-fix; API through the full compose stack / Nginx):**
+- Poison replays: `triage-delegation-cycle-001` → 2 anomalous nodes / 2 AlertBadges; `triage-fail-loop-002` → 5/5; `triage-timeout-003` → 3/3; `triage-token-spike-004` → 1/1 — matching live behavior.
+- Replay click-to-inspect works: token-spike composer node's InspectPanel shows `ANOMALY: TOKEN_SPIKES — "Single call token usage (38469) exceeded threshold (8000)"` with span identity, timing (9.13s), and token usage (37,984 prompt + 485 completion). Screenshot captured in the session record.
+- Happy-path regression: all 4 `triage-happy-*` replays render 0 anomalous nodes / 0 badges.
+- Nginx pass: `/history` returns merged flags through `http://localhost:80` AND `https://localhost:8443` (TLS 1.3); the dashboard's dev proxy routes replay fetches through Nginx :80, so the observed UI ran over the shipped path.
+- Suites: backend 11/11 (run twice — no flakiness), SDK 25/25, demo offline 6/6, dashboard build clean.
+
+**Why:**
+- Closes the gap logged in the 2026-08-19 entry ("Anomaly data is not yet included in historical replay responses") that `examples/support_triage_demo` first exercised with real anomaly data. Cites Flow 4 (anomaly alerting), Flow 5 (historical replay consistency), RULES.md invariants #4 and #5, FR-8.
+
+**Assumptions made (if any):**
+- Flag payloads are returned as-is (worker's WS shape) — no migration of already-stored data, so no re-migration needed; nothing in RULES.md §2 was touched (the optional schema field extends the canonical model in place).
+
+**Open questions / follow-ups (if any):**
+- During verification, one live fail-loop run co-fired `message_storms` (LLM-timing variance) — the platform correctly reporting what happened; demo pacing tuning is a demo-branch concern, not a platform bug.
+- `_anomalies_for_trace` scans the anomaly stream (no per-trace index yet); fine at current scale, parked alongside the events-index precedent if it ever matters.
+
+**Tests added/run:**
+- See verification list above.
+
+---
+
 ## [2026-08-22 15:30] — Docs: Single Consolidated Root README — demo-stepped-up-showcase
 
 **What changed:**
