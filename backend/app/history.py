@@ -7,8 +7,27 @@ from app.redis_client import get_redis
 router = APIRouter()
 
 EVENTS_STREAM = "agentscope:events"
+ANOMALIES_STREAM = "agentscope:anomalies"
 TRACES_ZSET = "agentscope:traces"
 TRACE_LIST_PREFIX = "agentscope:trace:"
+
+
+async def _anomalies_for_trace(trace_id: str) -> list[dict]:
+    """Anomaly flags the worker persisted for this trace, in arrival order
+    (stream order = detection order, RULES.md invariant #4)."""
+    flags: list[dict] = []
+    events = await get_redis().xrange(ANOMALIES_STREAM, min="-", max="+")
+    for _message_id, message in events:
+        payload = message.get(b"payload") or message.get("payload")
+        if not payload:
+            continue
+        try:
+            data = json.loads(payload)
+            if data.get("trace_id") == trace_id:
+                flags.append(data)
+        except Exception:
+            pass
+    return flags
 
 
 async def _scan_stream():
@@ -133,10 +152,16 @@ async def get_trace_history(
     end_time = max(end_time_candidates) if end_time_candidates else None
     status = "error" if any(span.status.status == "error" for span in spans) else "success"
 
+    # FR-8 / Flow 5: replay must carry the same anomaly flags the live WS
+    # path delivered — flags live in their own stream (written by the worker),
+    # so they must be merged here explicitly.
+    anomalies = await _anomalies_for_trace(trace_id)
+
     return Trace(
         trace_id=trace_id,
         spans=spans,
         start_time=start_time,
         end_time=end_time,
-        status=status
+        status=status,
+        anomalies=anomalies if anomalies else None,
     )

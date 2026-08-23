@@ -70,8 +70,15 @@ export function useEventSource(url: string, mode: 'live' | 'historical', traceId
           })
           .then(data => {
             setEvents(data.spans || []);
-            // Anomalies aren't returned by history.py yet
-            setAnomalies({});
+            // FR-8 / Flow 5: /history now returns the worker-persisted anomaly
+            // flags alongside spans. Map them into the SAME shape the live WS
+            // path produces, so downstream node-state computation (invariant #5)
+            // is shared, not duplicated per mode.
+            const flags: Record<string, AnomalyEvent> = {};
+            for (const a of data.anomalies || []) {
+              if (a?.span_id) flags[a.span_id] = a as AnomalyEvent;
+            }
+            setAnomalies(flags);
           })
           .catch(err => {
             if (err.name !== 'AbortError') {

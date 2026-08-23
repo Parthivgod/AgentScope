@@ -48,3 +48,8 @@ class Trace(BaseModel):
     start_time: datetime = Field(..., description="When the trace started")
     end_time: Optional[datetime] = Field(None, description="When the trace ended")
     status: Literal["success", "error"] = Field("success", description="Overall status of the trace")
+    # Anomaly flags detected for this trace (worker-written, FR-8 replay parity
+    # with the live WS path). Optional/additive: absent for producers that
+    # only report spans, so existing payloads stay valid. Raw flag payloads
+    # carry {rule, span_id, trace_id, agent_id, details, is_anomaly}.
+    anomalies: Optional[List[Dict[str, Any]]] = Field(None, description="Anomaly flags for this trace, in arrival order")
