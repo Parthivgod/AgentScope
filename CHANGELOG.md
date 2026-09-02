@@ -1,5 +1,217 @@
 # AgentScope Changelog
 
+## [2026-09-02 18:39] — Frozen Post-Fix Evaluation Candidate — Track Shared — Codex
+
+**What changed:**
+- Pinned the backend and worker Python base to the exact Python 3.11.16 image digest used by the post-fix Compose evaluation, pinned Redis and Nginx Compose images by digest, and replaced container dependency ranges with exact requirements plus a shared evaluation constraint file.
+- Expanded `scripts/evaluation/requirements.txt` into the exact Python 3.11.4 host environment needed for Locust, statistical analysis, AgentScope/Langfuse/Phoenix instrumentation, and static figures. Added machine-readable runtime and competitor-image locks, including the evaluated Langfuse v4.25.0 and Phoenix 20.4.0 image digests.
+- Updated the custom and LangGraph demo integration assertions from the obsolete direct Redis `xadd` boundary to the current atomic Lua `eval` ingestion boundary. The application payload path remained unchanged.
+- Reviewed the complete dirty candidate and retained the authorized SDK/backend/worker/dashboard/manuscript/evaluation work and evidence. Added `.zcode/` to `.gitignore` so local editor plans/configuration remain outside the candidate.
+
+**Why:**
+- Freezes the implementation and evaluation harness before independent production-load and three-product replication, as required for paper-grade reproducibility and RULES.md §6 evidence integrity.
+
+**Assumptions made (if any):**
+- Public SDK dependency ranges remain compatible package metadata; exact versions are imposed by the evaluation constraint/requirements files and container builds so the research environment is reproducible without unnecessarily narrowing downstream SDK consumers.
+- Existing post-fix artifacts and the authorized support-triage internals document are part of the research candidate. Local `.zcode` plans/configuration are editor state, not project source.
+
+**Open questions / follow-ups (if any):**
+- Independent replication and publication-ready aggregation follow in the next commit; no new performance claim is made by this freeze entry.
+
+**Tests added/run:**
+- Immutable-digest Compose config validated; pinned backend and worker images rebuilt successfully.
+- SDK 30/30, backend 16/16, worker 4/4, support-triage 6/6, custom demo 1/1, and LangGraph demo 1/1 passed. Dashboard production build and oxlint passed.
+
+---
+
+## [2026-08-31 21:17] — Correctness Fixes, Post-Fix Production Validation, and Three-Way Comparison — Track Shared — Codex
+
+**What changed:**
+- `worker/rules/failure_loops.py`: isolated rolling Failure Loops state by `(trace_id, agent_id)` and keyed observations by `span_id`, so unrelated traces cannot accumulate toward one threshold and active/completed lifecycle versions count once.
+- `worker/anomaly_store.py`, `worker/main.py`, and `backend/app/history.py`: added per-trace anomaly indexes with a one-time legacy-stream migration/readiness marker. New anomaly writes atomically append to the global stream and the trace-specific payload list; history uses the index and only retains a legacy full-scan fallback before migration completes.
+- `backend/app/ingest.py` and `backend/app/history.py`: made event stream append, trace registration, and per-trace message-ID indexing one Redis Lua operation; history also sorts parsed Redis stream IDs as the authoritative order, including legacy index contents.
+- `backend/app/ws.py` and `dashboard/src/hooks/useEventSource.ts`: added validated event/anomaly resume cursors plus additive transport metadata. Reconnect resumes after the last delivered durable IDs instead of always starting at `$`; the canonical Span schema was not changed.
+- Added focused worker/backend regressions, post-fix evaluation overlays/runners, and a matched AgentScope/Langfuse/Phoenix comparison with raw paired trials, bootstrap intervals, package/container provenance, and verified ingestion counts.
+- `manuscript/evaluation-artifacts/2026-08-31-post-fix/RESULTS.md` and `manuscript/evaluation-results.md`: recorded current results and limitations while preserving the 2026-08-30 directory as historical pre-fix evidence.
+
+**Measured results:**
+- The unchanged 1,200-scenario corpus measured precision=recall=F1=1.000 for all six production rules on 600 held-out cases. Failure Loops specifically improved from 0.714 precision/0.833 F1 to 1.000/1.000 (50 TP, 50 TN, 0 FP, 0 FN; Wilson 95% interval 0.929–1.000).
+- Production live/history convergence matched multiset, exact arrival order, and latest state in 9/9 continuous bursts. The reconnect-gap case received all 20 expected events in order with zero missing/extra events and the same latest state as history.
+- Post-fix idle event-to-WebSocket p95 was 63.0ms. Under 50-user load it was 78.0ms (n=300, zero probe errors), a 95.3% decrease from the pre-fix clean full-stack 1,642.5ms result and below the <200ms target in this local condition. Locust completed 13,675 requests with zero failures at 228.09 requests/s, 3.28x the pre-fix 69.50 requests/s; aggregate HTTP p95 remained 610ms.
+- Final matched comparison, 30 measured trials/workload/product after five warm-ups, all arms on LangGraph 1.2.11 and each verifying 70 new traces: CPU-trivial mean overhead was AgentScope 84.19% (95% bootstrap 58.75–117.07), Langfuse 185.56% (160.72–211.28), Phoenix 174.32% (150.91–197.88). At 100ms/node it was AgentScope 4.04% (2.64–5.50), Langfuse 4.31% (3.84–4.80), Phoenix 5.48% (4.64–6.34).
+
+**Why:**
+- These were the four pre-comparison blockers established by the production-compose investigation. The user authorized fixing them, rerunning the remaining production tests, and then executing the previously gated three-way comparison.
+
+**Assumptions made (if any):**
+- The anomaly result is deterministic synthetic-corpus evidence, not a field-prevalence estimate. Perfect point estimates do not imply perfect performance on unseen production failures.
+- Before/after load trials were sequential rather than randomized, so the large performance improvement is associated with the combined fix set; it is not a per-component causal estimate.
+- The quantitative product comparison covers matched graph-execution overhead and verified ingestion only. It does not rank diagnostic feature breadth, resource usage, UI quality, setup time, query latency, or unmatched platform capabilities.
+- AgentScope and Langfuse used counterbalanced AB/BA pairs. Phoenix's process-global instrumentation required baselines before its instrumented phase, so its order limitation is explicit in the artifact.
+
+**Open questions / follow-ups (if any):**
+- Repeat the 50-user event-to-dashboard protocol independently and extend the probe across the full load interval; one local p95=78.0ms run is insufficient for a broad production-performance claim, and aggregate HTTP p95 remains 610ms.
+- Reconnect catch-up assumes retained Redis stream IDs. Define stream trimming, stale-cursor, and full-history reconciliation policies before claiming long-disconnection recovery.
+- The comparison still needs matched resource telemetry, query/visibility latency, a documentation-derived feature matrix, and an independent usability study before any broad product-ranking claim.
+
+**Tests added/run:**
+- Worker 4/4, backend 16/16, and SDK 30/30 passed on the final environment. Dashboard production build and oxlint passed.
+- Post-fix anomaly corpus: 1,200 scenarios. Production convergence: nine continuous bursts plus one reconnect-gap run. Idle/load event probe: 300 samples each. Locust: 13,825 requests. Worker kill/restart: 70 accepted spans with checkpoint catch-up.
+- Three-way comparison: 30 measured trials × two workloads × three products plus five warm-ups per cell; raw pairs retained and every arm verified 70 newly stored traces.
+
+---
+
+## [2026-08-30 22:19] — Production-Compose Completion of Evaluation Stages 3–4 — Track Shared — Codex
+
+**What changed:**
+- Completed the previously blocked current-checkout protocols against Docker Engine 29.3.1 using Redis 7, the anomaly worker, four FastAPI workers, and Nginx. Production artifacts now cover live-ingest SDK overhead, idle and 50-user event-to-WebSocket latency, Locust load, continuous live/history convergence, and disconnect/reconnect behavior.
+- `scripts/evaluation/current_build_overhead.py`: added explicit `--delivery-transport mock|live` selection; the live run used `http://localhost/ingest` and verified that the asynchronous sender queue drained.
+- `scripts/evaluation/docker-compose.isolated.yml`: added a controlled full-stack Redis DB 14 override so the load protocol could start from an empty logical database without deleting persisted project data.
+- `scripts/evaluation/docker-compose.readpath-control.yml`: added a diagnostic-only control that placed the backend on empty DB 13 while leaving the worker on DB 14. This is not a deployment recommendation; it isolates the API read path from anomaly writes/scans.
+- `manuscript/evaluation-artifacts/2026-08-30-current-build/RESULTS.md`, `RUN_CONTEXT.json`, and `manuscript/evaluation-results.md`: replaced the fallback-only checkpoint with production-compose evidence while preserving fallback files as preliminary diagnostics.
+
+**Measured results:**
+- Live-ingest overhead, 30 paired runs/configuration: CPU-trivial +1.382ms and +70.18% mean (bootstrap 95% 53.44–88.60%); 100ms-per-node workload +8.467ms and +4.04% mean (2.38–6.75%). The point estimate is below 5%, but the interval crosses the target.
+- Event-to-WebSocket idle p95 was 78.0ms on persisted DB 0 and 63.0ms on initially empty DB 14. Under 50-user load, p95 was 1312.0ms on DB 0 and 1642.5ms on the controlled DB 14 run, so the current build does not meet the <200ms target.
+- Controlled full-stack Locust: 4,371 requests, one failure, 69.50 requests/s, 489.4ms mean, 1600ms aggregate p95. The single failure was an unauthenticated request receiving 502 instead of the expected 401 under saturation.
+- Read-path control: 8,135 requests, zero failures, 132.50 requests/s, 241.7ms mean, 720ms aggregate p95; concurrent event probe p95 was 625.7ms. Relative to the isolated full stack, throughput improved 1.91× and probe p95 fell 61.9%, but remained above target.
+- Production convergence: complete event multiset and dashboard-equivalent latest state matched in 9/9 continuous bursts; exact arrival order matched in 1/9. The reconnect-gap run missed ten completion events and left all ten latest span states inconsistent with history.
+
+**Why:**
+- Docker Desktop was restarted by the user, allowing the remaining tests in the approved first-four sequence to finish. The run stopped before the AgentScope/Langfuse/Phoenix three-way comparison as requested.
+
+**Assumptions made (if any):**
+- The persisted DB 0 run was treated as an ecological production-stack observation, not a clean benchmark. The DB 14 repeat is the controlled full-stack result because the logical database was empty at the start.
+- The read-path control is diagnostic evidence only. It supports, but does not prove, the hypothesis that cross-trace Failure Loop accumulation plus complete anomaly-stream scans are a major source of loaded latency.
+- The suspected ordering race between separate Redis stream and trace-index writes across four backend workers is an inference from the observed production/fallback contrast and code structure; it needs a focused causal test.
+
+**Open questions / follow-ups (if any):**
+- Key Failure Loops state by trace and agent, deduplicate lifecycle versions, and avoid complete anomaly-stream scans for each history request; then repeat the clean 50-user run.
+- Make trace-history ordering atomic or derive it from authoritative Redis message IDs, and add reconnect catch-up/history reconciliation.
+- Pin container dependency versions for immutable replication, then rerun the full Stage 3–4 protocol before accepting performance targets.
+- The three-way comparison remains intentionally unrun.
+
+**Tests added/run:**
+- Production live/history convergence: nine continuous bursts plus one reconnect-gap scenario.
+- Production live-ingest SDK overhead: 60 measured paired observations plus warm-ups; queue drained.
+- Event latency: 300/300 samples in each of five compose/control conditions, with zero probe errors.
+- Locust: three 50-user runs covering persisted full stack, initially empty full stack, and diagnostic read-path control.
+- Regression suites: SDK 30/30 and backend 11/11 passed. The first invocations from incompatible working directories failed during import collection and executed no tests; the corrected package-aware invocations passed.
+- Evaluation scripts compiled, all 15 JSON files parsed successfully, the SHA-256 manifest indexed 35 artifacts, and `git diff --check` passed apart from pre-existing line-ending conversion warnings.
+
+---
+
+## [2026-08-30 14:58] — Novelty, Detector, Performance, and Convergence Evaluation (Stages 1–4) — Track Shared — Codex
+
+**What changed:**
+- `scripts/evaluation/`: added reproducible, machine-readable runners for framework-free delegation fidelity, concurrent context isolation, privacy/HMAC ablation, a 1,200-scenario tuning/held-out anomaly corpus, counterbalanced current-build SDK overhead, live-versus-history convergence, environment/artifact manifests, and an explicitly labeled fakeredis fallback server for diagnostics when the production stack is unavailable.
+- `infra/loadtest/event_latency_probe.py`: preserved the existing probe while adding exact sample allocation, continued error collection, interpolated percentiles, and optional raw JSON output.
+- `manuscript/evaluation-artifacts/2026-08-30-current-build/`: recorded raw JSON, Locust CSV/HTML, SHA-256-indexed artifacts, run context, and a claim-bounded results report. `manuscript/evaluation-results.md` now reflects the current novelty evidence, held-out per-rule results, current overhead uncertainty, and reconnect convergence finding.
+- Framework-free delegation: all 107 scenarios passed exact ancestry/ownership/chain/hop/trace checks, including 100 concurrent chains, with correct exception/cancellation restoration. Privacy ablation: HMAC redaction matched full capture on all 200 balanced cases; literal-only redaction produced 100 changing-input false positives; sentinel wire scan passed.
+- Detector validation: five rules measured precision=recall=F1=1.000 on their synthetic held-out sets. Failure Loops measured precision=0.714, recall=1.000, F1=0.833 due to 10 cross-trace and 10 duplicate lifecycle-version false positives; tuning could not remove structural state-key/deduplication errors.
+- Current-build overhead (30 counterbalanced pairs/configuration): CPU-trivial +3.164ms / +190.17% mean; 100ms-per-node workload +9.697ms / +4.67% mean, bootstrap 95% interval 3.92–5.80%. The deterministic HTTP 202 transport and interpretation boundary are stored with the result.
+- Live/history fallback: all 9 continuously connected bursts converged exactly; a disconnect-gap run missed 10/10 completion events and failed latest-state convergence because reconnect starts at `$` without replay/backfill.
+
+**Why:**
+- Executes the first four pre-registered evaluation steps for the revised novelty claim and converts previously unmeasured claims into reproducible evidence or explicit failures. Per the user's stop boundary, the AgentScope/Langfuse/Phoenix three-way comparison was not run.
+
+**Assumptions made (if any):**
+- The anomaly corpus is deterministic synthetic evidence, not a field prevalence sample; per-rule outcomes are reported separately and are not generalized to unseen production traffic.
+- Docker Desktop 4.67.0 repeatedly failed inside its optional inference manager. The real FastAPI routes were therefore exercised with in-process fakeredis for fallback latency/load and convergence diagnostics. Those files are named `*_fallback`, exclude Nginx/worker/multiprocess Redis behavior, and are prohibited from supporting a production performance claim.
+- The host-overhead metric intentionally excludes network latency. Its deterministic success transport still exercises queue consumption, redaction, serialization, headers, and async HTTP dispatch.
+
+**Open questions / follow-ups (if any):**
+- Key Failure Loops state by trace and agent and deduplicate active/completed versions by span ID, then rerun the unchanged held-out corpus.
+- Add WebSocket reconnect catch-up/history reconciliation and rerun both continuous and disconnect-gap convergence protocols.
+- Repair/disable Docker Desktop's failing optional inference service, then rerun current-build latency/load and convergence on the full compose stack before making performance claims.
+- The LLM-bound overhead point estimate is under 5%, but its bootstrap interval crosses 5%; repeat on the healthy stack before target acceptance.
+- Only after these are resolved should the requested three-way comparison be run.
+
+**Tests added/run:**
+- `novelty_evaluation.py`: 107/107 delegation scenarios passed; 200-case privacy ablation completed; wire sentinel scan passed.
+- `anomaly_validation.py`: 1,200/1,200 labeled scenarios evaluated across tuning and held-out splits; all six rule reports, Wilson intervals, trigger delays, tuning grids, and co-firing output recorded.
+- `current_build_overhead.py`: 60 measured paired runs plus warm-ups completed; sender queue drained under the deterministic transport.
+- Fallback event latency: idle 300/300 and concurrent-load 300/300 probes completed with zero probe errors. Locust: 6,758 requests, zero failures.
+- Fallback convergence: continuous 9/9 exact; reconnect-gap failure reproduced and recorded.
+- Python compilation and `git diff --check` passed for the new/changed runners before execution; final regression results are recorded in the same session below.
+
+---
+
+## [2026-08-27 22:01] — Related Work, Revised Novelty Claim, and Rigorous Evaluation Guide — Track Shared — Codex
+
+**What changed:**
+- `manuscript/related_work_draft.md`: added a review draft grounded in the PRD, Build Plan, User Flows, current schema, manuscript evidence audit, and all 14 requested primary sources. It includes 2–4 sentence source notes, the three requested related-work groups, standards/interoperability analysis, a methodology preview, the supplied IEEE-numbered references, and citation-metadata checks.
+- Narrowed the manuscript's proposed novelty from the unsupported broad feature-combination claim to a testable integration claim: framework-free delegation ownership across decorator/client-patch boundaries, live deterministic failure detection, and redaction-safe loop comparison via a process-local keyed fingerprint. The draft explicitly records that current Langfuse and Phoenix capabilities materially overlap the old wording and that execution-time delegation binding already appears in Mishra and Sharad.
+- `manuscript/rigorous_evaluation_and_results_guide.md`: added a detailed RQ-driven validation plan covering ground-truth graph fidelity, all six rules, threshold tuning/held-out validation, privacy leakage and HMAC ablation, current-build latency/overhead reruns, resilience/security, usability, fair Langfuse/Phoenix comparison, statistical analysis, observation logs, results-section structure, table/figure templates, threats to validity, and an evidence-integrity checklist.
+
+**Why:**
+- Fulfills Build Plan §10 Research Track (literature review, methodology/evaluation planning) while keeping all numerical claims within RULES.md §6. It also converts the 2026-08-27 delegation/privacy mechanisms into a falsifiable research contribution rather than an untested novelty assertion.
+
+**Assumptions made (if any):**
+- “New novelty claim” was interpreted as the narrower combined contribution supported by the newly implemented delegation-aware context and privacy-preserving loop evidence. It is labeled a proposed contribution within the reviewed comparison set, not universal priority.
+- Current official platform documentation was evaluated as of 2026-08-27; rapidly evolving feature comparisons require versions/access dates in the final paper.
+
+**Open questions / follow-ups (if any):**
+- Final bibliography should verify community/corporate authorship metadata for OpenTelemetry/OpenInference and add a specific W3C Trace Context recommendation date.
+- Final claims still require held-out anomaly accuracy, current-build performance/overhead, Langfuse/Phoenix diagnostic comparison, live/history convergence, real usability participants, and any AWS-dependent evidence. The guide marks each gap explicitly.
+
+**Tests added/run:**
+- Manuscript audit confirmed every reference `[1]`–`[14]` appears in the draft beyond its bibliography entry.
+- Quantitative-claim grep verified that measured legacy numbers are identified as older-build evidence requiring rerun; unmeasured outcomes remain targets or `[TBD]` items.
+- `git diff --check` passed for both new manuscript files.
+
+---
+
+## [2026-08-27 21:31] — Delegation-Aware Context + Privacy-Preserving Loop Detection — Track A/Shared — Codex
+
+**What changed:**
+- `sdk/agentscope/context.py`, `trace.py`, and `patch.py`: added one shared `contextvars` execution context so framework-free delegation spans automatically establish agent identity, trace ancestry, delegation chain, and zero-based hop number; nested OpenAI and Anthropic calls now inherit that context in both sync and async paths without business-function argument plumbing.
+- `sdk/agentscope/privacy.py` and `sender.py`: added a process-local, randomly keyed HMAC-SHA256 progress fingerprint (truncated to 128 bits) computed from canonicalized input before wire redaction. The sender still exports only `[REDACTED]` input/output plus the non-reversible comparison fingerprint; the key is never serialized or logged.
+- `worker/rules/failure_loops.py`: preserved the existing Failure Loops rule and thresholds while using `progress_fingerprint` when available, so repeated protected values and genuinely changing protected values no longer collapse to the same literal redaction marker.
+- `sdk/agentscope/schema.py`: implemented the three fields authorized by RULES.md Decision #8: `delegation_chain`, `hop_number`, and `progress_fingerprint`, all with backward-compatible defaults. No parallel schema was introduced.
+- `sdk/tests/`: added framework-free nested-agent, concurrent-context isolation, HMAC same/different progress, serialization privacy, and cross-path regression coverage. Updated redaction wire tests to assert the new privacy boundary.
+- `manuscript/system-design.md`, `docs/sdk-quickstart.md`, and `AgentScope_Build_Plan.md`: documented the mechanisms, the gaps they close, and fulfillment of the framework-free delegation-context requirement. `docs/future-work.md` records Causal Incident Grouping as deliberately deferred; no part of it was implemented.
+
+**Why:**
+- Hand-rolled multi-agent systems previously produced disconnected LLM spans because `@trace` and `patch()` maintained separate context. Client-side redaction also made every protected input appear identical to Failure Loops. These changes close both approved gaps without adding a framework dependency, anomaly category, enforcement behavior, or excluded research scope.
+
+**Assumptions made (if any):**
+- `span_type="delegation"` is the existing signal for an agent boundary. When its optional `agent_id` is omitted, the span `name` is the agent identity; existing explicit `agent_id` usage remains supported.
+- The HMAC key intentionally lives for one SDK process lifetime. Fingerprints support equality comparison within that process and are not stable identifiers across restarts.
+
+**Open questions / follow-ups (if any):**
+- None for this implementation. Lifecycle-aware timing, evidence sufficiency, incident grouping, OpenTelemetry/OpenInference, new rules, remediation, and trace contracts remain explicitly excluded.
+
+**Tests added/run:**
+- SDK: 30/30 passed.
+- Backend: 11/11 passed with the repository Redis service running.
+- Framework/demo regressions: LangGraph 1/1, custom demo 1/1, support-triage 6/6 passed.
+- Dashboard: production build and oxlint passed.
+- Repository hygiene: `git diff --check` passed; scope audit found no excluded feature implementation.
+
+---
+
+## [2026-08-27 21:17] — Approved Span Schema Amendment — Track Shared — Codex
+
+**What changed:**
+- `RULES.md`: Added locked Decision #8, explicitly approved by Parthiv Godrihal in-session, authorizing exactly three additive `Span` fields: `delegation_chain`, `hop_number`, and `progress_fingerprint`.
+- **Rule changed:** Decision #2 remains the single canonical-schema rule; Decision #8 records its narrowly approved extension for delegation propagation and privacy-preserving loop comparison. It explicitly does not authorize other schema changes, anomaly categories, enforcement, lifecycle timing, evidence sufficiency, incident grouping, or OpenTelemetry/OpenInference work.
+
+**Why:**
+- Invokes RULES.md Decision #2 / §7 so the framework-free adapter and redaction-safe Failure Loops fix can proceed without an inferred or silent schema change.
+
+**Assumptions made (if any):**
+- `agent_id` is not a new field; it already exists and remains canonical. The approved amendment therefore adds three fields, correcting the four-item template that repeated `agent_id`.
+- `hop_number` is defined as a zero-based delegation-edge count, and the progress fingerprint is accurately described as a non-reversible keyed digest derived from pre-redaction content.
+
+**Open questions / follow-ups (if any):**
+- None. Explicit approval was received before this amendment or any implementation file was changed.
+
+**Tests added/run:**
+- Documentation-only approval gate; implementation and tests follow in the same session under Decision #8.
+
+---
+
 ## [2026-08-23 21:39] — Dashboard UI Redesign + Anomaly Evidence — Track C/Shared — Codex
 
 **What changed:**

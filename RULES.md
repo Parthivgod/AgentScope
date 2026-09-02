@@ -42,6 +42,28 @@ These are closed decisions (Build Plan §1). Do not propose alternatives, do not
 | 6 | First (and for now, only) LLM client targeted by `agentscope.patch()` is **OpenAI**. |
 | 7 | Repository is a **monorepo** with the ownership structure in Build Plan §3 (`sdk/`, `backend/`, `worker/`, `dashboard/`, `infra/`, `examples/`, `docs/`, `manuscript/`). Do not restructure this layout without explicit sign-off — other tracks depend on these paths.
 
+### Decision #8 — Span schema extension for delegation context and privacy-preserving loop detection
+
+**Invoking:** Decision #2 and §7 (explicit approval required for changes to the canonical `Span` schema)
+
+**Date:** 2026-08-27
+**Approved by:** Parthiv Godrihal (explicit in-session approval)
+
+The existing `agent_id: str` field remains the canonical identity of the agent that owns or produced a span. This amendment authorizes the following three additive `Span` fields:
+
+- `delegation_chain: list[str]` — ordered agent identities from the root agent through the current span owner. Defaults to an empty list for producers that do not provide delegation context.
+- `hop_number: int` — zero-based number of delegation edges traversed to reach the current span owner: root agent `0`, first delegated agent `1`, and so on. Defaults to `0` for compatibility with existing producers.
+- `progress_fingerprint: str | None` — optional truncated HMAC-SHA256 digest computed client-side from canonicalized pre-redaction progress/input data. It allows the existing Failure Loops detector to distinguish repeated values from changing values after `input` and `output` have been redacted. The HMAC secret remains local, is never logged or transmitted, and the digest is not intended to reveal or permit recovery of the original content.
+
+**Authorized purpose:** These fields are authorized only for:
+
+1. context-variable-based delegation propagation between `@trace` and `patch()` in framework-free Python multi-agent applications; and
+2. restoring the existing Failure Loops rule's ability to compare progress while client-side redaction is enabled.
+
+This decision does not authorize additional anomaly categories, automatic remediation, enforcement or trace-contract mechanisms, lifecycle-aware timing, evidence-sufficiency states, causal incident grouping, OpenTelemetry/OpenInference work, or any additional schema fields.
+
+**Approval rationale:** Closes the disconnected custom-adapter hierarchy and redaction-induced loop-comparison defects while preserving the existing scope and detection-only boundary.
+
 ---
 
 ## 3. Non-Negotiable Architectural Invariants

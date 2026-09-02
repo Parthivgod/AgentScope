@@ -15,15 +15,16 @@ Integration Paths:
    >>> graph.invoke(input_data, config={"callbacks": [adapter]})
 
 2. Flow 2: Custom / Decorator Integration Path
-   For custom Python agents, use `@trace` decorator for functions/methods and `patch(openai)`
-   to intercept LLM API calls:
+   For custom Python agents, use `@trace` delegation boundaries for agent functions/methods
+   and `patch()` to intercept LLM API calls. Patched calls inherit the active agent, parent,
+   delegation chain, and hop through context variables:
 
    >>> import agentscope
-   >>> agentscope.patch()  # Intercept OpenAI completion calls
+   >>> agentscope.patch()  # Intercept supported LLM completion calls
    >>>
-   >>> @agentscope.trace(name="search_tool", span_type="tool_call", agent_id="researcher")
-   ... def search(query: str):
-   ...     return "search results"
+   >>> @agentscope.trace(name="researcher", span_type="delegation")
+   ... def research(query: str):
+   ...     return openai_client.chat.completions.create(...)
 
 Public Entry Points:
 -------------------

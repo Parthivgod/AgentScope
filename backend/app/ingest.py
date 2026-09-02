@@ -1,5 +1,4 @@
 import os
-import json
 from fastapi import FastAPI, HTTPException, Request, Depends
 from agentscope.schema import Span
 from app.redis_client import get_redis
@@ -9,6 +8,14 @@ from app.history import router as history_router
 app = FastAPI(title="AgentScope Ingestion API")
 app.include_router(ws_router)
 app.include_router(history_router)
+
+INGEST_AND_INDEX_SCRIPT = """
+local message_id = redis.call('XADD', KEYS[1], '*', 'payload', ARGV[1])
+local timestamp_ms = string.match(message_id, '^(%d+)%-')
+redis.call('ZADD', KEYS[2], timestamp_ms, ARGV[2])
+redis.call('RPUSH', KEYS[3], message_id)
+return message_id
+"""
 
 # Middleware / Dependency for API Key validation
 async def verify_api_key(request: Request):
@@ -27,17 +34,17 @@ async def verify_api_key(request: Request):
 @app.post("/ingest", dependencies=[Depends(verify_api_key)])
 async def ingest_span(span: Span):
     # Validates incoming payloads against the Span schema from sdk/agentscope/schema.py
-    # Write to Redis Streams (durable, ordered)
+    # Append the durable event and both read-index entries as one Redis-side
+    # operation. Redis serializes scripts, so the per-trace list has exactly
+    # the authoritative stream order even with multiple backend workers.
     payload = span.model_dump_json()
-    message_id = await get_redis().xadd("agentscope:events", {"payload": payload})
-    # Per-trace read index: lets /history and /traces serve in O(trace size)
-    # instead of scanning the whole event stream (Week 9 load-test finding).
-    # Additive keys only — the worker still reads agentscope:events unchanged.
-    try:
-        ts_ms = int(str(message_id).split("-")[0])
-        await get_redis().zadd("agentscope:traces", {span.trace_id: ts_ms})
-        await get_redis().rpush(f"agentscope:trace:{span.trace_id}", str(message_id))
-    except Exception:
-        # Index maintenance must never break ingestion (RULES.md §3.1/#6)
-        pass
+    await get_redis().eval(
+        INGEST_AND_INDEX_SCRIPT,
+        3,
+        "agentscope:events",
+        "agentscope:traces",
+        f"agentscope:trace:{span.trace_id}",
+        payload,
+        span.trace_id,
+    )
     return {"status": "accepted", "span_id": span.span_id}

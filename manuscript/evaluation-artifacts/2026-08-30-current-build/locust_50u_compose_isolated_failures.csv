@@ -1,0 +1,2 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+POST,POST /ingest (no key),"CatchResponseError('expected 401, got 502')",1,2026-08-30T16:43:54Z,2026-08-30T16:43:54Z

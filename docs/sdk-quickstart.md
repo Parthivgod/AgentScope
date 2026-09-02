@@ -63,29 +63,37 @@ result = graph.invoke(inputs, config={"callbacks": [adapter]})
 
 ### Path 2: Custom Agent / Decorator Path
 
-For custom Python agent loops or frameworks outside LangGraph, use `@agentscope.trace` to wrap functions/tools and `agentscope.patch()` to automatically instrument LLM clients:
+For custom Python agent loops or frameworks outside LangGraph, use `@agentscope.trace` to mark agent boundaries/functions and `agentscope.patch()` to automatically instrument LLM clients. Delegation boundaries share execution context with patched calls, so trace IDs, parent spans, agent identity, delegation chains, and hop numbers do not need to be passed through business-function arguments:
 
 ```python
 import agentscope
 from agentscope import trace
 
-# 1. Automatically instrument LLM calls (e.g. OpenAI and Anthropic)
-# Patch all supported LLM clients (or specify target: agentscope.patch("anthropic") / agentscope.patch("openai"))
-agentscope.patch(agent_id="custom-researcher-agent", trace_id="trace-001")
+# 1. Automatically instrument LLM calls (e.g. OpenAI and Anthropic).
+# Fallback IDs apply only when a patched call runs outside a traced context.
+agentscope.patch()
 
 # 2. Decorate custom functions, tools, or agent nodes
-@trace(name="web_search", span_type="tool_call", agent_id="searcher-node")
+@trace(name="web_search", span_type="tool_call")
 def search_web(query: str) -> str:
     # Your custom search tool logic
     return f"Results for {query}"
 
-@trace(name="research_step", span_type="delegation", agent_id="lead-agent")
-async def run_research(user_query: str):
+@trace(name="specialist-agent", span_type="delegation")
+async def specialist_agent(user_query: str):
     search_results = search_web(user_query)
-    # LLM calls (e.g. OpenAI client.chat.completions.create or Anthropic client.messages.create)
-    # are captured automatically via patch()
+    # A patched OpenAI/Anthropic call here automatically belongs to
+    # specialist-agent and is parented beneath this span.
     return search_results
+
+@trace(name="lead-agent", span_type="delegation")
+async def run_research(user_query: str):
+    return await specialist_agent(user_query)
 ```
+
+For a root `delegation` span, `hop_number` is `0`; the first delegated agent is `1`, and so on. Supplying `agent_id=` remains supported, but when omitted a delegation span uses its `name` as the agent identity. Non-delegation spans inherit the active trace and parent context without extending the delegation chain.
+
+When redaction is enabled, the SDK computes a process-local HMAC fingerprint of the pre-redaction input before replacing `input` and `output` with `[REDACTED]`. Only the truncated fingerprint is transmitted; the HMAC key and raw value remain local. This lets the existing Failure Loops rule distinguish repeated input from changing input even in redacted traces.
 
 ---
 

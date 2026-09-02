@@ -1,7 +1,7 @@
 import asyncio
-import json
 import logging
 from redis_client import redis_client
+from anomaly_store import ensure_anomaly_index, persist_anomaly
 from agentscope.schema import Span
 from rules.engine import AnomalyEngine
 from pydantic import ValidationError
@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 async def main():
     logger.info("Starting AgentScope Anomaly Worker...")
     engine = AnomalyEngine()
+    await ensure_anomaly_index(redis_client)
 
     # Retrieve last processed ID to ensure no data loss (FR-4)
     last_id = await redis_client.get("agentscope:worker:last_id")
@@ -39,9 +40,9 @@ async def main():
                                 
                                 for anomaly in anomalies:
                                     anomaly["is_anomaly"] = True
-                                    # Write anomaly to a separate stream
-                                    anomaly_payload = json.dumps(anomaly)
-                                    await redis_client.xadd("agentscope:anomalies", {"payload": anomaly_payload})
+                                    # Persist the live stream record and its
+                                    # per-trace history index atomically.
+                                    await persist_anomaly(redis_client, anomaly)
                                     logger.warning(f"Anomaly detected: {anomaly['rule']} on span {anomaly['span_id']}")
                             except ValidationError as e:
                                 logger.error(f"Failed to validate payload: {e}")

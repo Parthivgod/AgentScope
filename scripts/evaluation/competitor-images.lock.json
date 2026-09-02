@@ -1,0 +1,17 @@
+{
+  "frozen_at": "2026-09-02",
+  "langfuse": {
+    "source_tag": "v4.25.0",
+    "source_commit": "60dfa8bc18ad3a71d26dec512d1c580de5ff2420",
+    "web": "docker.langfuse.com/langfuse/langfuse@sha256:12654de5ffb20722cf6b2d7df51b3099eb2d92bd92f5aef20e095b16a840ca8d",
+    "worker": "docker.langfuse.com/langfuse/langfuse-worker@sha256:638a46341ead4f68103f2b800a14b5d75f7c352b975f2b63a43697c577233a4c",
+    "clickhouse": "clickhouse/clickhouse-server@sha256:8a790dd3468db22b1d4e7b18a176f378ff5ff6053b9c48dd4ea1fa71a24c5ba6",
+    "postgres": "postgres@sha256:67f41722b7a8cbdb868a44a4995c846eddfdc2973bccb291ce937dce88ad5675",
+    "redis": "redis@sha256:e9b2e45ecd47fbb69b877cf8d045d5cccaaaed52524b6e098b4abe8212994f73",
+    "minio": "cgr.dev/chainguard/minio@sha256:1e408150bcf1bff07a2e468b9ac91347d4da261258921faeaedbe2ed7f0818b4"
+  },
+  "phoenix": {
+    "server_tag": "version-20.4.0",
+    "server": "arizephoenix/phoenix@sha256:8af594ab0342cc32acc4167f472fb89b4e25f5eb8d5e26c353bf4e102fddb693"
+  }
+}

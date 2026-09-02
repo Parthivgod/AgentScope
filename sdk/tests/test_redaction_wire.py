@@ -77,7 +77,9 @@ def run_sender_and_drain(url):
     asyncio.run(drain())
 
 
-def test_redacted_fields_absent_from_wire(stub_ingest):
+def test_redacted_fields_absent_from_wire(stub_ingest, monkeypatch):
+    local_hmac_key = b"WIRE-TEST-LOCAL-HMAC-KEY-NEVER-SEND"
+    monkeypatch.setattr("agentscope.privacy._HMAC_KEY", local_hmac_key)
     set_redaction_enabled(True)
     try:
         run_sender_and_drain(stub_ingest)
@@ -92,6 +94,9 @@ def test_redacted_fields_absent_from_wire(stub_ingest):
         payload = json.loads(text)
         assert payload["input"] == "[REDACTED]"
         assert payload["output"] == "[REDACTED]"
+        assert payload["progress_fingerprint"]
+        assert local_hmac_key.decode("ascii") not in text
+        assert local_hmac_key.hex() not in text
 
 
 def test_full_capture_default_leaks_by_design(stub_ingest):

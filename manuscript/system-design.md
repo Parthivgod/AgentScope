@@ -8,7 +8,9 @@ AgentScope is a self-hosted observability platform for multi-agent LLM systems w
 
 ## Architecture
 
-The SDK captures spans inside the monitored agent and ships them asynchronously to a FastAPI ingestion endpoint fronted by Nginx. Validated spans are appended to a Redis Stream (`agentscope:events`), which is the single ordered log of the system. Two independent consumers read the same stream:
+The SDK captures spans inside the monitored agent and ships them asynchronously to a FastAPI ingestion endpoint fronted by Nginx. In framework-free Python applications, the `@trace` decorator and patched LLM clients share execution-scoped `contextvars`: a decorated delegation boundary pushes its agent identity, nested boundaries extend the ordered delegation chain, and patched calls inherit the active trace, parent span, owning agent, and zero-based hop number without requiring those values in business-function arguments. This closes the prior split in which decorated functions formed a hierarchy while patched LLM calls used independent default identities.
+
+Validated spans are appended to a Redis Stream (`agentscope:events`), which is the single ordered log of the system. Two independent consumers read the same stream:
 
 1. **The anomaly worker** evaluates six rule-based detectors (crashes, failure loops, timeouts, token spikes, message storms, delegation cycles) against the stream in strict arrival order and appends flagged anomalies to a second stream (`agentscope:anomalies`), checkpointing its read position so it can be killed and restarted without data loss.
 2. **The WebSocket relay** multiplexes both streams to connected dashboards, delivering spans and anomaly flags as they occur.
@@ -28,4 +30,4 @@ The reference deployment is a single docker-compose stack (Redis with append-onl
 - **Observability must never risk availability.** Nothing in the SDK's send path may raise into the host agent or block synchronously on network I/O; delivery failures are logged locally and dropped after bounded retries.
 - **One schema, one rendering path.** A single Pydantic span model is shared by SDK, backend, worker, and dashboard; spans from all instrumentation paths are indistinguishable downstream.
 - **Detection is not enforcement.** The system surfaces anomalies; it never kills, restarts, or otherwise acts on the monitored agent.
-- **Client-side, opt-in redaction.** When enabled, sensitive span payloads are scrubbed inside the SDK process before anything leaves it.
+- **Client-side, opt-in redaction.** When enabled, sensitive span payloads are scrubbed inside the SDK process before anything leaves it. Immediately before scrubbing, the SDK computes a truncated HMAC-SHA256 progress fingerprint using a process-local secret that is never serialized or transmitted. The existing Failure Loops rule compares this fingerprint instead of the indistinguishable `[REDACTED]` placeholder, retaining same-versus-changed input discrimination without exposing the original value.

@@ -17,6 +17,7 @@ import os
 import statistics
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 
 import httpx
 import websockets
@@ -71,38 +72,77 @@ async def reader(ws, pending):
             fut.set_result(True)
 
 
-async def worker(client, api_key, samples_each, pending, results):
+async def worker(client, api_key, samples_each, pending, results, errors):
     for _ in range(samples_each):
         try:
             results.append(await probe_once(client, api_key, pending))
         except Exception as e:
             print(f"  probe error: {e}")
-            return
+            errors.append(str(e))
 
 
-async def main(samples: int, concurrency: int) -> None:
+def percentile(values, q):
+    if not values:
+        return None
+    ordered = sorted(values)
+    position = (len(ordered) - 1) * q
+    lower = int(position)
+    upper = min(lower + 1, len(ordered) - 1)
+    return ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower)
+
+
+async def main(samples: int, concurrency: int, json_output: Path | None) -> None:
     api_key = os.environ.get("AGENTSCOPE_API_KEY", "test-key")
     results: list[float] = []
+    errors: list[str] = []
     pending: dict[str, asyncio.Future] = {}
     async with websockets.connect(WS_URL, max_queue=4096) as ws:
         reader_task = asyncio.get_event_loop().create_task(reader(ws, pending))
         async with httpx.AsyncClient(timeout=10.0) as client:
+            base, remainder = divmod(samples, concurrency)
             await asyncio.gather(*[
-                worker(client, api_key, samples // concurrency, pending, results)
-                for _ in range(concurrency)
+                worker(client, api_key, base + (1 if index < remainder else 0), pending, results, errors)
+                for index in range(concurrency)
             ])
         reader_task.cancel()
 
     results.sort()
-    p = lambda q: results[min(int(len(results) * q), len(results) - 1)]
+    summary = {
+        "study": "event_to_dashboard_latency",
+        "environment_label": os.environ.get("EVALUATION_ENVIRONMENT", "unspecified"),
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "ingest_url": INGEST_URL,
+        "websocket_url": WS_URL,
+        "requested_samples": samples,
+        "concurrency": concurrency,
+        "completed_samples": len(results),
+        "error_count": len(errors),
+        "errors": errors,
+        "latency_ms": {
+            "p50": percentile(results, 0.50),
+            "p95": percentile(results, 0.95),
+            "p99": percentile(results, 0.99),
+            "min": min(results) if results else None,
+            "max": max(results) if results else None,
+            "mean": statistics.mean(results) if results else None,
+        },
+        "raw_latency_ms": results,
+    }
+    if not results:
+        raise RuntimeError("No latency samples completed")
     print(f"\n=== Event-to-dashboard latency (ingest->WS), n={len(results)} ===")
-    print(f"  p50={p(0.50):.1f}ms  p95={p(0.95):.1f}ms  p99={p(0.99):.1f}ms  "
+    print(f"  p50={summary['latency_ms']['p50']:.1f}ms  p95={summary['latency_ms']['p95']:.1f}ms  p99={summary['latency_ms']['p99']:.1f}ms  "
           f"min={results[0]:.1f}ms  max={results[-1]:.1f}ms  mean={statistics.mean(results):.1f}ms")
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        print(f"  JSON: {json_output}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--samples", type=int, default=200)
     parser.add_argument("--concurrency", type=int, default=5)
+    parser.add_argument("--json-output", type=Path)
     args = parser.parse_args()
-    asyncio.run(main(args.samples, args.concurrency))
+    asyncio.run(main(args.samples, args.concurrency, args.json_output))

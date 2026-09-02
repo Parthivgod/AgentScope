@@ -72,6 +72,7 @@ async def test_client_side_redaction_in_sender():
     assert posted_json["output"] == "[REDACTED]"
     assert posted_json["trace_id"] == "test-redact-trace"
     assert posted_json["name"] == "sensitive_tool"
+    assert posted_json["progress_fingerprint"]
 
 @pytest.mark.asyncio
 async def test_redaction_combined_with_retry_backoff():

@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from agentscope.schema import Span
 from datetime import datetime
 import json
@@ -12,16 +12,23 @@ class FailureLoopRule:
         # Pending tuning against real traffic patterns (RULES.md §6).
         self.count_threshold = thresholds.get("count", 4)
         self.window_seconds = thresholds.get("window_seconds", 60)
-        # state: agent_id -> list of (timestamp, signature)
-        self.history: Dict[str, List[tuple[datetime, str]]] = {}
+        # A loop is meaningful only within one execution. Keying by agent_id
+        # alone merged unrelated traces during concurrent load. The inner map
+        # deduplicates active/completed lifecycle versions of the same call.
+        # (trace_id, agent_id) -> span_id -> (timestamp, signature)
+        self.history: Dict[tuple[str, str], Dict[str, tuple[datetime, str]]] = {}
 
     def _get_signature(self, span: Span) -> str:
-        # A simple state hash: name + stringified input
-        try:
-            input_str = json.dumps(span.input, sort_keys=True) if span.input else ""
-        except TypeError:
-            input_str = str(span.input)
-        sig_raw = f"{span.name}:{input_str}"
+        # Under client-side redaction, compare the keyed pre-redaction
+        # fingerprint rather than the identical literal "[REDACTED]" value.
+        if span.progress_fingerprint:
+            comparison_value = f"hmac:{span.progress_fingerprint}"
+        else:
+            try:
+                comparison_value = json.dumps(span.input, sort_keys=True) if span.input else ""
+            except TypeError:
+                comparison_value = str(span.input)
+        sig_raw = f"{span.name}:{comparison_value}"
         return hashlib.sha256(sig_raw.encode('utf-8')).hexdigest()
 
     def evaluate(self, span: Span) -> Optional[Dict[str, Any]]:
@@ -29,24 +36,29 @@ class FailureLoopRule:
         if span.span_type not in ("llm_call", "tool_call"):
             return None
 
-        agent_id = span.agent_id
+        scope = (span.trace_id, span.agent_id)
         now = span.start_time
         sig = self._get_signature(span)
 
-        if agent_id not in self.history:
-            self.history[agent_id] = []
+        calls = self.history.setdefault(scope, {})
 
-        # Add current call
-        self.history[agent_id].append((now, sig))
+        # Prune old calls outside the window before considering this event.
+        self.history[scope] = calls = {
+            span_id: (timestamp, signature)
+            for span_id, (timestamp, signature) in calls.items()
+            if (now - timestamp).total_seconds() <= self.window_seconds
+        }
 
-        # Prune old calls outside the window
-        self.history[agent_id] = [
-            (t, s) for t, s in self.history[agent_id]
-            if (now - t).total_seconds() <= self.window_seconds
-        ]
+        previous = calls.get(span.span_id)
+        calls[span.span_id] = (now, sig)
+        if previous == (now, sig):
+            # The SDK emits active and completed versions with the same span
+            # identity/start time. A lifecycle update is not another call and
+            # must not emit the same loop finding twice.
+            return None
 
         # Count occurrences of the current signature
-        sig_count = sum(1 for t, s in self.history[agent_id] if s == sig)
+        sig_count = sum(1 for _timestamp, signature in calls.values() if signature == sig)
 
         if sig_count >= self.count_threshold:
             return {

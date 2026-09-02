@@ -21,8 +21,15 @@ import redis as sync_redis
 def _clean_redis():
     url = os.environ.get("REDIS_URL", "redis://localhost:6379")
     r = sync_redis.Redis.from_url(url, decode_responses=True)
-    keys = ["agentscope:events", "agentscope:traces", "agentscope:anomalies", "agentscope:worker:last_id"]
+    keys = [
+        "agentscope:events",
+        "agentscope:traces",
+        "agentscope:anomalies",
+        "agentscope:worker:last_id",
+        "agentscope:index:anomalies:v1",
+    ]
     keys += r.keys("agentscope:trace:*")
+    keys += r.keys("agentscope:anomaly-trace:*")
     if keys:
         r.delete(*keys)
     r.close()

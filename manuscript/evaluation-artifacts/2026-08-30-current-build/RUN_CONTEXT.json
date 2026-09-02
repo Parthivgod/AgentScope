@@ -1,0 +1,32 @@
+{
+  "comparison_run": false,
+  "docker_compose_available": true,
+  "docker_engine": "Docker Engine 29.3.1",
+  "production_components": {
+    "api": "current-checkout FastAPI backend, four Uvicorn workers",
+    "front_door": "Nginx",
+    "redis": "Redis 7",
+    "worker": "current-checkout anomaly worker"
+  },
+  "initial_docker_issue": "Docker Desktop 4.67.0 was initially unavailable because its optional inference manager failed while creating dockerInference; the user subsequently started Docker Desktop and the full compose protocols completed.",
+  "fallback_retained_as": "preliminary diagnostic evidence only",
+  "production_test_databases": {
+    "db0": "existing persisted project data; used for the first compose pass",
+    "db14": "empty at start; controlled full-stack isolation run",
+    "db13": "empty at start; diagnostic API read-path control while the worker remained on db14"
+  },
+  "scope_completed": [
+    "delegation and privacy ablation",
+    "labeled anomaly tuning and held-out validation",
+    "current-build SDK overhead with live compose ingestion",
+    "production-compose idle and 50-user latency/load testing",
+    "production-compose live/history convergence",
+    "isolated-database full-stack repeat",
+    "read-path diagnostic control"
+  ],
+  "scope_not_run": [
+    "AgentScope versus Langfuse versus Phoenix comparison",
+    "implementation of fixes identified by this evaluation",
+    "post-fix performance and convergence confirmation"
+  ]
+}

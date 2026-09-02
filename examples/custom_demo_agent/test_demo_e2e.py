@@ -56,4 +56,4 @@ async def test_custom_demo_agent_spans_sent_to_ingest():
             }
             assert span_json["status"]["status"] == "success"
 
-        assert mock_redis.xadd.called
+        assert mock_redis.eval.called

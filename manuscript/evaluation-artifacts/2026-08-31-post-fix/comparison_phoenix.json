@@ -1,0 +1,699 @@
+{
+  "arm": "phoenix",
+  "comparison_packages": {
+    "langchain-core": "1.6.0",
+    "langfuse": "4.15.1",
+    "langgraph": "1.2.11",
+    "openinference-instrumentation-langchain": "0.1.73",
+    "opentelemetry-exporter-otlp-proto-grpc": "1.44.0",
+    "opentelemetry-sdk": "1.44.0"
+  },
+  "configurations": [
+    {
+      "baseline_ms": {
+        "max": 8.273899999039713,
+        "mean": 5.318606666393559,
+        "min": 3.96069999987958,
+        "n": 30,
+        "p50": 5.014649999793619,
+        "p95": 7.406470000023546,
+        "p99": 8.022527999291924
+      },
+      "instrumented_ms": {
+        "max": 25.569700001142337,
+        "mean": 14.16148333325206,
+        "min": 10.954999999739812,
+        "n": 30,
+        "p50": 13.117449999299424,
+        "p95": 22.058854999886535,
+        "p99": 24.931845000955946
+      },
+      "label": "cpu_trivial",
+      "order_counts": {
+        "baseline_then_instrumented": 30
+      },
+      "paired_difference_ms": {
+        "max": 19.15010000266193,
+        "mean": 8.842876666858501,
+        "mean_bootstrap_95": [
+          7.787100917189491,
+          10.088646000137182
+        ],
+        "min": 4.468900002393639,
+        "n": 30,
+        "p50": 8.064849999755097,
+        "p95": 15.528264999738894,
+        "p99": 18.225870002061132
+      },
+      "paired_overhead_percent": {
+        "max": 298.30674819607106,
+        "mean": 174.32244584657118,
+        "mean_bootstrap_95": [
+          150.9091676618744,
+          197.8825544247553
+        ],
+        "min": 54.012013716775755,
+        "n": 30,
+        "p50": 161.06205671698484,
+        "p95": 269.1004482138745,
+        "p99": 291.46133781443257
+      },
+      "raw_pairs": [
+        {
+          "baseline_ms": 6.201899999723537,
+          "difference_ms": 7.2134000020014355,
+          "instrumented_ms": 13.415300001724972,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 116.30951808837595,
+          "pair_index": 0,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 5.204899998716428,
+          "difference_ms": 5.750100001023384,
+          "instrumented_ms": 10.954999999739812,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 110.4747449987782,
+          "pair_index": 1,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 4.691500000262749,
+          "difference_ms": 6.683199999315548,
+          "instrumented_ms": 11.374699999578297,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 142.45337309903553,
+          "pair_index": 2,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 8.273899999039713,
+          "difference_ms": 4.468900002393639,
+          "instrumented_ms": 12.742800001433352,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 54.012013716775755,
+          "pair_index": 3,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 6.4195999984804075,
+          "difference_ms": 19.15010000266193,
+          "instrumented_ms": 25.569700001142337,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 298.30674819607106,
+          "pair_index": 4,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 7.405700000163051,
+          "difference_ms": 5.354199998691911,
+          "instrumented_ms": 12.759899998854962,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 72.29836475382513,
+          "pair_index": 5,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 5.505900000571273,
+          "difference_ms": 7.011399999100831,
+          "instrumented_ms": 12.517299999672105,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 127.34339523735179,
+          "pair_index": 6,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 4.572600000756211,
+          "difference_ms": 11.936999999306863,
+          "instrumented_ms": 16.509600000063074,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 261.05497960313033,
+          "pair_index": 7,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 3.994000000602682,
+          "difference_ms": 9.422299999641837,
+          "instrumented_ms": 13.416300000244519,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 235.91136700601004,
+          "pair_index": 8,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 4.496399998970446,
+          "difference_ms": 11.792000001150882,
+          "instrumented_ms": 16.288400000121328,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 262.2542479283634,
+          "pair_index": 9,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 4.054400000313763,
+          "difference_ms": 7.7933999982633395,
+          "instrumented_ms": 11.847799998577102,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 192.22079710093288,
+          "pair_index": 10,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 4.004700000223238,
+          "difference_ms": 8.394899999984773,
+          "instrumented_ms": 12.399600000208011,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 209.62618921559186,
+          "pair_index": 11,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 6.090200000471668,
+          "difference_ms": 6.7180999994889135,
+          "instrumented_ms": 12.808299999960582,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 110.31000622259724,
+          "pair_index": 12,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 6.735499999194872,
+          "difference_ms": 6.757000001016422,
+          "instrumented_ms": 13.492500000211294,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 100.31920424354719,
+          "pair_index": 13,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 5.716799998481292,
+          "difference_ms": 6.102500001361477,
+          "instrumented_ms": 11.81929999984277,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 106.74678146835028,
+          "pair_index": 14,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 4.126700001506833,
+          "difference_ms": 9.22559999708028,
+          "instrumented_ms": 13.352299998587114,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 223.5587756248727,
+          "pair_index": 15,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 7.407099999909406,
+          "difference_ms": 15.963100000590202,
+          "instrumented_ms": 23.370200000499608,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 215.5107937085424,
+          "pair_index": 16,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 4.833599999983562,
+          "difference_ms": 7.506500000090455,
+          "instrumented_ms": 12.340100000074017,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 155.29832837048954,
+          "pair_index": 17,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 6.696599999486352,
+          "difference_ms": 5.6810999994922895,
+          "instrumented_ms": 12.377699998978642,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 84.83558820786736,
+          "pair_index": 18,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 5.459300000438816,
+          "difference_ms": 14.996799998698407,
+          "instrumented_ms": 20.456099999137223,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 274.7018848111108,
+          "pair_index": 19,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 5.663099998855614,
+          "difference_ms": 8.336300001246855,
+          "instrumented_ms": 13.999400000102469,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 147.2038283436887,
+          "pair_index": 20,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 5.069599999842467,
+          "difference_ms": 8.457399999315385,
+          "instrumented_ms": 13.526999999157852,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 166.82578506348017,
+          "pair_index": 21,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 4.264699999112054,
+          "difference_ms": 9.425500000361353,
+          "instrumented_ms": 13.690199999473407,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 221.01202903659862,
+          "pair_index": 22,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 4.885199999989709,
+          "difference_ms": 7.046000000627828,
+          "instrumented_ms": 11.931200000617537,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 144.23155655127061,
+          "pair_index": 23,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 4.21239999923273,
+          "difference_ms": 10.756300000139163,
+          "instrumented_ms": 14.968699999371893,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 255.34849496957497,
+          "pair_index": 24,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 4.577199999403092,
+          "difference_ms": 10.611300000164192,
+          "instrumented_ms": 15.188499999567284,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 231.82950278659442,
+          "pair_index": 25,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 3.96069999987958,
+          "difference_ms": 8.921900000132155,
+          "instrumented_ms": 12.882600000011735,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 225.2606862525163,
+          "pair_index": 26,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 4.508099998929538,
+          "difference_ms": 9.474000000409433,
+          "instrumented_ms": 13.98209999933897,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 210.1550542946932,
+          "pair_index": 27,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 4.959699999744771,
+          "difference_ms": 7.603700001709512,
+          "instrumented_ms": 12.563400001454283,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 153.3096760308245,
+          "pair_index": 28,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 5.566199999520904,
+          "difference_ms": 6.7323000002943445,
+          "instrumented_ms": 12.298499999815249,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 120.94966046627518,
+          "pair_index": 29,
+          "query": "Search system status"
+        }
+      ],
+      "runs": 30,
+      "simulated_node_delay_ms": 0.0,
+      "warmup_pairs_discarded": 5
+    },
+    {
+      "baseline_ms": {
+        "max": 213.98389999922074,
+        "mean": 208.99788999971256,
+        "min": 205.71150000068883,
+        "n": 30,
+        "p50": 208.65834999949584,
+        "p95": 212.90746000013314,
+        "p99": 213.68754899933265
+      },
+      "instrumented_ms": {
+        "max": 237.15939999965485,
+        "mean": 220.45955333323946,
+        "min": 213.9913000009983,
+        "n": 30,
+        "p50": 219.30274999976973,
+        "p95": 231.54618999988088,
+        "p99": 236.1169659999723
+      },
+      "label": "llm_bound_100ms_per_node",
+      "order_counts": {
+        "baseline_then_instrumented": 30
+      },
+      "paired_difference_ms": {
+        "max": 24.41019999969285,
+        "mean": 11.461663333526909,
+        "mean_bootstrap_95": [
+          9.695640000331878,
+          13.27906791684806
+        ],
+        "min": 4.598400002578273,
+        "n": 30,
+        "p50": 10.881499998504296,
+        "p95": 19.781295000393584,
+        "p99": 23.34120199977406
+      },
+      "paired_overhead_percent": {
+        "max": 11.473697668286043,
+        "mean": 5.4848233076861375,
+        "mean_bootstrap_95": [
+          4.64008190696765,
+          6.344280654649863
+        ],
+        "min": 2.1791116557333745,
+        "n": 30,
+        "p50": 5.280548950254863,
+        "p95": 9.349040248366137,
+        "p99": 10.970013283999483
+      },
+      "raw_pairs": [
+        {
+          "baseline_ms": 209.90429999983462,
+          "difference_ms": 18.629100000907783,
+          "instrumented_ms": 228.5334000007424,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 8.87504448499743,
+          "pair_index": 0,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 213.98389999922074,
+          "difference_ms": 5.038600000261795,
+          "instrumented_ms": 219.02249999948253,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 2.3546631313291067,
+          "pair_index": 1,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 212.96199999960663,
+          "difference_ms": 4.703700000391109,
+          "instrumented_ms": 217.66569999999774,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 2.208703900414063,
+          "pair_index": 2,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 209.8361999996996,
+          "difference_ms": 6.320399999822257,
+          "instrumented_ms": 216.15659999952186,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 3.012063695316302,
+          "pair_index": 3,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 206.7042999988189,
+          "difference_ms": 14.831100001174491,
+          "instrumented_ms": 221.5353999999934,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 7.175032160075642,
+          "pair_index": 4,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 211.26039999944624,
+          "difference_ms": 4.603600000336883,
+          "instrumented_ms": 215.86399999978312,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 2.1791116557333745,
+          "pair_index": 5,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 207.8914999983681,
+          "difference_ms": 7.2403000012855045,
+          "instrumented_ms": 215.1317999996536,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 3.4827301747990367,
+          "pair_index": 6,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 206.2605999999505,
+          "difference_ms": 9.907399999065092,
+          "instrumented_ms": 216.1679999990156,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 4.803341015718692,
+          "pair_index": 7,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 209.39289999842003,
+          "difference_ms": 4.598400002578273,
+          "instrumented_ms": 213.9913000009983,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 2.196063000518628,
+          "pair_index": 8,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 211.52389999951993,
+          "difference_ms": 16.775399999460205,
+          "instrumented_ms": 228.29929999898013,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 7.930735013631216,
+          "pair_index": 9,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 212.0522000004712,
+          "difference_ms": 17.026799998347997,
+          "instrumented_ms": 229.0789999988192,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 8.029532350199698,
+          "pair_index": 10,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 212.749199999962,
+          "difference_ms": 24.41019999969285,
+          "instrumented_ms": 237.15939999965485,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 11.473697668286043,
+          "pair_index": 11,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 206.98749999974098,
+          "difference_ms": 13.554299999668729,
+          "instrumented_ms": 220.5417999994097,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 6.54836644709738,
+          "pair_index": 12,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 207.0531999997911,
+          "difference_ms": 13.888600000427687,
+          "instrumented_ms": 220.9418000002188,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 6.707744676460783,
+          "pair_index": 13,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 208.60840000023018,
+          "difference_ms": 5.50929999917571,
+          "instrumented_ms": 214.1176999994059,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 2.6409770647632747,
+          "pair_index": 14,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 209.02870000099938,
+          "difference_ms": 5.19700000040757,
+          "instrumented_ms": 214.22570000140695,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 2.486261456145842,
+          "pair_index": 15,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 210.66009999958624,
+          "difference_ms": 6.708799999614712,
+          "instrumented_ms": 217.36889999920095,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 3.1846562304052304,
+          "pair_index": 16,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 206.76479999929143,
+          "difference_ms": 12.8182000007655,
+          "instrumented_ms": 219.58300000005693,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 6.199411118724961,
+          "pair_index": 17,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 206.39289999962784,
+          "difference_ms": 14.406000000235508,
+          "instrumented_ms": 220.79889999986335,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 6.97989126576616,
+          "pair_index": 18,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 209.47119999982533,
+          "difference_ms": 9.146000000328058,
+          "instrumented_ms": 218.6172000001534,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 4.366232685130789,
+          "pair_index": 19,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 208.7082999987615,
+          "difference_ms": 13.8466000007611,
+          "instrumented_ms": 222.5548999995226,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 6.634427093145441,
+          "pair_index": 20,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 207.6865999988513,
+          "difference_ms": 12.543900002128794,
+          "instrumented_ms": 220.2305000009801,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 6.039821539857734,
+          "pair_index": 21,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 212.84080000077665,
+          "difference_ms": 20.723999999972875,
+          "instrumented_ms": 233.56480000074953,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 9.736854963849625,
+          "pair_index": 22,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 209.27080000001297,
+          "difference_ms": 10.38940000034927,
+          "instrumented_ms": 219.66020000036224,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 4.964572219511095,
+          "pair_index": 23,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 208.60329999959504,
+          "difference_ms": 10.14000000031956,
+          "instrumented_ms": 218.7432999999146,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 4.860901050146016,
+          "pair_index": 24,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 206.45110000077693,
+          "difference_ms": 10.497599998416263,
+          "instrumented_ms": 216.9486999991932,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 5.084787631733014,
+          "pair_index": 25,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 207.7979999994568,
+          "difference_ms": 9.717100001580548,
+          "instrumented_ms": 217.51510000103735,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 4.676224026028137,
+          "pair_index": 26,
+          "query": "Search system status"
+        },
+        {
+          "baseline_ms": 205.71150000068883,
+          "difference_ms": 11.26539999859233,
+          "instrumented_ms": 216.97689999928116,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 5.476310268776712,
+          "pair_index": 27,
+          "query": "Tell me a joke"
+        },
+        {
+          "baseline_ms": 207.34189999893715,
+          "difference_ms": 12.746900001729955,
+          "instrumented_ms": 220.0888000006671,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 6.147768493389564,
+          "pair_index": 28,
+          "query": "Calculate 42 * 10"
+        },
+        {
+          "baseline_ms": 206.03620000110823,
+          "difference_ms": 16.66579999800888,
+          "instrumented_ms": 222.7019999991171,
+          "order": "baseline_then_instrumented",
+          "overhead_percent": 8.088772748633122,
+          "pair_index": 29,
+          "query": "Search system status"
+        }
+      ],
+      "runs": 30,
+      "simulated_node_delay_ms": 100.0,
+      "warmup_pairs_discarded": 5
+    }
+  ],
+  "design": {
+    "capture_policy": "full input/output capture",
+    "outlier_removal": false,
+    "phoenix_order_limitation": "global instrumentation requires baseline phase before Phoenix phase",
+    "runs_per_configuration": 30,
+    "timed_region": "graph ainvoke; asynchronous exporter flush excluded",
+    "warmup_pairs_discarded": 5,
+    "workload": "same deterministic branching LangGraph; router plus one specialist"
+  },
+  "manifest": {
+    "command": "scripts/evaluation/three_way_comparison.py --arm phoenix --runs 30 --warmup 5 --output manuscript/evaluation-artifacts/2026-08-31-post-fix/comparison_phoenix.json",
+    "docker": "Docker version 29.3.1, build c2be9cc",
+    "generated_at_utc": "2026-08-31T15:40:14.807511+00:00",
+    "git_branch": "dashboard-ui-redesign",
+    "git_commit": "8add3385c693a165f705352df222e1cdbba78aea",
+    "git_worktree_dirty": true,
+    "logical_cpu_count": 12,
+    "packages": {
+      "anthropic": "1.0.0",
+      "httpx": "0.28.1",
+      "locust": "2.46.3",
+      "openai": "3.3.1",
+      "pydantic": "2.13.4",
+      "websockets": "15.0.1"
+    },
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel",
+    "python": "3.11.4 (tags/v3.11.4:d2340ef, Jun  7 2023, 05:45:37) [MSC v.1934 64 bit (AMD64)]",
+    "seed": 20260831
+  },
+  "study": "agentscope_langfuse_phoenix_matched_comparison",
+  "verified_ingestion": {
+    "after_trace_count": 140,
+    "before_trace_count": 70,
+    "delta": 70
+  }
+}

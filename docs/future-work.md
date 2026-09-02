@@ -23,3 +23,8 @@ Any idea that's plausible but out of current scope (RULES.md §1), or that's in-
 - **Proposed by:** Track B / Week 7
 - **Why it's deferred:** Requires load-testing harness (scheduled for Week 9).
 - **What it would take:** Simulate concurrent `/history` queries + `/ingest` load to confirm ingestion p95 doesn't degrade.
+
+## Causal Incident Grouping
+- **Proposed by:** Delegation-aware adapter review / 2026-08-27
+- **Why it's deferred:** Deliberately excluded from the delegation-context and privacy-preserving loop-detection cycle. The review scored it Medium-High effort and not fully novel because causal graph reconstruction and root-cause ranking overlap existing AgentTrace functionality.
+- **What it would take:** A separately approved design for grouping causally related flags from the existing six rules, distinguishing initiating signals from downstream symptoms, defining evaluation ground truth, and updating the dashboard without introducing a new anomaly category or enforcement behavior.

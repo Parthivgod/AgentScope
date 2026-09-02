@@ -15,6 +15,7 @@ Usage: python scripts/resilience-stack.py {worker-kill|redis-restart|slow-ws}
 """
 
 import json
+import os
 import subprocess
 import sys
 import time
@@ -27,6 +28,7 @@ import httpx
 REPO = Path(__file__).resolve().parents[1]
 INGEST = "http://localhost/ingest"  # through Nginx
 HEADERS = {"Authorization": "Bearer test-key"}
+REDIS_DB = os.environ.get("AGENTSCOPE_REDIS_DB", "0")
 
 
 def make_span(trace_id):
@@ -42,7 +44,7 @@ def make_span(trace_id):
 
 
 def redis(*args):
-    r = subprocess.run(["docker", "compose", "exec", "-T", "redis", "redis-cli", *args],
+    r = subprocess.run(["docker", "compose", "exec", "-T", "redis", "redis-cli", "-n", REDIS_DB, *args],
                        cwd=str(REPO / "infra"), capture_output=True, text=True)
     return r.stdout.strip()
 

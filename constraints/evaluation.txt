@@ -1,0 +1,3 @@
+# Transitive SDK dependencies frozen for the evaluation containers.
+httpx==0.28.1
+pydantic==2.13.5

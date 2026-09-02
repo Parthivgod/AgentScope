@@ -1,0 +1,10 @@
+# Evaluation-only overlay: preserves the user's normal Redis DB 0 while giving
+# backend and worker an empty, isolated database for controlled load tests.
+services:
+  backend:
+    environment:
+      REDIS_URL: redis://redis:6379/14
+      AGENTSCOPE_API_KEY: ${AGENTSCOPE_API_KEY:-test-key}
+  worker:
+    environment:
+      REDIS_URL: redis://redis:6379/14

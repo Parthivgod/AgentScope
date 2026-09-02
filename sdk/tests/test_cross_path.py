@@ -51,6 +51,11 @@ async def test_identical_schema_decorator_and_adapter():
     assert adapter_span.agent_id == decorator_span.agent_id
     assert adapter_span.status.status == decorator_span.status.status
     assert type(adapter_span.model_dump()) == type(decorator_span.model_dump())
+    # Existing framework path retains its pre-extension graph semantics.
+    assert adapter_span.parent_span_id is None
+    assert adapter_span.delegation_chain == []
+    assert adapter_span.hop_number == 0
+    assert adapter_span.progress_fingerprint is None
 
 @pytest.mark.asyncio
 async def test_identical_schema_llm_calls_adapter_and_patch():

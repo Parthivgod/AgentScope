@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   redis:
-    image: redis:7
+    image: redis:7@sha256:e9b2e45ecd47fbb69b877cf8d045d5cccaaaed52524b6e098b4abe8212994f73
     ports:
       - "6379:6379"
     volumes:
@@ -54,7 +54,7 @@ services:
     restart: unless-stopped
 
   nginx:
-    image: nginx:latest
+    image: nginx:latest@sha256:798ab669cc2a4ebeb7b049175b2876e94ed6f1b455e0c8d65d8633e9880ad884
     ports:
       - "80:80"
       - "8443:8443"

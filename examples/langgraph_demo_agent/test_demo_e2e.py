@@ -48,4 +48,4 @@ async def test_langgraph_demo_spans_sent_to_real_ingest():
             assert "span_type" in span_json
             assert span_json["agent_id"] in ["e2e-linear-agent", "e2e-branching-agent"]
             
-        assert mock_redis.xadd.called
+        assert mock_redis.eval.called

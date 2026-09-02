@@ -11,5 +11,6 @@ build/
 dist/
 node_modules/
 .DS_Store
+.zcode/
 infra/nginx/certs/*.key
 infra/nginx/certs/*.crt

@@ -38,6 +38,19 @@ class Span(BaseModel):
     
     token_usage: Optional[TokenUsage] = Field(None, description="Prompt/completion tokens")
     agent_id: str = Field(..., description="Which agent/node made the call")
+    delegation_chain: List[str] = Field(
+        default_factory=list,
+        description="Ordered agent identities from the root agent through the current span owner",
+    )
+    hop_number: int = Field(
+        0,
+        ge=0,
+        description="Zero-based number of delegation edges traversed to the current span owner",
+    )
+    progress_fingerprint: Optional[str] = Field(
+        None,
+        description="Client-generated HMAC used for redaction-safe progress comparison",
+    )
 
 class Trace(BaseModel):
     """

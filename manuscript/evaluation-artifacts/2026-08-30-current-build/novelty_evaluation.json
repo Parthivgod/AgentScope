@@ -1,0 +1,233 @@
+{
+  "delegation_context": {
+    "concurrency": {
+      "cross_task_context_leaks": 0,
+      "passed_count": 100,
+      "task_count": 100
+    },
+    "context_restoration": {
+      "after_cancellation": {
+        "agent_id": "fallback-agent",
+        "delegation_chain": [],
+        "hop_number": 0,
+        "parent_span_id": null,
+        "trace_id": "fallback-trace"
+      },
+      "after_cancellation_passed": true,
+      "after_exception": {
+        "agent_id": "fallback-agent",
+        "delegation_chain": [],
+        "hop_number": 0,
+        "parent_span_id": null,
+        "trace_id": "fallback-trace"
+      },
+      "after_exception_passed": true
+    },
+    "integration": "framework-free @trace adapter",
+    "overall_passed": true,
+    "scenario_count": 107,
+    "sequential_scenarios": [
+      {
+        "agent_owner_accuracy": 1.0,
+        "delegation_chain_accuracy": 1.0,
+        "depth": 1,
+        "expected_span_count": 2,
+        "hop_number_accuracy": 1.0,
+        "observed_span_count": 2,
+        "parent_edge_accuracy": 1.0,
+        "passed": true,
+        "prefix": "sync-d1",
+        "single_trace": true
+      },
+      {
+        "agent_owner_accuracy": 1.0,
+        "delegation_chain_accuracy": 1.0,
+        "depth": 2,
+        "expected_span_count": 3,
+        "hop_number_accuracy": 1.0,
+        "observed_span_count": 3,
+        "parent_edge_accuracy": 1.0,
+        "passed": true,
+        "prefix": "sync-d2",
+        "single_trace": true
+      },
+      {
+        "agent_owner_accuracy": 1.0,
+        "delegation_chain_accuracy": 1.0,
+        "depth": 5,
+        "expected_span_count": 6,
+        "hop_number_accuracy": 1.0,
+        "observed_span_count": 6,
+        "parent_edge_accuracy": 1.0,
+        "passed": true,
+        "prefix": "sync-d5",
+        "single_trace": true
+      },
+      {
+        "agent_owner_accuracy": 1.0,
+        "delegation_chain_accuracy": 1.0,
+        "depth": 10,
+        "expected_span_count": 11,
+        "hop_number_accuracy": 1.0,
+        "observed_span_count": 11,
+        "parent_edge_accuracy": 1.0,
+        "passed": true,
+        "prefix": "sync-d10",
+        "single_trace": true
+      },
+      {
+        "agent_owner_accuracy": 1.0,
+        "delegation_chain_accuracy": 1.0,
+        "depth": 2,
+        "expected_span_count": 3,
+        "hop_number_accuracy": 1.0,
+        "observed_span_count": 3,
+        "parent_edge_accuracy": 1.0,
+        "passed": true,
+        "prefix": "async-d2",
+        "single_trace": true
+      },
+      {
+        "agent_owner_accuracy": 1.0,
+        "delegation_chain_accuracy": 1.0,
+        "depth": 5,
+        "expected_span_count": 6,
+        "hop_number_accuracy": 1.0,
+        "observed_span_count": 6,
+        "parent_edge_accuracy": 1.0,
+        "passed": true,
+        "prefix": "async-d5",
+        "single_trace": true
+      },
+      {
+        "agent_owner_accuracy": 1.0,
+        "delegation_chain_accuracy": 1.0,
+        "depth": 10,
+        "expected_span_count": 11,
+        "hop_number_accuracy": 1.0,
+        "observed_span_count": 11,
+        "parent_edge_accuracy": 1.0,
+        "passed": true,
+        "prefix": "async-d10",
+        "single_trace": true
+      }
+    ]
+  },
+  "manifest": {
+    "command": "scripts/evaluation/novelty_evaluation.py --output manuscript/evaluation-artifacts/2026-08-30-current-build/novelty_evaluation.json",
+    "docker": "Docker version 29.3.1, build c2be9cc",
+    "generated_at_utc": "2026-08-30T09:28:59.112406+00:00",
+    "git_branch": "dashboard-ui-redesign",
+    "git_commit": "8add3385c693a165f705352df222e1cdbba78aea",
+    "git_worktree_dirty": true,
+    "logical_cpu_count": 12,
+    "packages": {
+      "anthropic": "1.0.0",
+      "httpx": "0.28.1",
+      "locust": "2.46.3",
+      "openai": "3.3.1",
+      "pydantic": "2.13.4",
+      "websockets": "15.0.1"
+    },
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel",
+    "python": "3.11.4 (tags/v3.11.4:d2340ef, Jun  7 2023, 05:45:37) [MSC v.1934 64 bit (AMD64)]",
+    "seed": 20260830
+  },
+  "privacy_ablation": {
+    "case_count": 200,
+    "class_balance": {
+      "negative": 100,
+      "positive": 100
+    },
+    "modes": {
+      "full_capture": {
+        "accuracy": 1.0,
+        "agreement_with_full_capture": 1.0,
+        "fn": 0,
+        "fp": 0,
+        "tn": 100,
+        "tp": 100
+      },
+      "hmac_redaction": {
+        "accuracy": 1.0,
+        "agreement_with_full_capture": 1.0,
+        "fn": 0,
+        "fp": 0,
+        "tn": 100,
+        "tp": 100
+      },
+      "literal_redaction": {
+        "accuracy": 0.5,
+        "agreement_with_full_capture": 0.5,
+        "fn": 0,
+        "fp": 100,
+        "tn": 0,
+        "tp": 100
+      }
+    },
+    "redaction_preparation_cost": {
+      "1048576": {
+        "iterations": 25,
+        "microseconds": {
+          "max": 6660.5,
+          "mean": 5495.883999999999,
+          "min": 5206.4,
+          "n": 25,
+          "p50": 5412.2,
+          "p95": 5933.48,
+          "p99": 6497.300000000001
+        }
+      },
+      "128": {
+        "iterations": 1000,
+        "microseconds": {
+          "max": 18.3,
+          "mean": 7.704700000000018,
+          "min": 7.3,
+          "n": 1000,
+          "p50": 7.6,
+          "p95": 8.0,
+          "p99": 8.904999999999996
+        }
+      },
+      "4096": {
+        "iterations": 1000,
+        "microseconds": {
+          "max": 90.4,
+          "mean": 26.104199999999995,
+          "min": 25.4,
+          "n": 1000,
+          "p50": 25.8,
+          "p95": 26.704999999999995,
+          "p99": 32.603
+        }
+      },
+      "65536": {
+        "iterations": 200,
+        "microseconds": {
+          "max": 348.7,
+          "mean": 288.10750000000024,
+          "min": 284.6,
+          "n": 200,
+          "p50": 285.9,
+          "p95": 297.705,
+          "p99": 323.502
+        }
+      }
+    },
+    "restart_semantics": {
+      "same_value_different_process_key_differs": true,
+      "scope": "fingerprints are comparable only within one SDK process lifetime"
+    },
+    "wire_leak_scan": {
+      "fingerprint_length_hex": 32,
+      "fingerprint_present": true,
+      "passed": true,
+      "raw_input_present": false,
+      "raw_output_present": false,
+      "sentinel_present": false
+    }
+  },
+  "study": "delegation_context_and_privacy_ablation"
+}

@@ -3,6 +3,7 @@ import pytest
 from fastapi.testclient import TestClient
 from datetime import datetime, timezone
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 from app.ingest import app
 
@@ -113,6 +114,81 @@ def test_history_includes_persisted_anomaly_flags():
     assert flag["rule"] == "failure_loops"
     assert flag["span_id"] == "an-1"
     assert flag["is_anomaly"] is True
+
+def test_history_uses_per_trace_anomaly_index_after_migration():
+    """Indexed reads must not depend on scanning the shared anomaly stream."""
+    import asyncio
+    from app.redis_client import get_redis
+
+    headers = {"Authorization": "Bearer test-secret-key"}
+    span = get_valid_span_payload("indexed-an-1")
+    span["trace_id"] = "tr-indexed-anomaly"
+    client.post("/ingest", json=span, headers=headers)
+    flag = {
+        "rule": "failure_loops",
+        "span_id": "indexed-an-1",
+        "trace_id": "tr-indexed-anomaly",
+        "agent_id": "agent-1",
+        "details": {"reason": "indexed"},
+        "is_anomaly": True,
+    }
+
+    async def _write_index_only():
+        r = get_redis()
+        await r.rpush("agentscope:anomaly-trace:tr-indexed-anomaly", json.dumps(flag))
+        await r.set("agentscope:index:anomalies:v1", "1")
+
+    asyncio.run(_write_index_only())
+    response = client.get("/history/tr-indexed-anomaly")
+    assert response.status_code == 200
+    assert response.json()["anomalies"] == [flag]
+
+def test_history_sorts_legacy_trace_index_by_authoritative_stream_id():
+    """Old RPUSH races are repaired at read time by Redis stream-ID order."""
+    import asyncio
+    from app.redis_client import get_redis
+
+    first = get_valid_span_payload("ordered-1")
+    first["trace_id"] = "tr-legacy-order"
+    second = get_valid_span_payload("ordered-2")
+    second["trace_id"] = "tr-legacy-order"
+
+    async def _write_out_of_order_index():
+        r = get_redis()
+        id1 = await r.xadd("agentscope:events", {"payload": json.dumps(first)})
+        id2 = await r.xadd("agentscope:events", {"payload": json.dumps(second)})
+        await r.rpush("agentscope:trace:tr-legacy-order", id2, id1)
+
+    asyncio.run(_write_out_of_order_index())
+    response = client.get("/history/tr-legacy-order")
+    assert response.status_code == 200
+    assert [span["span_id"] for span in response.json()["spans"]] == ["ordered-1", "ordered-2"]
+
+def test_concurrent_ingest_index_matches_authoritative_stream_order():
+    headers = {"Authorization": "Bearer test-secret-key"}
+    trace_id = "tr-concurrent-order"
+
+    def post(index: int):
+        payload = get_valid_span_payload(f"parallel-{index:03d}")
+        payload["trace_id"] = trace_id
+        response = client.post("/ingest", json=payload, headers=headers)
+        assert response.status_code == 200
+
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        list(pool.map(post, range(60)))
+
+    response = client.get(f"/history/{trace_id}")
+    assert response.status_code == 200
+
+    import redis
+    r = redis.Redis.from_url(os.environ["REDIS_URL"], decode_responses=True)
+    stream_order = []
+    for _message_id, message in r.xrange("agentscope:events"):
+        payload = json.loads(message["payload"])
+        if payload["trace_id"] == trace_id:
+            stream_order.append(payload["span_id"])
+    r.close()
+    assert [span["span_id"] for span in response.json()["spans"]] == stream_order
 
 def test_history_without_anomalies_omits_field():
     headers = {"Authorization": "Bearer test-secret-key"}

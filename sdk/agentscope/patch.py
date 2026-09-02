@@ -4,6 +4,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
+from agentscope.context import get_execution_context
 from agentscope.schema import Span, SpanStatus
 from agentscope.sender import sender
 
@@ -89,6 +90,7 @@ def _patch_openai(agent_id: str = "openai-agent", trace_id: str = "default-trace
         def sync_wrapper(self, *args, **kwargs):
             start_time = datetime.now(timezone.utc)
             span_id = str(uuid.uuid4())
+            execution_context = get_execution_context(agent_id, trace_id)
             status = SpanStatus(status="success")
             output = None
             response = None
@@ -113,8 +115,9 @@ def _patch_openai(agent_id: str = "openai-agent", trace_id: str = "default-trace
                     }
 
                     span = Span(
-                        trace_id=trace_id,
+                        trace_id=execution_context.trace_id,
                         span_id=span_id,
+                        parent_span_id=execution_context.parent_span_id,
                         span_type="llm_call",
                         name=f"openai.{model_name}",
                         input=input_data,
@@ -123,7 +126,9 @@ def _patch_openai(agent_id: str = "openai-agent", trace_id: str = "default-trace
                         end_time=end_time,
                         status=status,
                         token_usage=token_usage,
-                        agent_id=agent_id
+                        agent_id=execution_context.agent_id,
+                        delegation_chain=list(execution_context.delegation_chain),
+                        hop_number=execution_context.hop_number,
                     )
                     sender.send(span)
                 except Exception as ex:
@@ -141,6 +146,7 @@ def _patch_openai(agent_id: str = "openai-agent", trace_id: str = "default-trace
         async def async_wrapper(self, *args, **kwargs):
             start_time = datetime.now(timezone.utc)
             span_id = str(uuid.uuid4())
+            execution_context = get_execution_context(agent_id, trace_id)
             status = SpanStatus(status="success")
             output = None
             response = None
@@ -165,8 +171,9 @@ def _patch_openai(agent_id: str = "openai-agent", trace_id: str = "default-trace
                     }
 
                     span = Span(
-                        trace_id=trace_id,
+                        trace_id=execution_context.trace_id,
                         span_id=span_id,
+                        parent_span_id=execution_context.parent_span_id,
                         span_type="llm_call",
                         name=f"openai.{model_name}",
                         input=input_data,
@@ -175,7 +182,9 @@ def _patch_openai(agent_id: str = "openai-agent", trace_id: str = "default-trace
                         end_time=end_time,
                         status=status,
                         token_usage=token_usage,
-                        agent_id=agent_id
+                        agent_id=execution_context.agent_id,
+                        delegation_chain=list(execution_context.delegation_chain),
+                        hop_number=execution_context.hop_number,
                     )
                     sender.send(span)
                 except Exception as ex:
@@ -200,6 +209,7 @@ def _patch_anthropic(agent_id: str = "anthropic-agent", trace_id: str = "default
         def sync_wrapper(self, *args, **kwargs):
             start_time = datetime.now(timezone.utc)
             span_id = str(uuid.uuid4())
+            execution_context = get_execution_context(agent_id, trace_id)
             status = SpanStatus(status="success")
             output = None
             response = None
@@ -225,8 +235,9 @@ def _patch_anthropic(agent_id: str = "anthropic-agent", trace_id: str = "default
                     }
 
                     span = Span(
-                        trace_id=trace_id,
+                        trace_id=execution_context.trace_id,
                         span_id=span_id,
+                        parent_span_id=execution_context.parent_span_id,
                         span_type="llm_call",
                         name=f"anthropic.{model_name}",
                         input=input_data,
@@ -235,7 +246,9 @@ def _patch_anthropic(agent_id: str = "anthropic-agent", trace_id: str = "default
                         end_time=end_time,
                         status=status,
                         token_usage=token_usage,
-                        agent_id=agent_id
+                        agent_id=execution_context.agent_id,
+                        delegation_chain=list(execution_context.delegation_chain),
+                        hop_number=execution_context.hop_number,
                     )
                     sender.send(span)
                 except Exception as ex:
@@ -252,6 +265,7 @@ def _patch_anthropic(agent_id: str = "anthropic-agent", trace_id: str = "default
         async def async_wrapper(self, *args, **kwargs):
             start_time = datetime.now(timezone.utc)
             span_id = str(uuid.uuid4())
+            execution_context = get_execution_context(agent_id, trace_id)
             status = SpanStatus(status="success")
             output = None
             response = None
@@ -277,8 +291,9 @@ def _patch_anthropic(agent_id: str = "anthropic-agent", trace_id: str = "default
                     }
 
                     span = Span(
-                        trace_id=trace_id,
+                        trace_id=execution_context.trace_id,
                         span_id=span_id,
+                        parent_span_id=execution_context.parent_span_id,
                         span_type="llm_call",
                         name=f"anthropic.{model_name}",
                         input=input_data,
@@ -287,7 +302,9 @@ def _patch_anthropic(agent_id: str = "anthropic-agent", trace_id: str = "default
                         end_time=end_time,
                         status=status,
                         token_usage=token_usage,
-                        agent_id=agent_id
+                        agent_id=execution_context.agent_id,
+                        delegation_chain=list(execution_context.delegation_chain),
+                        hop_number=execution_context.hop_number,
                     )
                     sender.send(span)
                 except Exception as ex:

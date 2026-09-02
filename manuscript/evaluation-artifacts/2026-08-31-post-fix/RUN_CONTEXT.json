@@ -1,0 +1,30 @@
+{
+  "study": "post_fix_production_validation_and_three_way_comparison",
+  "generated_at": "2026-08-31T21:17:03.7020056+05:30",
+  "git_commit": "8add3385c693a165f705352df222e1cdbba78aea",
+  "git_branch": "dashboard-ui-redesign",
+  "git_worktree_dirty": true,
+  "docker_engine": "29.3.1",
+  "agentscope_compose": "Redis 7; Redis DB 12; FastAPI four worker processes; anomaly worker; Nginx",
+  "comparison": {
+    "python": "3.11.4",
+    "langgraph": "1.2.11",
+    "langchain_core": "1.6.0",
+    "runs_per_workload": 30,
+    "warmups_per_workload": 5,
+    "seed": 20260830,
+    "outlier_removal": false,
+    "langfuse_sdk": "4.15.1",
+    "langfuse_server_source_tag": "v4.25.0",
+    "langfuse_server_source_commit": "60dfa8bc18ad3a71d26dec512d1c580de5ff2420",
+    "phoenix_server_image": "arizephoenix/phoenix:version-20.4.0",
+    "openinference_instrumentation_langchain": "0.1.73",
+    "opentelemetry_sdk": "1.44.0"
+  },
+  "boundaries": [
+    "Local Docker Compose only; no cloud measurement.",
+    "Comparison timed graph invocation and excluded asynchronous exporter flush.",
+    "Quantitative product comparison covers overhead and verified ingestion, not diagnostic feature equivalence.",
+    "Phoenix baseline phase preceded global instrumentation because its LangChain instrumentation is process-global."
+  ]
+}

@@ -1,0 +1,11 @@
+# Evaluation-only overlay for the 2026-08-31 post-fix validation. Redis DB 12
+# was verified empty before the run, preserving normal DB 0 and prior DB 14
+# evidence without destructive cleanup.
+services:
+  backend:
+    environment:
+      REDIS_URL: redis://redis:6379/12
+      AGENTSCOPE_API_KEY: ${AGENTSCOPE_API_KEY:-test-key}
+  worker:
+    environment:
+      REDIS_URL: redis://redis:6379/12

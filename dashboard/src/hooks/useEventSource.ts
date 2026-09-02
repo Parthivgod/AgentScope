@@ -32,6 +32,10 @@ export type SpanEvent = {
   status: SpanStatus;
   token_usage: TokenUsage | null;
   agent_id: string;
+  _agentscope_stream?: string;
+  _agentscope_stream_id?: string;
+  _agentscope_event_cursor?: string;
+  _agentscope_anomaly_cursor?: string;
 };
 
 export type AnomalyEvent = {
@@ -41,6 +45,10 @@ export type AnomalyEvent = {
   agent_id: string;
   details: any;
   is_anomaly: boolean;
+  _agentscope_stream?: string;
+  _agentscope_stream_id?: string;
+  _agentscope_event_cursor?: string;
+  _agentscope_anomaly_cursor?: string;
 };
 
 export function useEventSource(url: string, mode: 'live' | 'historical', traceId: string | null) {
@@ -98,9 +106,14 @@ export function useEventSource(url: string, mode: 'live' | 'historical', traceId
     let closedByCleanup = false;
     let retry = 0;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let lastEventId: string | null = null;
+    let lastAnomalyId: string | null = null;
 
     const connect = () => {
-      ws = new WebSocket(url);
+      const resumeUrl = new URL(url, window.location.href);
+      if (lastEventId) resumeUrl.searchParams.set('last_event_id', lastEventId);
+      if (lastAnomalyId) resumeUrl.searchParams.set('last_anomaly_id', lastAnomalyId);
+      ws = new WebSocket(resumeUrl.toString());
 
       ws.onopen = () => {
         retry = 0;
@@ -110,6 +123,20 @@ export function useEventSource(url: string, mode: 'live' | 'historical', traceId
       ws.onmessage = (event) => {
         try {
           const payload = JSON.parse(event.data);
+
+          if (payload._agentscope_event_cursor) {
+            lastEventId = payload._agentscope_event_cursor;
+          }
+          if (payload._agentscope_anomaly_cursor) {
+            lastAnomalyId = payload._agentscope_anomaly_cursor;
+          }
+          if (payload._agentscope_stream_id && !payload._agentscope_event_cursor && !payload._agentscope_anomaly_cursor) {
+            if (payload._agentscope_stream === 'agentscope:anomalies') {
+              lastAnomalyId = payload._agentscope_stream_id;
+            } else if (payload._agentscope_stream === 'agentscope:events') {
+              lastEventId = payload._agentscope_stream_id;
+            }
+          }
 
           if (payload.is_anomaly) {
             setAnomalies((prev) => ({ ...prev, [payload.span_id]: payload as AnomalyEvent }));

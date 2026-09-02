@@ -5,8 +5,28 @@ import logging
 from typing import Optional
 from agentscope.schema import Span
 from agentscope.config import AGENTSCOPE_INGEST_URL, AGENTSCOPE_API_KEY, is_redaction_enabled
+from agentscope.privacy import compute_progress_fingerprint
 
 logger = logging.getLogger(__name__)
+
+
+def _prepare_span_for_send(span: Span) -> Span:
+    """Return the wire-safe span copy; never mutate the host application's span."""
+    if not is_redaction_enabled():
+        return span
+
+    fingerprint = span.progress_fingerprint
+    if fingerprint is None:
+        fingerprint = compute_progress_fingerprint(span.input)
+
+    return span.model_copy(
+        update={
+            "input": "[REDACTED]",
+            "output": "[REDACTED]",
+            "progress_fingerprint": fingerprint,
+        }
+    )
+
 
 class AsyncEventSender:
     def __init__(self, max_retries: int = 3, initial_backoff: float = 0.5, backoff_factor: float = 2.0):
@@ -31,8 +51,7 @@ class AsyncEventSender:
             span = await self.queue.get()
             try:
                 # Client-side redaction guarantee (Decision #4 / NFR 9.4)
-                if is_redaction_enabled():
-                    span = span.model_copy(update={"input": "[REDACTED]", "output": "[REDACTED]"})
+                span = _prepare_span_for_send(span)
 
                 headers = {}
                 api_key = os.environ.get("AGENTSCOPE_API_KEY") or AGENTSCOPE_API_KEY

@@ -10,12 +10,31 @@ EVENTS_STREAM = "agentscope:events"
 ANOMALIES_STREAM = "agentscope:anomalies"
 TRACES_ZSET = "agentscope:traces"
 TRACE_LIST_PREFIX = "agentscope:trace:"
+ANOMALY_TRACE_PREFIX = "agentscope:anomaly-trace:"
+ANOMALY_INDEX_READY = "agentscope:index:anomalies:v1"
 
 
 async def _anomalies_for_trace(trace_id: str) -> list[dict]:
-    """Anomaly flags the worker persisted for this trace, in arrival order
-    (stream order = detection order, RULES.md invariant #4)."""
+    """Return anomaly flags in detection order using the per-trace index."""
     flags: list[dict] = []
+    indexed = await get_redis().lrange(f"{ANOMALY_TRACE_PREFIX}{trace_id}", 0, -1)
+    if indexed:
+        for payload in indexed:
+            try:
+                flags.append(json.loads(payload))
+            except Exception:
+                pass
+        return flags
+
+    # Once the worker has completed its startup migration, an absent list
+    # means this trace has no flags. This avoids an O(total anomalies) scan on
+    # every clean history request.
+    if await get_redis().get(ANOMALY_INDEX_READY):
+        return flags
+
+    # Compatibility path while the worker migrates records written by an
+    # older release. It disappears from the hot path once the ready marker is
+    # present.
     events = await get_redis().xrange(ANOMALIES_STREAM, min="-", max="+")
     for _message_id, message in events:
         payload = message.get(b"payload") or message.get("payload")
@@ -44,9 +63,18 @@ async def _scan_stream():
 
 
 async def _indexed_message_ids(trace_id: str) -> list[str]:
-    """Message IDs for a trace from the per-trace index, in arrival order."""
+    """Message IDs sorted by authoritative Redis stream order.
+
+    Sorting also repairs reads of indexes created by the older non-atomic
+    XADD/RPUSH path, whose list insertion order could race across workers.
+    """
     ids = await get_redis().lrange(f"{TRACE_LIST_PREFIX}{trace_id}", 0, -1)
-    return [str(i) for i in ids]
+    return sorted((str(i) for i in ids), key=_stream_id_key)
+
+
+def _stream_id_key(message_id: str) -> tuple[int, int]:
+    milliseconds, sequence = message_id.split("-", 1)
+    return int(milliseconds), int(sequence)
 
 
 async def _rebuild_index_for_trace(trace_id: str, scanned: list[tuple[str, str]]) -> None:

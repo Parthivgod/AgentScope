@@ -1,0 +1,7 @@
+{
+  "python": "3.11.4",
+  "docker_engine": "29.3.1",
+  "docker_python_base": "python:3.11-slim@sha256:1042b61448fef4ba92d16a8c7eb4996d027568ce64792a7877fd88511e0af7c6",
+  "docker_python_version": "3.11.16",
+  "note": "Install scripts/evaluation/requirements.txt into the pinned host Python before replication. Docker services use immutable image digests and exact requirements."
+}

@@ -135,7 +135,7 @@ Each track below lists: what it owns, which PRD requirements it's responsible fo
 | Week | Task | Depends on / feeds |
 |---|---|---|
 | 1 | Design & finalize `Span`/`Trace` Pydantic models in `schema.py` — **this is the Week 1 contract everyone else needs.** Scaffold package structure. | Share with Track B day 1; both review together before locking. |
-| 2 | Build `LangGraphAdapter` (`AsyncBaseTracer` subclass, injected via `config["callbacks"]`, Decision #6/#7), `@agentscope.trace` decorator, `sender.py` (async, buffered, fail-silent), `config.py` (env vars). | Independent — no dependency on Track B/C yet. |
+| 2 | Build `LangGraphAdapter` (`AsyncBaseTracer` subclass, injected via `config["callbacks"]`, Decision #6/#7), `@agentscope.trace` decorator, `sender.py` (async, buffered, fail-silent), `config.py` (env vars). **Fulfilled and hardened 2026-08-27:** `sdk/agentscope/context.py` now propagates framework-free delegation identity/chain/hop context from `@trace` into `patch()`, and client-side HMAC fingerprints preserve Failure Loops comparison under redaction (RULES.md Decision #8). | Independent — no dependency on Track B/C yet. |
 | 3 | Build `patch.py` for OpenAI (Decision #8). Test both integration paths against a **mock** ingestion server, confirming schema-identical spans (shared fixture test, per Flow 2 design implication). | Uses a local mock; doesn't need Track B's real backend yet. |
 | 4 | Build `examples/langgraph_demo_agent/` (linear + branching, mirroring the LangGraphics test-fixture pattern). Attach `LangGraphAdapter`. **[Integration checkpoint — M1]:** join Track B/C for the first real end-to-end run proving "zero-rewrite." | Needs Track B's real `/ingest` + Track C's dashboard live. |
 | 5 | Build `examples/custom_demo_agent/` (Flow 2 demo). Begin overhead-benchmark harness scaffolding (full run in Week 9). | — |
@@ -218,7 +218,7 @@ If a track finds itself blocked at one of these points because an upstream track
 | ID | Requirement | Owning Track | Delivered by |
 |---|---|---|---|
 | FR-1 | SDK captures LLM/tool/delegation events, zero business-logic changes | A | Week 2 |
-| FR-2 | Native LangGraph adapter + generic decorator/patch adapter | A | Weeks 2–3 |
+| FR-2 | Native LangGraph adapter + generic decorator/patch adapter | A | Weeks 2–3; framework-free delegation context completed 2026-08-27 (`sdk/agentscope/context.py`) |
 | FR-3 | Stream events to dashboard, p95 < 200ms | A (client non-block) + B (server) | Validated Week 9 |
 | FR-4 | Durable event persistence, no data loss on consumer restart | B | Week 5, validated Week 10 |
 | FR-5 | Anomaly worker evaluates all 6 rules, writes flags back | B | Weeks 5–6, tuned Week 8 |

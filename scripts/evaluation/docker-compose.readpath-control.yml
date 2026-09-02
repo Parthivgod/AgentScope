@@ -1,0 +1,11 @@
+# Diagnostic control only: backend uses empty DB13 while worker stays on DB14.
+# This isolates API/Nginx capacity from anomaly-worker writes and full anomaly
+# stream scans. It is not a production-stack result.
+services:
+  backend:
+    environment:
+      REDIS_URL: redis://redis:6379/13
+      AGENTSCOPE_API_KEY: ${AGENTSCOPE_API_KEY:-test-key}
+  worker:
+    environment:
+      REDIS_URL: redis://redis:6379/14
