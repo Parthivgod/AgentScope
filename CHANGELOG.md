@@ -1,5 +1,39 @@
 # AgentScope Changelog
 
+## [2026-09-02 19:08] — Independent Load and Three-Way Replication — Track Shared — Codex
+
+**What changed:**
+- Extended `infra/loadtest/event_latency_probe.py` with paced sampling so a fixed sample panel spans the loaded interval instead of completing as a short burst.
+- Added a clean-volume 50-user replication runner, a pinned Langfuse Compose override, and comparison telemetry for process CPU, sampled peak RSS, host-network deltas, complete post-flush trace visibility, and product-native trace-query latency.
+- Repeated AgentScope, Langfuse, and Phoenix in three fresh Python processes and clean product storage stacks per arm. Tightened ingestion acceptance from “any increase” to all 70 expected traces after early Phoenix snapshots exposed only 64–66 traces.
+- Added an automatic publication pipeline that emits raw/aggregate JSON, CSV tables, process-level Student t 95% intervals, 300-dpi PNG/PDF figures, a claim-bounded `RESULTS.md`, and a SHA-256 artifact manifest under `manuscript/evaluation-artifacts/2026-09-02-replicated/`.
+
+**Measured results:**
+- Three fresh-volume 50-user runs completed 77,330 mixed HTTP requests and 900 whole-window event probes with zero recorded failures/errors. Event p95 was 235.75, 266.00, and 218.05ms; all three exceed the 200ms target. The process-level mean was 239.93ms (t 95% CI 179.70–300.17). HTTP p95 was 250, 320, and 260ms; mean throughput was 343.80 requests/s.
+- All comparison products verified 210/210 expected traces across three fresh processes. At 100ms/node, process-mean overhead was AgentScope 4.81% (t 95% CI 1.28–8.33), Langfuse 5.24% (0.54–9.93), and Phoenix 6.56% (4.33–8.79). Intervals overlap and AgentScope's interval crosses 5%, so no reliable ranking or unconditional target acceptance is claimed.
+- CPU-trivial process-mean overhead was AgentScope 68.92%, Langfuse 235.36%, and Phoenix 647.78%, with especially high Phoenix run variability. These percentages divide millisecond-scale costs by tiny baselines and are retained as stress observations, not LLM-agent proxies.
+- Mean batch-level post-flush visibility wait was 280.50ms for AgentScope, 648.00ms for Langfuse, and 739.12ms for Phoenix. Mean native trace-catalog query p95 was 57.73, 176.43, and 49.36ms respectively; endpoint semantics differ, so this is not treated as a matched query benchmark.
+
+**Why:**
+- Completes the first four steps of the post-comparison sequence: freeze the candidate, independently repeat the load condition, repeat every three-way arm with operational telemetry, and generate paper-ready tables and figures.
+
+**Assumptions made (if any):**
+- The independent unit for uncertainty is the clean-stack/process repetition (`n=3`), not each within-process timing pair. These intervals are intentionally low-powered and sometimes very wide.
+- Comparison CPU and RSS cover the client/instrumentation Python process, not product server containers. Host-network counters can include unrelated OS traffic. Query endpoints are product-native rather than semantically identical.
+- Post-flush visibility measures batch completion after exporter flush, not per-trace end-to-end dashboard latency. Results remain local-Docker evidence and do not establish production generalization.
+
+**Open questions / follow-ups (if any):**
+- Diagnose why whole-window loaded event p95 consistently exceeds 200ms despite the earlier one-run 78ms result; use a randomized load matrix and server-side profile before another acceptance test.
+- Add isolated container-level CPU, memory, and network telemetry before making a server-efficiency comparison. Increase independent repetitions beyond three for narrower process-level inference.
+- Continue with the documentation-derived qualitative feature matrix and usability study; neither is covered by this quantitative run.
+
+**Tests added/run:**
+- Load: three 75-second, 50-user clean-volume runs; 300 paced WebSocket probes per run; all generated Locust/probe/resource artifacts parsed and aggregated.
+- Comparison: 30 measured pairs × two workloads × three products × three fresh processes, plus five warm-ups per cell; 630/630 expected traces verified overall.
+- Harness compilation passed; aggregate JSON/CSV/Markdown and six figure files generated; all 45 non-manifest artifacts SHA-256 indexed; `git diff --check` passed apart from line-ending conversion warnings.
+
+---
+
 ## [2026-09-02 18:39] — Frozen Post-Fix Evaluation Candidate — Track Shared — Codex
 
 **What changed:**

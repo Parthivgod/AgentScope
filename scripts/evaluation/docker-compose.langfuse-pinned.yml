@@ -1,0 +1,13 @@
+services:
+  langfuse-worker:
+    image: docker.langfuse.com/langfuse/langfuse-worker@sha256:638a46341ead4f68103f2b800a14b5d75f7c352b975f2b63a43697c577233a4c
+  langfuse-web:
+    image: docker.langfuse.com/langfuse/langfuse@sha256:12654de5ffb20722cf6b2d7df51b3099eb2d92bd92f5aef20e095b16a840ca8d
+  clickhouse:
+    image: clickhouse/clickhouse-server@sha256:8a790dd3468db22b1d4e7b18a176f378ff5ff6053b9c48dd4ea1fa71a24c5ba6
+  minio:
+    image: cgr.dev/chainguard/minio@sha256:1e408150bcf1bff07a2e468b9ac91347d4da261258921faeaedbe2ed7f0818b4
+  redis:
+    image: redis@sha256:e9b2e45ecd47fbb69b877cf8d045d5cccaaaed52524b6e098b4abe8212994f73
+  postgres:
+    image: postgres@sha256:67f41722b7a8cbdb868a44a4995c846eddfdc2973bccb291ce937dce88ad5675

@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+import psutil
 
 from common import bootstrap_mean_ci, distribution, environment_manifest, write_json
 
@@ -148,6 +149,27 @@ async def snapshot(arm: str) -> int:
         "langfuse": snapshot_langfuse,
         "phoenix": snapshot_phoenix,
     }[arm]()
+
+
+async def query_latency_samples(arm: str, samples: int) -> list[float]:
+    values = []
+    for _ in range(samples):
+        started = time.perf_counter()
+        await snapshot(arm)
+        values.append((time.perf_counter() - started) * 1000.0)
+    return values
+
+
+async def sample_peak_rss(process: psutil.Process, observed: list[int], stop: asyncio.Event) -> None:
+    while not stop.is_set():
+        try:
+            observed.append(process.memory_info().rss)
+        except psutil.Error:
+            break
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=0.01)
+        except asyncio.TimeoutError:
+            pass
 
 
 def initialize_phoenix():
@@ -279,8 +301,16 @@ async def main() -> int:
     parser.add_argument("--arm", required=True, choices=("agentscope", "langfuse", "phoenix"))
     parser.add_argument("--runs", type=int, default=30)
     parser.add_argument("--warmup", type=int, default=5)
+    parser.add_argument("--query-samples", type=int, default=20)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
+
+    process = psutil.Process()
+    cpu_before = process.cpu_times()
+    net_before = psutil.net_io_counters()
+    rss_samples = [process.memory_info().rss]
+    rss_stop = asyncio.Event()
+    rss_task = asyncio.create_task(sample_peak_rss(process, rss_samples, rss_stop))
 
     before = await snapshot(args.arm)
     configurations = (
@@ -291,14 +321,27 @@ async def main() -> int:
             await run_configuration(args.arm, "llm_bound_100ms_per_node", 0.1, args.runs, args.warmup),
         ]
     )
+    expected_trace_delta = 2 * (args.runs + args.warmup)
     after = before
+    visibility_started = time.perf_counter()
+    visibility_polls = 0
     for _ in range(30):
-        await asyncio.sleep(2.0)
+        await asyncio.sleep(0.25)
+        visibility_polls += 1
         after = await snapshot(args.arm)
-        if after > before:
+        if after - before >= expected_trace_delta:
             break
-    if after <= before:
-        raise RuntimeError(f"{args.arm} ingestion was not verified: count stayed {before} -> {after}")
+    visibility_wait_ms = (time.perf_counter() - visibility_started) * 1000.0
+    if after - before < expected_trace_delta:
+        raise RuntimeError(
+            f"{args.arm} ingestion incomplete: expected {expected_trace_delta}, observed {before} -> {after}"
+        )
+
+    query_samples = await query_latency_samples(args.arm, args.query_samples)
+    rss_stop.set()
+    await rss_task
+    cpu_after = process.cpu_times()
+    net_after = psutil.net_io_counters()
 
     payload = {
         "study": "agentscope_langfuse_phoenix_matched_comparison",
@@ -313,8 +356,30 @@ async def main() -> int:
             "outlier_removal": False,
             "timed_region": "graph ainvoke; asynchronous exporter flush excluded",
             "phoenix_order_limitation": "global instrumentation requires baseline phase before Phoenix phase",
+            "resource_scope": "comparison Python process for CPU/RSS; host-wide network counters for bytes",
+            "query_scope": "product-native trace catalog/count endpoint; endpoint semantics differ by product",
         },
-        "verified_ingestion": {"before_trace_count": before, "after_trace_count": after, "delta": after - before},
+        "verified_ingestion": {
+            "before_trace_count": before,
+            "after_trace_count": after,
+            "delta": after - before,
+            "expected_delta": expected_trace_delta,
+            "complete": after - before >= expected_trace_delta,
+            "visibility_wait_after_final_flush_ms": visibility_wait_ms,
+            "visibility_poll_count": visibility_polls,
+        },
+        "resource_observation": {
+            "process_cpu_seconds": (cpu_after.user + cpu_after.system) - (cpu_before.user + cpu_before.system),
+            "process_peak_rss_bytes": max(rss_samples),
+            "process_rss_samples": len(rss_samples),
+            "host_network_bytes_sent": net_after.bytes_sent - net_before.bytes_sent,
+            "host_network_bytes_received": net_after.bytes_recv - net_before.bytes_recv,
+            "host_network_scope_warning": "Host-wide counters can include unrelated traffic; runs are sequential but not OS-isolated.",
+        },
+        "trace_catalog_query_latency_ms": {
+            **distribution(query_samples),
+            "raw": query_samples,
+        },
         "configurations": configurations,
     }
     write_json(args.output, payload)

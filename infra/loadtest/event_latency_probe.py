@@ -8,6 +8,7 @@ background Locust load generates realistic concurrent traffic.
 
 Usage:
     AGENTSCOPE_API_KEY=test-key python event_latency_probe.py [--samples 200] [--concurrency 5]
+        [--duration-seconds 60]
 """
 
 import argparse
@@ -72,13 +73,38 @@ async def reader(ws, pending):
             fut.set_result(True)
 
 
-async def worker(client, api_key, samples_each, pending, results, errors):
-    for _ in range(samples_each):
+async def scheduled_probe(
+    client,
+    api_key,
+    index,
+    samples,
+    duration_seconds,
+    started,
+    semaphore,
+    pending,
+    records,
+    errors,
+):
+    scheduled_offset = duration_seconds * index / max(samples - 1, 1)
+    await asyncio.sleep(max(0.0, started + scheduled_offset - asyncio.get_event_loop().time()))
+    observed_offset = asyncio.get_event_loop().time() - started
+    async with semaphore:
         try:
-            results.append(await probe_once(client, api_key, pending))
+            latency = await probe_once(client, api_key, pending)
+            records.append({
+                "sample_index": index,
+                "scheduled_offset_s": scheduled_offset,
+                "observed_offset_s": observed_offset,
+                "latency_ms": latency,
+            })
         except Exception as e:
             print(f"  probe error: {e}")
-            errors.append(str(e))
+            errors.append({
+                "sample_index": index,
+                "scheduled_offset_s": scheduled_offset,
+                "observed_offset_s": observed_offset,
+                "error": str(e),
+            })
 
 
 def percentile(values, q):
@@ -91,21 +117,27 @@ def percentile(values, q):
     return ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower)
 
 
-async def main(samples: int, concurrency: int, json_output: Path | None) -> None:
+async def main(samples: int, concurrency: int, duration_seconds: float, json_output: Path | None) -> None:
     api_key = os.environ.get("AGENTSCOPE_API_KEY", "test-key")
-    results: list[float] = []
-    errors: list[str] = []
+    records: list[dict] = []
+    errors: list[dict] = []
     pending: dict[str, asyncio.Future] = {}
     async with websockets.connect(WS_URL, max_queue=4096) as ws:
         reader_task = asyncio.get_event_loop().create_task(reader(ws, pending))
         async with httpx.AsyncClient(timeout=10.0) as client:
-            base, remainder = divmod(samples, concurrency)
-            await asyncio.gather(*[
-                worker(client, api_key, base + (1 if index < remainder else 0), pending, results, errors)
-                for index in range(concurrency)
-            ])
+            started = asyncio.get_event_loop().time()
+            semaphore = asyncio.Semaphore(concurrency)
+            await asyncio.gather(*(
+                scheduled_probe(
+                    client, api_key, index, samples, duration_seconds, started,
+                    semaphore, pending, records, errors,
+                )
+                for index in range(samples)
+            ))
         reader_task.cancel()
 
+    records.sort(key=lambda row: row["sample_index"])
+    results = sorted(row["latency_ms"] for row in records)
     results.sort()
     summary = {
         "study": "event_to_dashboard_latency",
@@ -115,6 +147,7 @@ async def main(samples: int, concurrency: int, json_output: Path | None) -> None
         "websocket_url": WS_URL,
         "requested_samples": samples,
         "concurrency": concurrency,
+        "scheduled_duration_seconds": duration_seconds,
         "completed_samples": len(results),
         "error_count": len(errors),
         "errors": errors,
@@ -127,6 +160,7 @@ async def main(samples: int, concurrency: int, json_output: Path | None) -> None
             "mean": statistics.mean(results) if results else None,
         },
         "raw_latency_ms": results,
+        "sample_records": records,
     }
     if not results:
         raise RuntimeError("No latency samples completed")
@@ -143,6 +177,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--samples", type=int, default=200)
     parser.add_argument("--concurrency", type=int, default=5)
+    parser.add_argument("--duration-seconds", type=float, default=0.0)
     parser.add_argument("--json-output", type=Path)
     args = parser.parse_args()
-    asyncio.run(main(args.samples, args.concurrency, args.json_output))
+    asyncio.run(main(args.samples, args.concurrency, args.duration_seconds, args.json_output))
