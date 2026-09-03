@@ -1,0 +1,125 @@
+{
+  "associated_mean_changes": {
+    "event_p95_percent": -63.91377627937814,
+    "http_p95_percent": -61.81818181818181,
+    "requests_per_second_percent": 42.34170058202162
+  },
+  "claim_boundary": "The repetitions were sequential, not randomized interleaved pairs. Changes are associated with the combined payload-index candidate and do not establish universal production performance or a component-level causal effect.",
+  "design": "Sequential before/after; three fresh-volume 50-user repetitions per implementation, 75 seconds load, 300 probes paced across 60 seconds.",
+  "post": {
+    "event_p95_ms": {
+      "max": 156.8000000024769,
+      "mean": 135.60000000082564,
+      "min": 125.0,
+      "n": 3,
+      "p50": 125.0,
+      "p95": 153.6200000022292,
+      "p99": 156.16400000242737,
+      "process_t_95": [
+        89.99188106249412,
+        181.20811893915717
+      ],
+      "raw_run_values": [
+        125.0,
+        156.8000000024769,
+        125.0
+      ]
+    },
+    "http_p95_ms": {
+      "max": 150.0,
+      "mean": 140.0,
+      "min": 130.0,
+      "n": 3,
+      "p50": 140.0,
+      "p95": 149.0,
+      "p99": 149.8,
+      "process_t_95": [
+        115.15862288280454,
+        164.84137711719546
+      ],
+      "raw_run_values": [
+        140.0,
+        150.0,
+        130.0
+      ]
+    },
+    "requests_per_second": {
+      "max": 400.68225911510825,
+      "mean": 380.7934266056462,
+      "min": 343.9888433738677,
+      "n": 3,
+      "p50": 397.70917732796255,
+      "p95": 400.3849509363937,
+      "p99": 400.6227974793653,
+      "process_t_95": [
+        301.5286904970293,
+        460.05816271426306
+      ],
+      "raw_run_values": [
+        343.9888433738677,
+        400.68225911510825,
+        397.70917732796255
+      ]
+    }
+  },
+  "post_all_event_p95_below_200ms": true,
+  "post_commit": "7f89f34",
+  "pre": {
+    "event_p95_ms": {
+      "max": 656.800000002477,
+      "mean": 375.76666666658053,
+      "min": 219.74999999729351,
+      "n": 3,
+      "p50": 250.74999999997107,
+      "p95": 616.1950000022263,
+      "p99": 648.6790000024268,
+      "process_t_95": [
+        -230.0525971026994,
+        981.5859304358605
+      ],
+      "raw_run_values": [
+        219.74999999729351,
+        656.800000002477,
+        250.74999999997107
+      ]
+    },
+    "http_p95_ms": {
+      "max": 540.0,
+      "mean": 366.6666666666667,
+      "min": 280.0,
+      "n": 3,
+      "p50": 280.0,
+      "p95": 514.0,
+      "p99": 534.8000000000001,
+      "process_t_95": [
+        -6.229903240332362,
+        739.5632365736658
+      ],
+      "raw_run_values": [
+        280.0,
+        540.0,
+        280.0
+      ]
+    },
+    "requests_per_second": {
+      "max": 333.8737931518528,
+      "mean": 267.52063875070917,
+      "min": 165.00867103355142,
+      "n": 3,
+      "p50": 303.67945206672334,
+      "p95": 330.85435904333985,
+      "p99": 333.2699063301502,
+      "process_t_95": [
+        43.817835106231,
+        491.22344239518736
+      ],
+      "raw_run_values": [
+        303.67945206672334,
+        165.00867103355142,
+        333.8737931518528
+      ]
+    }
+  },
+  "pre_commit": "dadf573",
+  "study": "history_payload_index_before_after_load_evaluation"
+}

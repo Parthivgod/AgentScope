@@ -281,7 +281,7 @@ Measure:
 
 Record wall time, host CPU time, peak RSS, allocations if feasible, bytes sent, queue depth, and drain time. Microbenchmark `_canonical_bytes`/HMAC cost by payload size, but never substitute the microbenchmark for end-to-end overhead.
 
-The existing +3.3–3.6 ms absolute result and Phoenix comparison predate the new mechanisms. Re-run them for the final build; report the old data only as development history if the new data supersede it.
+The final-build replicated study now covers AgentScope, Langfuse, and Phoenix on CPU-trivial and 100 ms/node LangGraph workloads with three fresh processes per product. It supersedes the earlier +3.3–3.6 ms/Phoenix-only values for current claims. Custom decorator/patch paths, redacted-HMAC overhead, multiple simulated delays, real API traffic, and product server-container costs remain future measurements.
 
 ## 9. RQ6 — Resilience, Durability, and Ordering
 
@@ -408,16 +408,16 @@ Never convert “not found” into “does not exist.”
 
 | Area | Current evidence | What it supports | What is still missing |
 |---|---|---|---|
-| Delegation context | SDK 30/30; nested custom A→B→LLM and async isolation tests | Functional correctness for covered fixtures | Large graph-fidelity matrix, cancellation/thread cases, live/history convergence, ablation |
-| Privacy fingerprint | Same/different input and wire-serialization tests | Covered HMAC equality and sentinel non-leakage behavior | Full boundary capture, mode-equivalence corpus, restart semantics, overhead by payload size |
-| Detection | Hand-crafted harness and four poison/four happy demo observations | Rules can trigger on selected cases | Held-out labeled corpus, threshold sweep, per-rule precision/recall/F1, co-fire analysis |
-| Latency | 156 ms p95 at 50 users, n=300, older build | Earlier build met the declared event-to-dashboard target in one local condition | Current-build rerun, trigger-to-alert latency, repetitions/CIs, saturation curve |
-| Overhead | +3.3–3.6 ms absolute; Phoenix baseline, older build | Earlier-build local paired results | Current-build rerun, counterbalanced order, custom path, redaction/HMAC, resource use |
-| Resilience | Backend/worker/Redis/slow-WS scenarios | Strong local evidence for tested faults | Longer soak, duplicates/order, queue exhaustion, disk/memory pressure, live convergence |
+| Delegation context | 107/107 exact deterministic cases, including 100 concurrent chains, exceptions, and cancellation | Functional correctness for covered framework-free fixtures | External applications, cross-process propagation, broader topology sampling |
+| Privacy fingerprint | 200-case ablation; full/HMAC 100 TP + 100 TN; sentinel wire scan | Equality behavior and raw-value non-leakage in the tested serialization boundary | Store/log/UI boundary corpus, restart semantics, cost by payload size, formal privacy analysis |
+| Detection | 600-case held-out synthetic split; every rule 50 TP + 50 TN, F1 1.000 | Declared precision/recall targets on the frozen corpus | Field-prevalence data, external workloads, detection-delay/co-fire analysis |
+| Latency | Three fresh-volume 50-user runs after payload index: event p95 125.0/156.8/125.0 ms | Target met in all three latest local conditions; command-amplification fix is associated with lower latency | Randomized causal ablation, longer soak, other hardware/cloud, trigger-to-alert latency |
+| Overhead | Three fresh processes/product; 90 pairs per product/workload; AgentScope/Langfuse/Phoenix | Local execution-overhead and ingestion-completeness observations | More process/host reps, custom path and redaction modes, server-container resources |
+| Resilience | 9/9 convergence, 20/20 reconnect, worker/backend/Redis/slow-WS fault runs | Strong bounded local evidence for tested faults | Long soak, invalid/trimmed cursors, queue exhaustion, disk/memory pressure, permanent loss |
 | Security | API-key rejection, local TLS, wire redaction | Tested local boundary behavior | Deployment exposure, XSS/payload abuse, secret scan, independent review |
 | Accessibility | axe 0 violations, Lighthouse a11y 100, keyboard tests | Automated checks for tested UI | Human assistive-technology evaluation and current-build rerun |
 | Usability | Prepared protocol only | No outcome claim | Actual participants, counterbalanced study, recorded/scored results |
-| Comparative | Phoenix overhead only | One performance comparison | Langfuse run; graph/detection delay and diagnostic-quality comparison |
+| Comparative | Replicated local three-way overhead, resources, visibility, query observations; 210/210 traces/product | Bounded operational comparison | Matched diagnostic task, qualitative matrix, container-isolated telemetry, human study |
 | Deployment | Local Compose only | Local self-hosting | AWS/reference cloud deployment if the final paper claims it |
 
 ## 15. How to Record Observations Properly
@@ -514,12 +514,12 @@ At minimum discuss:
 
 | Rule | Threshold | Pos/Neg traces | TP | FP | FN | TN | Precision [95% CI] | Recall [95% CI] | F1 | FP/1k spans | Detection delay p50/p95 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Failure Loops | [frozen value] | [TBD] | | | | | | | | | |
-| Crashes | logical | [TBD] | | | | | | | | | |
-| Timeouts | [frozen value] | [TBD] | | | | | | | | | |
-| Token Spikes | [frozen values] | [TBD] | | | | | | | | | |
-| Message Storms | [frozen values] | [TBD] | | | | | | | | | |
-| Delegation Cycles | logical | [TBD] | | | | | | | | | |
+| Failure Loops | frozen production rule | 50/50 | 50 | 0 | 0 | 50 | 1.000 [0.929–1.000] | 1.000 [0.929–1.000] | 1.000 | not measured | not measured |
+| Crashes | logical | 50/50 | 50 | 0 | 0 | 50 | 1.000 [0.929–1.000] | 1.000 [0.929–1.000] | 1.000 | not measured | not measured |
+| Timeouts | frozen production rule | 50/50 | 50 | 0 | 0 | 50 | 1.000 [0.929–1.000] | 1.000 [0.929–1.000] | 1.000 | not measured | not measured |
+| Token Spikes | frozen production rule | 50/50 | 50 | 0 | 0 | 50 | 1.000 [0.929–1.000] | 1.000 [0.929–1.000] | 1.000 | not measured | not measured |
+| Message Storms | frozen production rule | 50/50 | 50 | 0 | 0 | 50 | 1.000 [0.929–1.000] | 1.000 [0.929–1.000] | 1.000 | not measured | not measured |
+| Delegation Cycles | logical | 50/50 | 50 | 0 | 0 | 50 | 1.000 [0.929–1.000] | 1.000 [0.929–1.000] | 1.000 | not measured | not measured |
 
 ### Graph fidelity
 
@@ -593,12 +593,12 @@ Avoid:
 - [ ] Every metric names its unit of analysis and sample size.
 - [ ] Confidence intervals and effect sizes accompany point estimates.
 - [ ] Per-rule results are shown; macro averages do not hide weak detectors.
-- [ ] New delegation and HMAC mechanisms are evaluated with ablations.
-- [ ] Current-build load and overhead tests are rerun after the 2026-08-27 changes.
-- [ ] Live versus historical final-state convergence is explicitly tested.
-- [ ] Langfuse and Phoenix versions/configurations are recorded and comparison claims are matched fairly.
+- [x] New delegation and HMAC mechanisms are evaluated with ablations.
+- [x] Current-build load and overhead tests are rerun after the 2026-08-27 changes.
+- [x] Live versus historical final-state convergence is explicitly tested.
+- [x] Langfuse and Phoenix versions/configurations are recorded and comparison claims are matched fairly for the measured dimensions.
 - [ ] Raw/key leakage scans cover wire, stores, logs, and UI boundaries.
 - [ ] Usability claims come from real participants and a predefined rubric.
-- [ ] AWS, precision/recall, sustainability, and usability claims remain absent until measured.
+- [x] AWS, sustainability, and usability outcome claims remain absent; precision/recall is limited to its synthetic held-out corpus.
 - [ ] Every table/figure is regenerated automatically from raw data.
 - [ ] Results, interpretation, and limitations are visibly separated.

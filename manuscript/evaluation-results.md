@@ -1,88 +1,78 @@
 # Evaluation Results
 
-*Manuscript section — Track B draft (Week 11). Every quantitative claim below cites the CHANGELOG.md entry (date/title) and underlying artifact that produced it. Target values from the PRD are labeled as targets; measured values are labeled as measured. Nothing here asserts a PRD goal as an achieved result.*
+This section reports the latest evidence available on 2026-09-03. Every numerical claim is tied to a repository artifact. PRD thresholds are identified as targets rather than silently converted into achieved results. Unless stated otherwise, measurements use the local production Compose path (Nginx, four FastAPI processes, Redis 7, anomaly worker) on Windows 11; no result is an AWS measurement.
 
-**Environment for all measurements:** local docker-compose deployment (Redis 7, FastAPI backend ×4 workers, anomaly worker, Nginx), Windows 11 host, all traffic through the Nginx front door unless noted. AWS deployment is pending; no measurement below involves a cloud instance.
+## RQ1 — Delegation-context fidelity
 
-**Current-build checkpoint (2026-08-31):** the four correctness/performance fixes identified on 2026-08-30 were implemented and the production protocols were rerun before the AgentScope/Langfuse/Phoenix comparison. Full protocols, raw paired trials, bootstrap intervals, limitations, and reproduction context are in `evaluation-artifacts/2026-08-31-post-fix/RESULTS.md`. The 2026-08-30 directory is preserved as pre-fix evidence rather than reused as a current result.
+All 107 deterministic framework-free delegation scenarios passed exact checks for trace identity, parentage, current owner, delegation chain, and hop count. The set includes 100 concurrent chains plus exception and cancellation restoration cases. This establishes behavior for the tested Python execution contexts, not universal compatibility with every agent runtime.
 
-## Latency (NFR 9.1 / FR-3: event-to-dashboard latency < 200ms p95 — *target*)
+## RQ2 — Anomaly detection
 
-Event-to-dashboard latency — POST /ingest until the same span arrives on a dashboard WebSocket — was measured with a concurrent probe (`infra/loadtest/event_latency_probe.py`) while Locust generated mixed background load:
+The frozen 1,200-case synthetic corpus contains separate 600-case tuning and 600-case held-out splits. Each rule has 50 positive and 50 negative held-out cases.
 
-| Load | n | p50 | p95 | p99 | Source |
-|---|---|---|---|---|---|
-| Idle | 100 | 47ms | 63ms | 63ms | CHANGELOG [2026-08-21 23:50] Week 9 Track B |
-| 10 users, 1 backend worker | 200 | 125ms | 219ms | 360ms | same |
-| 10 users, 4 workers | 198 | 47ms | 63ms | — | same |
-| 50 users, 4 workers | 300 | 78ms | **156ms** | 218ms | same |
+| Rule | TP | TN | FP | FN | Precision | Recall | F1 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Crashes | 50 | 50 | 0 | 0 | 1.000 | 1.000 | 1.000 |
+| Failure Loops | 50 | 50 | 0 | 0 | 1.000 | 1.000 | 1.000 |
+| Timeouts | 50 | 50 | 0 | 0 | 1.000 | 1.000 | 1.000 |
+| Token Spikes | 50 | 50 | 0 | 0 | 1.000 | 1.000 | 1.000 |
+| Message Storms | 50 | 50 | 0 | 0 | 1.000 | 1.000 | 1.000 |
+| Delegation Cycles | 50 | 50 | 0 | 0 | 1.000 | 1.000 | 1.000 |
 
-**Older-build result:** the 2026-08-21 build measured 156ms p95 under 50-user concurrent load. The 2026-08-30 current-build rerun did not reproduce that result, so the target is not currently accepted as met. Before the older read-path optimization, the same 2026-08-21 scenario measured p50=1700ms / p95=3600ms.
+Precision and recall have Wilson 95% intervals of 0.929–1.000. These results meet the declared targets on this synthetic corpus only. Failure Loops improved from pre-fix precision 0.714 and F1 0.833 after state isolation by `(trace_id, agent_id)` and lifecycle deduplication by `span_id`. Source: `evaluation-artifacts/2026-08-31-post-fix/anomaly_validation_postfix.json`.
 
-Raw HTTP endpoint percentiles at 50-user saturation remain above 200ms (aggregate p95=320ms) — reported as measured; the NFR is defined on event-to-dashboard latency, which passes.
+## RQ3 — Privacy-preserving loop detection
 
-Current-build compose measurements through Nginx were:
+In a balanced 200-case ablation, full capture and HMAC-based redaction each produced 100 TP and 100 TN. Literal-only redaction produced 100 false positives on changing protected values because every input became the same placeholder. A sentinel scan found no raw protected input/output in the serialized wire object. The HMAC secret is process-local and is not transmitted. This is mechanism evidence, not a formal privacy proof. Source: `evaluation-artifacts/2026-08-30-current-build/privacy_ablation.json`.
 
-| Current-build condition | n | p50 | p95 | p99 | Probe errors |
+## RQ4 — Latency and history-read optimization
+
+The 2026-09-03 protocol ran three independent 75-second, 50-user mixed-load repetitions from fresh Redis volumes. Each run used 300 event-to-WebSocket probes paced over 60 seconds. Before the ordered payload index, all three event p95 values missed the 200 ms target; an ingest-only control remained below the target, and profiling identified growing `/history` command amplification.
+
+| Candidate | Run event p95 values (ms) | Mean event p95 | Mean HTTP p95 | Mean throughput |
+|---|---|---:|---:|---:|
+| Pre-index, `dadf573` | 219.75, 656.80, 250.75 | 375.77 ms | 366.67 ms | 267.52 req/s |
+| Payload index, `7f89f34` | 125.00, 156.80, 125.00 | **135.60 ms** | **140.00 ms** | **380.79 req/s** |
+
+All three post-index repetitions were below 200 ms. Relative to the sequential pre-index runs, mean event p95 fell 63.9%, mean HTTP p95 fell 61.8%, and throughput rose 42.3%. The implementation atomically stores a per-trace ordered payload copy and serves complete new traces with one `LRANGE`; legacy or partial indexes use the authoritative Redis-ID fallback. Redis peak memory rose to 29.3–35.8 MB in the post runs while processing more requests, compared with 12.9–22.1 MB before. Because the repetitions were sequential rather than randomized interleaved pairs, the differences are associated with the combined candidate and are not a component-level causal estimate or a universal production guarantee.
+
+Sources: `evaluation-artifacts/2026-09-03-redis-recovery-load/` and `evaluation-artifacts/2026-09-03-history-payload-index/`.
+
+## RQ5 — AgentScope, Langfuse, and Phoenix
+
+The latest matched comparison used three fresh processes and storage stacks per product, 30 measured pairs per workload and process after five warm-ups, full capture, no outlier removal, and 210/210 verified traces per product. Uncertainty is a Student t 95% confidence interval across the three process means.
+
+| Product | CPU-trivial overhead | Absolute delta | 100 ms/node overhead | Absolute delta |
+|---|---:|---:|---:|---:|
+| AgentScope | 68.92% (39.16–98.69) | 2.230 ms | 4.81% (1.28–8.33) | 10.155 ms |
+| Langfuse | 235.36% (107.58–363.13) | 5.631 ms | 5.24% (0.54–9.93) | 10.848 ms |
+| Phoenix | 647.78% (-283.51–1579.07) | 15.545 ms | 6.56% (4.33–8.79) | 13.551 ms |
+
+CPU-trivial percentages are unstable because millisecond costs divide by very small baselines. The 100 ms/node intervals overlap substantially; three repetitions do not establish a reliable product ranking or an unconditional <5% claim.
+
+| Product | Process CPU | Peak process RSS | Host network | Post-flush visibility | Native query p95 |
 |---|---:|---:|---:|---:|---:|
-| Idle, persisted DB 0 | 300 | 63.0ms | 78.0ms | 94.0ms | 0 |
-| Idle, initially empty DB 14 | 300 | 62.0ms | 63.0ms | 78.0ms | 0 |
-| 50 users, persisted DB 0 | 300 | 594.0ms | 1312.0ms | 1766.4ms | 0 |
-| 50 users, initially empty DB 14 | 300 | 235.0ms | **1642.5ms** | 2516.2ms | 0 |
+| AgentScope | 27.15 s | 97.3 MB | 0.152 MB | 280.50 ms | 57.73 ms |
+| Langfuse | 18.36 s | 124.1 MB | 0.157 MB | 648.00 ms | 176.43 ms |
+| Phoenix | 18.79 s | 109.4 MB | 0.293 MB | 739.12 ms | 49.36 ms |
 
-Both current full-stack load trials miss the <200ms p95 target. In the controlled empty-database run, Locust completed 4,371 requests at 69.50 requests/s with one failure and 1600ms aggregate p95. A diagnostic control that separated the backend read path from the worker/anomaly database improved probe p95 to 625.7ms and throughput to 132.50 requests/s, but still missed the target. The clean full-stack database accumulated 1,157 anomaly records during the test; combined with full anomaly-stream scanning on history reads, this identifies a likely major bottleneck, not a complete causal proof.
+CPU/RSS exclude product server containers, host network counters are not isolated, and native query endpoints are not semantically identical. Visibility is a batch-level post-flush observation. The comparison therefore reports local operational measurements and ingestion completeness, not overall product superiority. Source: `evaluation-artifacts/2026-09-02-replicated/`.
 
-After trace-isolated/lifecycle-deduplicated Failure Loops state and indexed anomaly history lookup, the final exact-code production run measured idle p50/p95/p99 of 47.0/63.0/78.0ms and concurrent 50-user p50/p95/p99 of 47.0/**78.0**/109.0ms (n=300 each, zero probe errors). Locust completed 13,675 requests with zero failures at 228.09 requests/s. Relative to the pre-fix clean full-stack run, throughput increased 3.28× and probe p95 fell 95.3%; because the trials were sequential, this is an associated before/after improvement rather than a component-level causal estimate. The <200ms event-to-dashboard target is met in this local condition, while aggregate HTTP p95 remains 610ms; independent repetitions and a longer stationarity probe are still required for a broad production claim.
+## RQ6 — Convergence, recovery, and security
 
-## SDK overhead (NFR 9.5: <5% — *target*)
+- Live/history convergence matched event multiset, exact arrival order, and dashboard-equivalent latest state in 9/9 continuously connected production bursts.
+- Cursor reconnect delivered all 20 expected lifecycle events in exact order and converged with history while referenced Redis entries remained retained.
+- Redis restart accepted 20 events before and 20 after restart, recovered in approximately one second, recorded zero post-restart transient failures, and ended with all 40 events.
+- A stalled WebSocket consumer left ingest p50/p95 effectively unchanged: 50/53 ms baseline and 52/55 ms while stalled.
+- Worker restart caught up 70 accepted events from its checkpoint. Backend termination left the monitored application successful in 30/30 bounded workloads.
+- Missing and invalid API keys are rejected; local TLS and wire-level redaction tests pass.
 
-Measured on the branching demo-agent workload, 30 paired interleaved runs, no outlier removal (CHANGELOG [2026-08-21 23:30] Week 9 Track A; raw logs `sdk/agentscope/benchmarks/results/`):
+These are bounded fault-injection results. They do not cover permanent Redis loss, expired/trimmed reconnect cursors, hostile deployment exposure, or every ambiguous retry outcome for non-idempotent commands.
 
-- **Demo workload as-is** (CPU-trivial, ~4.7ms/graph): +3.3ms mean absolute overhead, **+79.7% mean / +60.7% median relative** — the <5% target is not applicable at this workload scale; any instrumentation dominates a sub-10ms graph.
-- **LLM-bound workload** (100ms simulated LLM latency per node, ~208ms/graph): +3.6ms mean absolute, **+1.76% mean and median relative** — target met on the workload class it was written for.
+## RQ7 — Usability
 
-The final 2026-08-31 matched run used 30 measured pairs after five warm-ups and verified 70 newly ingested AgentScope traces. CPU-trivial overhead was +2.057ms / +84.19% mean (bootstrap 95% interval 58.75–117.07%); LLM-bound overhead was +8.443ms / +4.04% mean (2.64–5.50%). Because the LLM-bound interval crosses 5%, the final run does not support an unqualified “target met” claim. The timed region excludes asynchronous delivery flush by design; completed ingestion was verified after flush.
+The dashboard build, lint, accessibility evidence, and scripted failure-injection rehearsal are complete. The required unfamiliar-human session has not occurred, so no usability finding, completion rate, time-to-diagnosis, or SUS score is reported. The controlled protocol and blank recording instruments are in `docs/usability-test-prep.md` and `manuscript/usability-study/`.
 
-## Delegation-context fidelity and privacy-preserving comparison
+## Threats to validity
 
-On the current checkout, all 107 framework-free delegation scenarios passed exact parent, owner, chain, hop, and trace checks, including 100 concurrent chains; exception and cancellation restoration also passed. In a balanced 200-case loop ablation, full capture and HMAC redaction both achieved 100/100 TP and 100/100 TN, while literal-only redaction produced 100/100 false positives on changing protected values. A sentinel scan found no raw protected input/output in the wire object. These are deterministic mechanism-level results; external validity still requires additional real workloads.
-
-## Comparative evaluation vs. Langfuse and Arize Phoenix (RQ8)
-
-The final matched local comparison used the same deterministic graph, Python and LangGraph versions, full capture policy, 30 measured trials per workload/product after five warm-ups, no outlier removal, and verified 70 newly ingested traces in every product. AgentScope and Langfuse used seeded AB/BA pairing; Phoenix required a baseline phase before process-global instrumentation. The older n=15 Phoenix-only result is superseded as the final-build comparison.
-
-| Workload | AgentScope mean overhead (95% bootstrap CI) | Langfuse | Phoenix |
-|---|---:|---:|---:|
-| CPU-trivial | **84.19%** (58.75–117.07) | 185.56% (160.72–211.28) | 174.32% (150.91–197.88) |
-| LLM-bound (100ms/node) | **4.04%** (2.64–5.50) | 4.31% (3.84–4.80) | 5.48% (4.64–6.34) |
-
-AgentScope had the smallest point estimate in both workloads. Its LLM-bound interval overlaps Langfuse's, so this run does not establish a reliable difference between those two products. The quantitative scope is overhead and verified ingestion only; it does not rank diagnostic feature breadth, UI, resource use, setup effort, or query latency, and it does not pretend that a custom AgentScope detector is built into either baseline.
-
-## Resilience (Test #6, NFR 9.2)
-
-All from CHANGELOG [2026-08-22 00:45] (Track A) and [2026-08-22 01:20] (Track B):
-
-- **Backend killed mid-run:** monitored agent completed 30/30 workloads with correct outputs, exit 0, no exceptions — only fail-silent sender warnings.
-- **Worker killed mid-ingestion:** ingestion unaffected, zero lost events; worker caught up from its checkpoint after restart.
-- **Redis full restart:** zero accepted events lost (AOF persistence); ingestion self-recovered within ~2s.
-- **Stalled WebSocket consumer:** ingest p50/p95 unchanged (48/52ms vs. 48/52ms baseline).
-
-## Security (Test #7, NFR 9.3)
-
-CHANGELOG [2026-08-21 23:50] and [2026-08-22 01:20]: unauthenticated and invalid-key ingestion rejected with 401 through Nginx on both plain and TLS listeners, including under load (all 1272 unauthenticated requests correctly 401 during the 50-user load test). TLS 1.3 termination verified locally with a self-signed certificate (the reference deployment substitutes a real certificate); the WebSocket relay works over TLS. Redaction (NFR 9.4) verified at the wire level: with redaction enabled, raw payload strings are absent from every byte leaving the SDK process (CHANGELOG [2026-08-22 00:45]).
-
-## Anomaly detection precision/recall (PRD targets: ≥90% precision / ≥85% recall)
-
-The 2026-08-31 post-fix runner reevaluated the unchanged 1,200 labeled scenarios with separate 600-case tuning and 600-case held-out splits. On each rule's 100 held-out cases, all six production rules measured precision=recall=F1=1.000 (50 TP, 50 TN, 0 FP, 0 FN; Wilson 95% interval 0.929–1.000 for precision and recall). Failure Loops improved from the pre-fix 0.714 precision/0.833 F1 after state was keyed by `(trace_id, agent_id)` and duplicate lifecycle versions were collapsed by `span_id`. The declared precision and recall targets are met on this corpus; these remain synthetic-corpus measurements, not field prevalence estimates or evidence of perfect generalization.
-
-## Live/historical convergence
-
-After atomic event/index writes and authoritative Redis stream-ID sorting, the production-compose test matched event multiset, exact arrival order, and dashboard-equivalent latest state in all 9/9 continuously connected burst runs. The reconnect-gap run also received all 20 expected lifecycle events in exact order and converged with history by resuming after the last durable event/anomaly cursors. This bounded result assumes the referenced stream entries remain retained; stream trimming, invalid cursors, and Redis loss require separate policies and tests.
-
-## Dashboard accessibility
-
-CHANGELOG [2026-08-21 00:20] Week 9 Track C and [2026-08-22 01:40] Week 10 Track C: axe-core 0 violations (from 1 serious violation pre-fix); Lighthouse accessibility 100; graph nodes keyboard-accessible with status glyphs and dashed anomalous borders providing non-hue state distinction for colorblind users. Performance Lighthouse score (39) was measured on the dev server and is not representative of a production build — no performance claim is drawn from it.
-
-## Usability (Test #9)
-
-Requires a live session with an unfamiliar human observer; the test scenario and injection tooling are prepared, but the session has not been conducted. **No usability findings are reported** — the section will be written only after the real session (see the Week 11 Track C changelog entry and `docs/usability-test-prep.md`).
+The detector corpus and delegation cases are synthetic. Performance runs are local and low-powered at three independent repetitions. The history before/after sequence is not randomized. Competing products expose different storage and query semantics, and server-container resource costs were not captured in the comparison process metrics. Human usability and cloud deployment remain unevaluated. These boundaries prohibit claims of perfect field accuracy, universal production latency, formal privacy, or overall product superiority.

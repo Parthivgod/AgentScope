@@ -1,6 +1,6 @@
 # Instrumentation Methodology
 
-*Manuscript section — Track A draft (Week 11). Every number cites the CHANGELOG.md entry that produced it.*
+*Manuscript section synchronized with the latest replicated evidence through 2026-09-03.*
 
 AgentScope instruments multi-agent LLM systems through two integration paths that produce schema-identical spans:
 
@@ -17,13 +17,10 @@ Redaction is opt-in and client-side: when enabled, `input`/`output` are replaced
 
 ## Measured overhead
 
-Measured on the branching demo-agent workload, 30 paired interleaved runs with 5 discarded warmup pairs, no outlier removal (CHANGELOG [2026-08-21 23:30]; raw logs in `sdk/agentscope/benchmarks/results/`):
-
-- **CPU-trivial demo workload** (~4.7ms per graph): +3.3ms mean absolute overhead (**+79.7% mean / +60.7% median relative**). The commonly-cited "<5%" target does not describe this regime — at sub-10ms workloads any instrumentation dominates. We report this number plainly.
-- **LLM-bound workload** (same graph, 100ms simulated LLM latency per node, ~208ms per graph): +3.6ms mean absolute (**+1.76% mean and median relative**), meeting the <5% target on the workload class for which it was defined. The absolute cost of instrumentation is consistent (~3.3–3.6ms per graph invocation) across both regimes.
+The latest study used three fresh AgentScope processes/storage stacks, 30 measured baseline/instrumented pairs per workload and process after five warm-ups, no outlier removal, and 210/210 verified traces. CPU-trivial mean overhead was 68.92% (95% t interval across processes 39.16–98.69) with a 2.230 ms mean absolute delta. On the 100 ms/node workload it was 4.81% (1.28–8.33) with a 10.155 ms mean delta. Because the latter interval crosses 5%, this evidence does not support an unconditional “<5%” claim. CPU-trivial percentages are dominated by their millisecond baseline. Raw data and versions are in `evaluation-artifacts/2026-09-02-replicated/`.
 
 ## Comparison point
 
-Under identical workloads and an identical paired-run methodology, Arize Phoenix (OpenInference LangChain tracer, batch exporter to a local Phoenix instance, export verified) measured higher overhead than AgentScope on both workload classes: +201.7% vs. +93.1% (demo-as-is) and +2.6% vs. −0.5% mean (LLM-bound), n=15 per arm (CHANGELOG [2026-08-22 01:20]).
+The replicated comparison used the same workload/protocol for AgentScope, Langfuse, and Phoenix. On the 100 ms/node workload, mean overhead was 4.81%, 5.24%, and 6.56%, respectively, but the low-powered three-process intervals overlap substantially. The result reports bounded local overhead and verified ingestion, not a reliable ranking or broader diagnostic superiority.
 
 *Note: no claim is made here about observing an AWS-deployed AgentScope backend — cloud deployment is pending, and all measurements were taken against the local stack.*

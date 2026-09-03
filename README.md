@@ -2,6 +2,8 @@
 
 AgentScope is a local-first observability and anomaly detection tool for autonomous agents: **live** execution-graph visualization, **zero-rewrite** instrumentation, and **rule-based anomaly detection** — delivered as a single docker-compose stack you can self-host.
 
+For the complete architecture, technology stack, operating model, diagrams, and consolidated evaluation tables, see [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md).
+
 - **Monitored agent** — your LangGraph or custom Python agent, instrumented by the AgentScope SDK (`sdk/`)
 - **Ingestion + storage** — FastAPI backend behind Nginx, Redis Streams as the ordered event log (`backend/`, `infra/`)
 - **Anomaly worker** — six rule-based detectors, independently killable (`worker/`)
@@ -84,7 +86,7 @@ adapter = LangGraphAdapter(agent_id="my-agent", trace_id="trace-1")
 result = await graph.ainvoke(state, config={"callbacks": [adapter]})
 ```
 
-**Measured guarantees** (see CHANGELOG entries cited): backend killed mid-run → monitored agent completes normally (30/30 workloads verified); redaction → raw payloads never leave the SDK process (wire-verified); overhead ~3.3–3.6ms per graph invocation (+1.76% on a 100ms/node LLM-bound workload).
+**Measured, bounded evidence:** backend termination left the monitored application successful in 30/30 fault-injection workloads; redaction excluded raw sentinel payloads from the captured wire object; the latest three-process 100ms/node comparison measured 4.81% mean overhead (95% t interval 1.28–8.33) and therefore does not support an unconditional <5% claim. See [Evaluation Results](manuscript/evaluation-results.md).
 
 ---
 
@@ -135,17 +137,19 @@ The zero-rewrite point: `agent.py` contains the entire multi-agent system and im
 ## 4. Testing & operational checks
 
 ```powershell
-cd sdk;      python -m pytest tests        # 25 tests
-cd backend;  python -m pytest tests        # 9 tests (uses local Redis on :6379)
-python scripts/smoke-test.py               # ingest -> Redis -> WS relay -> anomaly flag
+python -m pytest sdk/tests                 # 30 tests
+Push-Location backend; python -m pytest tests; Pop-Location  # 18 tests
+python -m pytest worker/tests              # 4 tests
+docker compose -f infra/docker-compose.yml up -d redis
+python scripts/smoke-test.py               # requires port 8000 free; isolated DB 14
 ```
 
 - **Load testing** (`infra/loadtest/`): `locustfile.py` (mixed traffic through Nginx), `locustfile_ingest_only.py`, `event_latency_probe.py` (event-to-dashboard latency; run alongside background load).
 - **Resilience**: `python scripts/resilience-stack.py {worker-kill|redis-restart|slow-ws}`; backend-kill from the SDK side: `python scripts/resilience-backend-kill.py`.
-- **Benchmarks**: `sdk/agentscope/benchmarks/week9_overhead_benchmark.py` (SDK overhead); `scripts/baseline-comparison-phoenix.py` (vs. Arize Phoenix).
-- **Dashboard checks** (from `dashboard/`): `node scripts/a11y-scan.mjs`, `keyboard-nav-test.mjs`, `escape-close-test.mjs`, `demo-readiness-test.mjs`.
+- **Benchmarks/evaluation**: `scripts/evaluation/` contains repeatable latency, aggregation, three-way, convergence, privacy, and anomaly protocols. The latest results are under `manuscript/evaluation-artifacts/2026-09-03-history-payload-index/` and `2026-09-02-replicated/`.
+- **Dashboard checks** (from `dashboard/`): `node scripts/a11y-scan.mjs`, `node scripts/keyboard-nav-test.mjs`, `node scripts/escape-close-test.mjs`, and `node scripts/demo-readiness-test.mjs`.
 
-Operational notes: transient 5xx on `/ingest` during a full Redis restart is expected (accepted events are never lost — AOF — and the backend self-heals in seconds); `/traces` may briefly list a trace whose events were externally flushed.
+Operational notes: Redis clients use bounded exponential reconnect retries and health checks. In the latest ready-state restart test, all 20 pre-restart and 20 post-restart events were retained with no post-restart transient failures; requests made while Redis itself is unavailable can still fail. `/traces` may briefly list a trace whose events were externally flushed.
 
 ---
 
@@ -163,6 +167,7 @@ docs/       Deep guides: sdk-quickstart, backend-infra, dashboard, demo-script,
             usability-test-prep, future-work
 manuscript/ Working manuscript sections (System Design, Evaluation Results,
             Instrumentation Methodology) with per-claim citations
+PROJECT_OVERVIEW.md  Consolidated architecture, stack, operation, and results
 ```
 
 ## 6. Contributing

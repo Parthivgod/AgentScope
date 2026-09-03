@@ -4,8 +4,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Provisional thresholds pending injection-harness validation (Sprint 1 starting values)
-# See RULES.md §2 Decision 3
+# Frozen production thresholds validated on the repository's synthetic corpus.
+# Representative field traffic is still required before external generalization.
 THRESHOLDS = {
     "failure_loops": {"count": 4, "window_seconds": 60},
     "timeouts": {"ceiling_seconds": 30},

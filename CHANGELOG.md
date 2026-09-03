@@ -1,5 +1,32 @@
 # AgentScope Changelog
 
+## [2026-09-03 20:10] — Replicated History Acceptance, Evidence Synchronization, and Study Pack — Shared — Codex
+
+**What changed:**
+- Repeated the frozen payload-index candidate (`7f89f34`) in three fresh-volume 50-user runs and added the raw Locust, paced WebSocket-probe, and container-resource artifacts plus an aggregate JSON/CSV, PNG/PDF figure, readable results report, SHA-256 manifest, and reproducible aggregation script under `manuscript/evaluation-artifacts/2026-09-03-history-payload-index/`.
+- Synchronized the README, infrastructure/SDK guides, system design, instrumentation methodology, related-work positioning, evaluation guide, and evaluation-results manuscript with the current code and latest replicated evidence. Added `PROJECT_OVERVIEW.md` with repository-grounded stack, architecture/data-flow diagrams, APIs, storage semantics, evaluation tables, evidence map, and explicit limitations.
+- Added a counterbalanced unfamiliar-human study protocol, frozen scoring/data columns, and an automated study-readiness record under `manuscript/usability-study/`. Removed the obsolete manual root `test_httpx.py` probe and completed future-work items that had already shipped; added explicit retained-cursor and container-telemetry follow-ups.
+- Updated detector threshold comments to distinguish completed synthetic-corpus validation from still-pending field validation.
+
+**Measured results:**
+- Post-index event p95 was 125.0, 156.8, and 125.0ms (mean 135.60ms) across three runs; all were below the local 200ms target. Mean mixed HTTP p95 was 140.00ms and mean throughput was 380.79 requests/s, with zero Locust failures and zero probe errors.
+- Against the sequential pre-index profile, associated mean changes were -63.9% event p95, -61.8% HTTP p95, and +42.3% throughput. Redis peak memory increased to 29.3–35.8MB while processing more requests, versus 12.9–22.1MB before.
+- Dashboard study-readiness passed with 4 replay nodes/3 edges, 3 live anomalous nodes after injection, and zero console errors. axe returned zero violations and 34 passes, plus 14 incomplete checks requiring human review (2 ARIA and 12 contrast nodes).
+
+**Why:**
+- Closes the profiled latency acceptance loop, makes current claims discoverable from one project document, removes stale earlier-build numbers and obsolete scaffolding from main, and prepares—but does not fabricate—the participant-dependent usability phase.
+
+**Assumptions and boundaries:**
+- The latency comparison is sequential, not randomized interleaved, so the changes are associated with the combined candidate rather than a component-level causal estimate. Additional Redis memory is an explicit tradeoff.
+- Automated browser/readiness checks are not human usability evidence. No participant has been recruited or observed, and no usability outcome is claimed.
+- Three-way process-level intervals use only three independent repetitions and overlap; documentation does not claim product superiority or unconditional <5% overhead.
+
+**Tests added/run:**
+- SDK 30/30, backend 18/18, worker 4/4, custom demo 1/1, LangGraph demo 1/1, and support-triage 6/6 passed with their authoritative per-package invocations. A combined monorepo pytest invocation was rejected as non-authoritative because package roots and duplicate demo module names conflict; that collection failure was retained in the work log rather than counted as a product failure.
+- Redis-backed end-to-end smoke passed. Dashboard production build, oxlint, demo-readiness browser test, and axe scan passed with the incomplete manual-review items reported above. Python compilation and `git diff --check` passed (line-ending notices only).
+
+---
+
 ## [2026-09-03 19:36] — Latency Profile and Constant-Round-Trip History Index — Track B/Shared — Codex
 
 **What changed:**

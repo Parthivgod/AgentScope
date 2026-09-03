@@ -19,7 +19,7 @@ Worker isolation is a load-bearing design property rather than an implementation
 
 ### Read path
 
-Historical replay is served by `GET /history/{trace_id}` and a trace listing by `GET /traces`. Ingestion maintains a per-trace read index (a timestamp-scored ZSET of trace IDs plus per-trace message-ID lists), so replay reads are proportional to the trace size rather than the total event volume; a full-scan fallback preserves correctness for data predating the index and rebuilds it lazily. Live and historical views deliberately share one graph-rendering component in the dashboard — the only difference is the event source — which removes an entire class of live/replay divergence defects.
+Historical replay is served by `GET /history/{trace_id}` and a trace listing by `GET /traces`. One Redis Lua operation atomically appends the canonical event, registers the trace, records the authoritative message ID, and maintains an ordered per-trace payload copy. Complete new traces are snapshotted with one transactional `LLEN`/`LRANGE`, avoiding one stream lookup per event. Data predating the payload index—and any deliberately detected partial index—uses the authoritative message-ID fallback, so an upgrade cannot silently truncate history. Per-trace anomaly indexes avoid global anomaly-stream scans after migration. Live and historical views share one graph-rendering component; cursor-based WebSocket reconnect replays retained event and anomaly entries after the last durable IDs before resuming live reads.
 
 ### Deployment
 
@@ -28,6 +28,7 @@ The reference deployment is a single docker-compose stack (Redis with append-onl
 ## Design principles
 
 - **Observability must never risk availability.** Nothing in the SDK's send path may raise into the host agent or block synchronously on network I/O; delivery failures are logged locally and dropped after bounded retries.
+- **Recovery is bounded and explicit.** Backend Redis clients health-check pooled connections and use bounded exponential retries. Cursor catch-up is guaranteed only for retained stream entries; trimming and invalid-cursor policy remain future work.
 - **One schema, one rendering path.** A single Pydantic span model is shared by SDK, backend, worker, and dashboard; spans from all instrumentation paths are indistinguishable downstream.
 - **Detection is not enforcement.** The system surfaces anomalies; it never kills, restarts, or otherwise acts on the monitored agent.
 - **Client-side, opt-in redaction.** When enabled, sensitive span payloads are scrubbed inside the SDK process before anything leaves it. Immediately before scrubbing, the SDK computes a truncated HMAC-SHA256 progress fingerprint using a process-local secret that is never serialized or transmitted. The existing Failure Loops rule compares this fingerprint instead of the indistinguishable `[REDACTED]` placeholder, retaining same-versus-changed input discrimination without exposing the original value.

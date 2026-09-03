@@ -117,4 +117,4 @@ The dashboard (Vite dev server) shows the live DAG and anomaly alerts at `http:/
 
 - **Fail-silent delivery:** if the backend is unreachable, the agent is unaffected — verified by killing the backend mid-run and observing the monitored agent complete 30/30 workloads with correct outputs and exit 0 (CHANGELOG 2026-08-22 00:45).
 - **Client-side redaction:** with `AGENTSCOPE_REDACT_ENABLED=true`, raw `input`/`output` never leave your process — verified at the wire level (same changelog entry).
-- **Overhead:** ~3.3–3.6ms per graph invocation (+1.76% mean on a 100ms/node LLM-bound workload; see CHANGELOG 2026-08-21 23:30 for both workload configurations).
+- **Overhead:** the latest three-process 100ms/node evaluation measured 4.81% mean overhead (95% t interval 1.28–8.33) and a 10.155ms mean absolute delta. The interval crosses 5%, so this is not an unconditional target-met claim; see `manuscript/evaluation-artifacts/2026-09-02-replicated/`.

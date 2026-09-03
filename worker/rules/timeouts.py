@@ -6,8 +6,7 @@ class TimeoutRule:
     name = "timeouts"
 
     def __init__(self, thresholds: Dict[str, Any]):
-        # Provisional Sprint 1 baseline threshold, validated via synthetic injection harness.
-        # Pending tuning against real traffic patterns (RULES.md §6).
+        # Frozen baseline validated on the synthetic corpus; field tuning remains pending.
         self.ceiling_seconds = thresholds.get("ceiling_seconds", 30)
 
     def evaluate(self, span: Span) -> Optional[Dict[str, Any]]:

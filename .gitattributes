@@ -1,2 +1,8 @@
 CHANGELOG.md merge=union
 docs/future-work.md merge=union
+
+# Raw Windows/Locust evidence is byte-preserved and verified by artifact manifests.
+manuscript/evaluation-artifacts/**/load_*_stats*.csv -text -diff
+manuscript/evaluation-artifacts/**/load_*_failures.csv -text -diff
+manuscript/evaluation-artifacts/**/load_*_exceptions.csv -text -diff
+manuscript/evaluation-artifacts/**/load_*_locust.log -text -diff

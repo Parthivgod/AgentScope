@@ -1,31 +1,29 @@
-# AgentScope — Manuscript (Working Assembly)
+# AgentScope Manuscript — Working Assembly
 
-Status: assembled Weeks 9-12 (local-complete, pre-AWS). Sections that genuinely depend on a live AWS deployment (deployed-instance experience, Flow 6 claims) are deliberately absent and will be added by the deferred AWS Go-Live pass.
+Status: synchronized with the local evidence through 2026-09-03. The system, instrumentation, related-work positioning, and quantitative evaluation drafts are assembled. AWS deployment evidence and unfamiliar-human usability results remain deliberately absent.
 
 ## Sections
 
 | Section | File | Status |
 |---|---|---|
-| System Design | `system-design.md` | Draft (Track B) |
-| Instrumentation Methodology | `instrumentation-methodology.md` | Draft (Track A) |
-| Evaluation Results | `evaluation-results.md` | Draft (Track B) |
-| Usability Findings | — | **Not written.** Requires the real observer session (see `docs/usability-test-prep.md`); will be drafted only from recorded answers. |
+| System Design | `system-design.md` | Synchronized draft |
+| Instrumentation Methodology | `instrumentation-methodology.md` | Draft |
+| Related Work and Positioning | `related_work_draft.md` | Synchronized draft; citation metadata needs final review |
+| Evaluation Results | `evaluation-results.md` | Synchronized through payload-index rerun |
+| Evaluation Protocol | `rigorous_evaluation_and_results_guide.md` | Protocol plus current evidence ledger |
+| Usability Findings | — | Not written; a real unfamiliar-human session is required |
 
-## Number-tracing audit (RULES.md §6) — performed 2026-08-22
+## Current evidence ledger
 
-Every quantitative claim below was checked against the CHANGELOG entry and artifact that produced it. Numbers without a traceable source were cut.
-
-| Claim in manuscript | Value | Source (CHANGELOG entry) |
+| Evidence | Current result | Primary artifact |
 |---|---|---|
-| Event-to-dashboard p95 @50u | 156ms (n=300) | [2026-08-21 23:50] Week 9 Track B |
-| Pre-optimization p95 @50u | 3600ms | [2026-08-21 23:50] Week 9 Track B |
-| HTTP agg p95 @50u (saturation) | 320ms (reported as measured) | [2026-08-21 23:50] Week 9 Track B |
-| SDK overhead, demo workload | +3.3ms abs; +79.7%/+60.7% rel | [2026-08-21 23:30] Week 9 Track A |
-| SDK overhead, LLM-bound | +3.6ms abs; +1.76% mean/median | [2026-08-21 23:30] Week 9 Track A |
-| Phoenix comparison | +201.7%/+2.6% vs AgentScope +93.1%/−0.5% | [2026-08-22 01:20] Week 10 Track B |
-| Resilience outcomes | 30/30 workloads; 0 lost events; ~2s recovery; 48/52ms unchanged | [2026-08-22 00:45] + [2026-08-22 01:20] |
-| Accessibility | axe 0 violations; Lighthouse a11y 100 | [2026-08-21 00:20] + [2026-08-22 01:40] Track C |
-| Precision/recall per rule | **No claim made** — targets only; validation incomplete | RULES.md §6 |
-| Sustainability % | **No claim made** — never measured | RULES.md §6 |
+| Delegation fidelity | 107/107 deterministic scenarios | `2026-08-30-current-build/novelty_evaluation.json` |
+| Six anomaly rules | Each 50 TP, 50 TN; precision/recall/F1 1.000 on held-out synthetic cases | `2026-08-31-post-fix/anomaly_validation_postfix.json` |
+| Privacy ablation | Full and HMAC: 100 TP/100 TN; literal redaction: 100 FP | `2026-08-30-current-build/privacy_ablation.json` |
+| 50-user latency after payload index | Event p95 125.0, 156.8, 125.0 ms; mean 135.6 ms | `2026-09-03-history-payload-index/` |
+| Latest three-way overhead | 100 ms/node means: AgentScope 4.81%, Langfuse 5.24%, Phoenix 6.56%; overlapping low-powered intervals | `2026-09-02-replicated/` |
+| Live/history convergence | 9/9 bursts; reconnect 20/20 ordered events | `2026-08-31-post-fix/live_history_convergence_postfix.json` |
+| Redis restart | 20 pre + 20 post, 40 final, approximately 1 s recovery | `CHANGELOG.md` entry 2026-09-03 14:35 |
+| Usability | Not conducted | `docs/usability-test-prep.md` |
 
-The <5% overhead and <200ms latency targets are stated as targets, with the measured values (including misses and their scope) alongside — per RULES.md §6.
+Every target is reported alongside the measurement and its scope. Synthetic accuracy is not field accuracy; local performance is not universal production performance; three comparison repetitions do not establish a product ranking.

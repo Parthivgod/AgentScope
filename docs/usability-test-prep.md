@@ -1,12 +1,14 @@
-# Usability Test #9 — Preparation Pack (Flow 3, PRD §10.9)
+# Usability Test #9 — Controlled Study Pack (Flow 3, PRD §10.9)
 
 **Status: PREPARED, NOT CONDUCTED.** This test requires a real, unfamiliar human observer watching a live failure and explaining unaided what happened. No such session has taken place; no findings exist yet, and none may be written until one does. The `manuscript/` Usability Findings section is intentionally unwritten.
 
-## What the team needs to schedule
+## Minimum formative session
 
 - One observer who has NOT seen AgentScope before (no familiarity with the dashboard or the project).
 - ~15 minutes: 2 min brief, ~5 min observation, ~5 min debrief questions, rest buffer.
 - A screen showing the dashboard in Live mode (`npm run dev` in `dashboard/`, local stack running) with the failure injection below ready to trigger.
+
+For a manuscript outcome, use the counterbalanced protocol and blank instruments in `manuscript/usability-study/README.md`. One observer is a formative case, not a generalizable study.
 
 ## Test scenario
 
@@ -68,3 +70,5 @@ Fill in per session:
 ## After the session
 
 Only then draft `manuscript/usability-findings.md` from the recorded answers, citing this pack and the session date. If the observer could NOT explain the failure, that is the finding — record it as such.
+
+Do not replace the participant with a developer, an automated browser check, or an AI-generated response. Automated checks establish interface readiness only.

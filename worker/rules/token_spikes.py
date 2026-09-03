@@ -6,8 +6,7 @@ class TokenSpikeRule:
     name = "token_spikes"
 
     def __init__(self, thresholds: Dict[str, Any]):
-        # Provisional Sprint 1 baseline thresholds, validated via synthetic injection harness.
-        # Pending tuning against real traffic patterns (RULES.md §6).
+        # Frozen baseline validated on the synthetic corpus; field tuning remains pending.
         self.single_call = thresholds.get("single_call", 8000)
         self.session_rate = thresholds.get("session_rate", 20000)
         
