@@ -4,12 +4,13 @@
 
 **What changed:**
 - Added `tiktoken` to the support-triage demo's declared requirements and made GitHub Actions install that requirements file instead of maintaining a second incomplete package list.
+- Made smoke-test child cleanup bounded and cross-platform: it uses the active Python interpreter, attempts graceful termination, escalates to kill after five seconds, and always stops both children. The end-to-end assertions had passed remotely, but Linux Uvicorn remained in graceful shutdown while a Redis `XREAD` was outstanding and caused the cleanup wait to time out.
 
 **Why:**
 - The first pushed CI run on `b86f470` proved SDK 30/30, backend 18/18, worker 4/4, both lightweight demos, and dashboard build/lint passed on clean Linux, but the support-triage token-sizing test failed because its directly imported tokenizer was available locally but undeclared in CI.
 
 **Tests added/run:**
-- The exact support-triage suite remained 6/6 locally. A new GitHub Actions run is required to verify the clean-runner dependency correction before declaring CI green.
+- The exact support-triage suite remained 6/6 locally. On pushed `8adc616`, the complete Python job then passed, proving the dependency correction; the smoke job reached its success assertion before exposing the cleanup-only timeout. A new GitHub Actions run is required to verify bounded cleanup before declaring CI green.
 
 ---
 

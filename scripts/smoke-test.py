@@ -2,11 +2,24 @@ import asyncio
 import json
 import os
 import subprocess
+import sys
 import time
 from datetime import datetime, timezone
 import httpx
 import redis
 from websockets import connect
+
+
+def stop_process(process: subprocess.Popen, grace_seconds: float = 5.0) -> None:
+    """Stop a child without turning a successful smoke assertion into failure."""
+    if process.poll() is not None:
+        return
+    process.terminate()
+    try:
+        process.wait(timeout=grace_seconds)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=grace_seconds)
 
 async def run_smoke_test():
     print("Starting AgentScope E2E Smoke Test...")
@@ -31,14 +44,14 @@ async def run_smoke_test():
     print("1. Starting Uvicorn backend and worker...")
     # Start the backend server as a subprocess
     backend_proc = subprocess.Popen(
-        ["uvicorn", "app.ingest:app", "--host", "127.0.0.1", "--port", "8000"],
+        [sys.executable, "-m", "uvicorn", "app.ingest:app", "--host", "127.0.0.1", "--port", "8000"],
         cwd="backend",
         env=env
     )
     
     # Start the anomaly worker
     worker_proc = subprocess.Popen(
-        ["python", "main.py"],
+        [sys.executable, "main.py"],
         cwd="worker",
         env=env
     )
@@ -101,12 +114,15 @@ async def run_smoke_test():
 
     finally:
         print("5. Cleaning up...")
-        backend_proc.terminate()
-        backend_proc.wait(timeout=10)
-        worker_proc.terminate()
-        worker_proc.wait(timeout=10)
-        store.flushdb()
-        store.close()
+        # Uvicorn can wait on an outstanding blocking Redis XREAD after SIGTERM
+        # on Linux. Escalate to kill after a bounded grace period, and always
+        # stop both children even if one needs escalation.
+        stop_process(backend_proc)
+        stop_process(worker_proc)
+        try:
+            store.flushdb()
+        finally:
+            store.close()
         print("Done.")
 
 if __name__ == "__main__":
