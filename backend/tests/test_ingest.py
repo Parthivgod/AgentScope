@@ -55,3 +55,15 @@ def test_ingest_invalid_payload():
     del invalid_payload["span_type"] # Missing required field
     response = client.post("/ingest", json=invalid_payload, headers=headers)
     assert response.status_code == 422 # Pydantic validation error
+
+
+def test_backend_redis_client_has_bounded_reconnect_policy():
+    """A recovered Redis must not leave the first request on a stale socket."""
+    from app import redis_client
+
+    redis_client._clients.clear()
+    configured = redis_client.get_redis()
+    connection = configured.connection_pool.make_connection()
+
+    assert connection.health_check_interval == 1
+    assert connection.retry._retries == 5

@@ -1,5 +1,30 @@
 # AgentScope Changelog
 
+## [2026-09-03 14:35] — Authoritative CI and Redis Restart Recovery — Track Shared — Codex
+
+**What changed:**
+- Replaced the stale GitHub Actions workflow with Redis-backed Python jobs that run the complete SDK, backend, worker, and three demo regression suites via package-aware `python -m pytest` invocations. Dashboard lint is now blocking and the production build replaces the former TypeScript-only check.
+- Reworked `scripts/smoke-test.py` to use an externally managed Redis prerequisite on isolated DB 14 instead of starting a full Compose stack and then launching duplicate backend/worker processes against the same ports. The smoke event now uses the current timestamp so the intentional crash does not also trigger a timeout.
+- Configured the loop-local FastAPI Redis client with one-second health checks and five bounded exponential-backoff retries. This prevents a recovered Redis instance from leaving the next request on a stale pooled socket.
+- Removed the obsolete top-level Compose `version` field.
+
+**Why:**
+- Restores the Build Plan section 7 requirement that CI be an authoritative merge gate and strengthens NFR 9.2 recovery behavior after the stale-connection HTTP 500 observed during the 2026-09-03 production verification sequence.
+
+**Assumptions made (if any):**
+- Redis command retries remain bounded to the recovery window. The SDK sender remains asynchronous and fail-silent, and the canonical span schema is unchanged.
+- The E2E smoke test requires Redis as an explicit prerequisite; CI provides it as a service and local users can start only the Compose Redis service.
+
+**Open questions / follow-ups (if any):**
+- The independent whole-window latency rerun and server-resource profile are recorded in the next evaluation entry rather than mixed into this correctness fix.
+
+**Tests added/run:**
+- Clean Linux reproduction confirmed the old SDK job failed collection because `pytest` omitted the repository root (`ModuleNotFoundError: worker`); the corrected package-aware command collected and passed locally.
+- SDK 30/30, backend 17/17, worker 4/4, custom demo 1/1, LangGraph demo 1/1, and support-triage 6/6 passed. Dashboard production build and lint passed. The isolated Redis/backend/worker smoke test passed.
+- Production Compose Redis-restart test recovered with 40/40 events, no transient failures after restart, and no loss. The immediately chained slow-WebSocket test passed at 50/53ms baseline versus 52/55ms stalled-client p50/p95.
+
+---
+
 ## [2026-09-02 19:08] — Independent Load and Three-Way Replication — Track Shared — Codex
 
 **What changed:**

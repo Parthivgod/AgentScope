@@ -3,19 +3,32 @@ import json
 import os
 import subprocess
 import time
+from datetime import datetime, timezone
 import httpx
+import redis
 from websockets import connect
 
 async def run_smoke_test():
     print("Starting AgentScope E2E Smoke Test...")
 
     env = os.environ.copy()
-    env["AGENTSCOPE_API_KEY"] = "smoke-test-key"
-    
-    print("1. Starting Redis (docker-compose)...")
-    subprocess.run(["docker-compose", "up", "-d"], cwd="infra", check=True)
+    env.setdefault("AGENTSCOPE_API_KEY", "smoke-test-key")
+    env.setdefault("REDIS_URL", "redis://127.0.0.1:6379/14")
 
-    print("2. Starting Uvicorn backend and Worker...")
+    # Redis is an explicit prerequisite. CI supplies it as a service; local
+    # users can start just Redis with `docker compose -f infra/docker-compose.yml
+    # up -d redis`. DB 14 keeps this destructive smoke-test cleanup isolated
+    # from the normal stack on DB 0 and backend unit tests on DB 15.
+    store = redis.Redis.from_url(env["REDIS_URL"], decode_responses=True)
+    try:
+        store.ping()
+    except redis.RedisError as exc:
+        raise RuntimeError(
+            "Redis is required for the smoke test; start the Redis service first"
+        ) from exc
+    store.flushdb()
+
+    print("1. Starting Uvicorn backend and worker...")
     # Start the backend server as a subprocess
     backend_proc = subprocess.Popen(
         ["uvicorn", "app.ingest:app", "--host", "127.0.0.1", "--port", "8000"],
@@ -43,17 +56,18 @@ async def run_smoke_test():
         else:
             raise RuntimeError("Backend failed to start within 15 seconds.")
 
-        print("3. Connecting to WebSocket relay...")
+        print("2. Connecting to WebSocket relay...")
         async with connect("ws://127.0.0.1:8000/ws") as websocket:
             print("WebSocket connected.")
 
-            print("4. Sending test crash span via HTTP POST...")
+            print("3. Sending test crash span via HTTP POST...")
+            now = datetime.now(timezone.utc).isoformat()
             test_span = {
                 "trace_id": "smoke-test-trace",
                 "span_id": "smoke-test-span",
                 "span_type": "llm_call",
                 "name": "SmokeTestNode",
-                "start_time": "2026-01-01T00:00:00Z",
+                "start_time": now,
                 "agent_id": "smoke-test-agent",
                 "status": {"status": "error", "exception_details": "intentional test crash"}
             }
@@ -61,13 +75,13 @@ async def run_smoke_test():
             async with httpx.AsyncClient() as client:
                 res = await client.post(
                     "http://127.0.0.1:8000/ingest",
-                    headers={"Authorization": "Bearer smoke-test-key"},
+                    headers={"Authorization": f"Bearer {env['AGENTSCOPE_API_KEY']}"},
                     json=test_span
                 )
                 assert res.status_code == 200, f"Ingest failed: {res.text}"
                 print("Span ingested successfully.")
 
-            print("5. Verifying span and anomaly arrival over WebSocket...")
+            print("4. Verifying span and anomaly arrival over WebSocket...")
             # We expect two messages (one event, one anomaly) since worker processes it and writes to anomaly stream
             msg1 = await asyncio.wait_for(websocket.recv(), timeout=5.0)
             data1 = json.loads(msg1)
@@ -86,12 +100,13 @@ async def run_smoke_test():
             print("SUCCESS: Both span and anomaly arrived over WebSocket relay.")
 
     finally:
-        print("6. Cleaning up...")
+        print("5. Cleaning up...")
         backend_proc.terminate()
-        backend_proc.wait()
+        backend_proc.wait(timeout=10)
         worker_proc.terminate()
-        worker_proc.wait()
-        subprocess.run(["docker-compose", "down"], cwd="infra", check=False)
+        worker_proc.wait(timeout=10)
+        store.flushdb()
+        store.close()
         print("Done.")
 
 if __name__ == "__main__":
