@@ -1,0 +1,87 @@
+{
+  "event_completed_samples": 180,
+  "event_error_count": 0,
+  "event_latency": {
+    "max": 125.0,
+    "mean": 53.85555555541133,
+    "min": 16.00000000325963,
+    "p50": 46.999999998661224,
+    "p95": 78.00000000133878,
+    "p99": 93.9999999988504
+  },
+  "fresh_redis_volume": true,
+  "locust": {
+    "average_response_time_ms": 45.71293956767996,
+    "failures": 0,
+    "median_response_time_ms": 48.0,
+    "p95_response_time_ms": 100.0,
+    "p99_response_time_ms": 160.0,
+    "requests": 5320,
+    "requests_per_second": 112.36798743983411
+  },
+  "locust_exit_code": 0,
+  "probe_stdout": "\n=== Event-to-dashboard latency (ingest->WS), n=180 ===\n  p50=47.0ms  p95=78.0ms  p99=94.0ms  min=16.0ms  max=125.0ms  mean=53.9ms\n  JSON: manuscript\\evaluation-artifacts\\2026-09-03-redis-recovery-load\\matrix_mixed_10u\\load_r1_event_latency.json\n",
+  "project": "agentscope-load-r1",
+  "repetition": 1,
+  "resources": {
+    "containers": {
+      "agentscope-load-r1-backend-1": {
+        "cpu_percent": {
+          "max": 137.09,
+          "mean": 62.06937500000001,
+          "min": 0.85,
+          "n": 16,
+          "p50": 58.105000000000004,
+          "p95": 129.9125,
+          "p99": 135.6545
+        },
+        "network_rx_delta_bytes": 143997330.0,
+        "network_tx_delta_bytes": 139998300.0,
+        "peak_memory_bytes": 201326592.0
+      },
+      "agentscope-load-r1-nginx-1": {
+        "cpu_percent": {
+          "max": 14.04,
+          "mean": 7.116249999999999,
+          "min": 0.0,
+          "n": 16,
+          "p50": 7.619999999999999,
+          "p95": 13.5,
+          "p99": 13.931999999999999
+        },
+        "network_rx_delta_bytes": 127997280.0,
+        "network_tx_delta_bytes": 128998260.0,
+        "peak_memory_bytes": 4194304.0
+      },
+      "agentscope-load-r1-redis-1": {
+        "cpu_percent": {
+          "max": 31.13,
+          "mean": 11.128750000000002,
+          "min": 0.28,
+          "n": 16,
+          "p50": 10.899999999999999,
+          "p95": 20.8775,
+          "p99": 29.079499999999996
+        },
+        "network_rx_delta_bytes": 20094730.0,
+        "network_tx_delta_bytes": 141997560.0,
+        "peak_memory_bytes": 9416212.48
+      },
+      "agentscope-load-r1-worker-1": {
+        "cpu_percent": {
+          "max": 32.78,
+          "mean": 16.143749999999997,
+          "min": 0.05,
+          "n": 16,
+          "p50": 16.520000000000003,
+          "p95": 30.005,
+          "p99": 32.225
+        },
+        "network_rx_delta_bytes": 2527180.0,
+        "network_tx_delta_bytes": 3607730.0,
+        "peak_memory_bytes": 29800529.92
+      }
+    },
+    "sample_count": 64
+  }
+}

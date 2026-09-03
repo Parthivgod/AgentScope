@@ -1,0 +1,545 @@
+{
+  "conditions": {
+    "ingest_only_50u": {
+      "event_p50_ms": 46.999999998661224,
+      "event_p95_ms": 47.00000000593718,
+      "event_p99_ms": 62.999999994717655,
+      "failures": 0,
+      "http_p95_ms": 120.0,
+      "requests": 30284,
+      "requests_per_second": 409.3052446242321,
+      "resources": {
+        "containers": {
+          "agentscope-load-r1-backend-1": {
+            "cpu_percent": {
+              "max": 127.62,
+              "mean": 83.70291666666668,
+              "min": 0.77,
+              "n": 24,
+              "p50": 88.635,
+              "p95": 117.8645,
+              "p99": 125.55460000000001
+            },
+            "network_rx_delta_bytes": 50197370.0,
+            "network_tx_delta_bytes": 48798300.0,
+            "peak_memory_bytes": 191365120.0
+          },
+          "agentscope-load-r1-nginx-1": {
+            "cpu_percent": {
+              "max": 23.17,
+              "mean": 16.38958333333333,
+              "min": 0.0,
+              "n": 24,
+              "p50": 17.255000000000003,
+              "p95": 22.077,
+              "p99": 22.9607
+            },
+            "network_rx_delta_bytes": 42297280.0,
+            "network_tx_delta_bytes": 43498260.0,
+            "peak_memory_bytes": 4898947.072
+          },
+          "agentscope-load-r1-redis-1": {
+            "cpu_percent": {
+              "max": 27.7,
+              "mean": 19.487916666666667,
+              "min": 0.28,
+              "n": 24,
+              "p50": 21.060000000000002,
+              "p95": 26.538,
+              "p99": 27.4562
+            },
+            "network_rx_delta_bytes": 51394730.0,
+            "network_tx_delta_bytes": 31197560.0,
+            "peak_memory_bytes": 34896609.28
+          },
+          "agentscope-load-r1-worker-1": {
+            "cpu_percent": {
+              "max": 103.34,
+              "mean": 91.71333333333331,
+              "min": 0.11,
+              "n": 24,
+              "p50": 97.185,
+              "p95": 102.76650000000001,
+              "p99": 103.3078
+            },
+            "network_rx_delta_bytes": 7167140.0,
+            "network_tx_delta_bytes": 15497730.0,
+            "peak_memory_bytes": 33114030.08
+          }
+        },
+        "sample_count": 96
+      }
+    },
+    "mixed_10u": {
+      "event_p50_ms": 46.999999998661224,
+      "event_p95_ms": 78.00000000133878,
+      "event_p99_ms": 93.9999999988504,
+      "failures": 0,
+      "http_p95_ms": 100.0,
+      "requests": 5320,
+      "requests_per_second": 112.36798743983411,
+      "resources": {
+        "containers": {
+          "agentscope-load-r1-backend-1": {
+            "cpu_percent": {
+              "max": 137.09,
+              "mean": 62.06937500000001,
+              "min": 0.85,
+              "n": 16,
+              "p50": 58.105000000000004,
+              "p95": 129.9125,
+              "p99": 135.6545
+            },
+            "network_rx_delta_bytes": 143997330.0,
+            "network_tx_delta_bytes": 139998300.0,
+            "peak_memory_bytes": 201326592.0
+          },
+          "agentscope-load-r1-nginx-1": {
+            "cpu_percent": {
+              "max": 14.04,
+              "mean": 7.116249999999999,
+              "min": 0.0,
+              "n": 16,
+              "p50": 7.619999999999999,
+              "p95": 13.5,
+              "p99": 13.931999999999999
+            },
+            "network_rx_delta_bytes": 127997280.0,
+            "network_tx_delta_bytes": 128998260.0,
+            "peak_memory_bytes": 4194304.0
+          },
+          "agentscope-load-r1-redis-1": {
+            "cpu_percent": {
+              "max": 31.13,
+              "mean": 11.128750000000002,
+              "min": 0.28,
+              "n": 16,
+              "p50": 10.899999999999999,
+              "p95": 20.8775,
+              "p99": 29.079499999999996
+            },
+            "network_rx_delta_bytes": 20094730.0,
+            "network_tx_delta_bytes": 141997560.0,
+            "peak_memory_bytes": 9416212.48
+          },
+          "agentscope-load-r1-worker-1": {
+            "cpu_percent": {
+              "max": 32.78,
+              "mean": 16.143749999999997,
+              "min": 0.05,
+              "n": 16,
+              "p50": 16.520000000000003,
+              "p95": 30.005,
+              "p99": 32.225
+            },
+            "network_rx_delta_bytes": 2527180.0,
+            "network_tx_delta_bytes": 3607730.0,
+            "peak_memory_bytes": 29800529.92
+          }
+        },
+        "sample_count": 64
+      }
+    },
+    "mixed_25u": {
+      "event_p50_ms": 46.999999998661224,
+      "event_p95_ms": 125.0,
+      "event_p99_ms": 212.870000001058,
+      "failures": 0,
+      "http_p95_ms": 170.0,
+      "requests": 10838,
+      "requests_per_second": 231.59130553212972,
+      "resources": {
+        "containers": {
+          "agentscope-load-r1-backend-1": {
+            "cpu_percent": {
+              "max": 203.2,
+              "mean": 123.60799999999999,
+              "min": 1.55,
+              "n": 15,
+              "p50": 129.86,
+              "p95": 196.66200000000003,
+              "p99": 201.89239999999998
+            },
+            "network_rx_delta_bytes": 244981100.0,
+            "network_tx_delta_bytes": 238979800.0,
+            "peak_memory_bytes": 206254899.2
+          },
+          "agentscope-load-r1-nginx-1": {
+            "cpu_percent": {
+              "max": 18.11,
+              "mean": 13.161333333333333,
+              "min": 0.0,
+              "n": 15,
+              "p50": 15.23,
+              "p95": 17.648,
+              "p99": 18.017599999999998
+            },
+            "network_rx_delta_bytes": 217997280.0,
+            "network_tx_delta_bytes": 219998260.0,
+            "peak_memory_bytes": 4460642.304
+          },
+          "agentscope-load-r1-redis-1": {
+            "cpu_percent": {
+              "max": 28.23,
+              "mean": 19.724666666666668,
+              "min": 0.53,
+              "n": 15,
+              "p50": 21.68,
+              "p95": 27.782000000000004,
+              "p99": 28.1404
+            },
+            "network_rx_delta_bytes": 36188600.0,
+            "network_tx_delta_bytes": 241993180.0,
+            "peak_memory_bytes": 14082375.68
+          },
+          "agentscope-load-r1-worker-1": {
+            "cpu_percent": {
+              "max": 48.83,
+              "mean": 30.519333333333332,
+              "min": 0.11,
+              "n": 15,
+              "p50": 32.4,
+              "p95": 48.718,
+              "p99": 48.8076
+            },
+            "network_rx_delta_bytes": 4934860.0,
+            "network_tx_delta_bytes": 7167040.0,
+            "peak_memory_bytes": 31216107.52
+          }
+        },
+        "sample_count": 60
+      }
+    },
+    "mixed_50u": [
+      {
+        "event_p50_ms": 61.99999999807915,
+        "event_p95_ms": 219.74999999729351,
+        "event_p99_ms": 297.1499999986553,
+        "failures": 0,
+        "http_p95_ms": 280.0,
+        "requests": 22366,
+        "requests_per_second": 303.67945206672334,
+        "resources": {
+          "containers": {
+            "agentscope-load-r1-backend-1": {
+              "cpu_percent": {
+                "max": 203.7,
+                "mean": 140.17076923076922,
+                "min": 1.06,
+                "n": 26,
+                "p50": 162.45,
+                "p95": 203.22250000000003,
+                "p99": 203.65749999999997
+              },
+              "network_rx_delta_bytes": 469997300.0,
+              "network_tx_delta_bytes": 461998250.0,
+              "peak_memory_bytes": 218732953.6
+            },
+            "agentscope-load-r1-nginx-1": {
+              "cpu_percent": {
+                "max": 20.67,
+                "mean": 12.371923076923075,
+                "min": 0.0,
+                "n": 26,
+                "p50": 13.635000000000002,
+                "p95": 19.305,
+                "p99": 20.365000000000002
+              },
+              "network_rx_delta_bytes": 419996670.0,
+              "network_tx_delta_bytes": 420997600.0,
+              "peak_memory_bytes": 5017436.16
+            },
+            "agentscope-load-r1-redis-1": {
+              "cpu_percent": {
+                "max": 30.06,
+                "mean": 16.673846153846153,
+                "min": 0.35,
+                "n": 26,
+                "p50": 18.58,
+                "p95": 26.4225,
+                "p99": 29.232499999999998
+              },
+              "network_rx_delta_bytes": 69094400.0,
+              "network_tx_delta_bytes": 463997290.0,
+              "peak_memory_bytes": 20038287.36
+            },
+            "agentscope-load-r1-worker-1": {
+              "cpu_percent": {
+                "max": 52.75,
+                "mean": 29.247307692307693,
+                "min": 0.04,
+                "n": 26,
+                "p50": 31.375,
+                "p95": 49.0825,
+                "p99": 51.9875
+              },
+              "network_rx_delta_bytes": 9057000.0,
+              "network_tx_delta_bytes": 9427560.0,
+              "peak_memory_bytes": 33837547.52
+            }
+          },
+          "sample_count": 104
+        }
+      },
+      {
+        "event_p50_ms": 78.00000000133878,
+        "event_p95_ms": 656.800000002477,
+        "event_p99_ms": 1563.619999994698,
+        "failures": 0,
+        "http_p95_ms": 540.0,
+        "requests": 12412,
+        "requests_per_second": 165.00867103355142,
+        "resources": {
+          "containers": {
+            "agentscope-load-r2-backend-1": {
+              "cpu_percent": {
+                "max": 201.13,
+                "mean": 106.30045454545456,
+                "min": 1.04,
+                "n": 22,
+                "p50": 105.69,
+                "p95": 198.9565,
+                "p99": 200.90949999999998
+              },
+              "network_rx_delta_bytes": 149997260.0,
+              "network_tx_delta_bytes": 146998180.0,
+              "peak_memory_bytes": 203843174.4
+            },
+            "agentscope-load-r2-nginx-1": {
+              "cpu_percent": {
+                "max": 19.36,
+                "mean": 12.211818181818183,
+                "min": 0.0,
+                "n": 22,
+                "p50": 12.705,
+                "p95": 18.634,
+                "p99": 19.2172
+              },
+              "network_rx_delta_bytes": 133996670.0,
+              "network_tx_delta_bytes": 134997600.0,
+              "peak_memory_bytes": 4514119.68
+            },
+            "agentscope-load-r2-redis-1": {
+              "cpu_percent": {
+                "max": 34.17,
+                "mean": 17.166363636363638,
+                "min": 0.53,
+                "n": 22,
+                "p50": 17.11,
+                "p95": 27.950499999999998,
+                "p99": 32.878499999999995
+              },
+              "network_rx_delta_bytes": 27494500.0,
+              "network_tx_delta_bytes": 146997430.0,
+              "peak_memory_bytes": 12939427.84
+            },
+            "agentscope-load-r2-worker-1": {
+              "cpu_percent": {
+                "max": 49.0,
+                "mean": 25.04409090909091,
+                "min": 0.07,
+                "n": 22,
+                "p50": 26.674999999999997,
+                "p95": 43.94499999999999,
+                "p99": 47.94579999999999
+              },
+              "network_rx_delta_bytes": 5147180.0,
+              "network_tx_delta_bytes": 5117730.0,
+              "peak_memory_bytes": 31761367.04
+            }
+          },
+          "sample_count": 88
+        }
+      },
+      {
+        "event_p50_ms": 93.99999999732245,
+        "event_p95_ms": 250.74999999997107,
+        "event_p99_ms": 327.9999999941356,
+        "failures": 0,
+        "http_p95_ms": 280.0,
+        "requests": 25144,
+        "requests_per_second": 333.8737931518528,
+        "resources": {
+          "containers": {
+            "agentscope-load-r3-backend-1": {
+              "cpu_percent": {
+                "max": 204.52,
+                "mean": 164.29319999999998,
+                "min": 0.84,
+                "n": 25,
+                "p50": 196.25,
+                "p95": 201.33599999999998,
+                "p99": 203.80960000000002
+              },
+              "network_rx_delta_bytes": 601997370.0,
+              "network_tx_delta_bytes": 589998300.0,
+              "peak_memory_bytes": 221039820.8
+            },
+            "agentscope-load-r3-nginx-1": {
+              "cpu_percent": {
+                "max": 18.83,
+                "mean": 12.520800000000001,
+                "min": 0.0,
+                "n": 25,
+                "p50": 12.34,
+                "p95": 18.338,
+                "p99": 18.7148
+              },
+              "network_rx_delta_bytes": 537997280.0,
+              "network_tx_delta_bytes": 539998260.0,
+              "peak_memory_bytes": 5132779.52
+            },
+            "agentscope-load-r3-redis-1": {
+              "cpu_percent": {
+                "max": 30.89,
+                "mean": 17.932000000000002,
+                "min": 0.41,
+                "n": 25,
+                "p50": 17.05,
+                "p95": 27.958000000000002,
+                "p99": 30.374000000000002
+              },
+              "network_rx_delta_bytes": 83094970.0,
+              "network_tx_delta_bytes": 594997700.0,
+              "peak_memory_bytes": 22124953.6
+            },
+            "agentscope-load-r3-worker-1": {
+              "cpu_percent": {
+                "max": 51.96,
+                "mean": 31.123599999999993,
+                "min": 0.08,
+                "n": 25,
+                "p50": 30.02,
+                "p95": 46.506,
+                "p99": 50.65200000000001
+              },
+              "network_rx_delta_bytes": 10297270.0,
+              "network_tx_delta_bytes": 11397960.0,
+              "peak_memory_bytes": 34445721.6
+            }
+          },
+          "sample_count": 100
+        }
+      }
+    ]
+  },
+  "frozen_commit": "dadf573",
+  "interpretation": {
+    "boundary": "The controls isolate read pressure at workload level but do not estimate the causal contribution of each history implementation step.",
+    "code_profile": "The mixed workload repeatedly requests growing trace histories; the pre-optimization history path issued one XRANGE per indexed event.",
+    "isolated_observation": "The 50-user ingest-only control remained below target while the mixed workload missed in every repetition."
+  },
+  "mixed_50u_event_p95_ms": {
+    "all_below_200ms": false,
+    "max": 656.800000002477,
+    "mean": 375.76666666658053,
+    "min": 219.74999999729351,
+    "n": 3,
+    "p50": 250.74999999997107,
+    "p95": 616.1950000022263,
+    "p99": 648.6790000024268,
+    "process_t_95": [
+      -230.0525971026994,
+      981.5859304358605
+    ]
+  },
+  "study": "redis_recovery_and_mixed_load_latency_profile",
+  "timeline_thirds": {
+    "mixed_50u_r1": [
+      {
+        "max": 78.00000000133878,
+        "mean": 53.15000000009604,
+        "min": 14.999999999417923,
+        "n": 100,
+        "p50": 46.999999998661224,
+        "p95": 63.00000000192085,
+        "p99": 78.00000000133878,
+        "window": "early"
+      },
+      {
+        "max": 235.00000000058208,
+        "mean": 56.7600000002858,
+        "min": 30.999999995401595,
+        "n": 100,
+        "p50": 46.999999998661224,
+        "p95": 79.55000000147257,
+        "p99": 140.94999999943005,
+        "window": "middle"
+      },
+      {
+        "max": 360.0000000005821,
+        "mean": 145.9699999998702,
+        "min": 14.999999999417923,
+        "n": 100,
+        "p50": 125.0,
+        "p95": 281.8000000024767,
+        "p99": 359.010000003982,
+        "window": "late"
+      }
+    ],
+    "mixed_50u_r2": [
+      {
+        "max": 155.9999999954016,
+        "mean": 59.649999999892316,
+        "min": 14.999999999417923,
+        "n": 100,
+        "p50": 46.999999998661224,
+        "p95": 94.80000000439755,
+        "p99": 125.30999999995417,
+        "window": "early"
+      },
+      {
+        "max": 2264.999999999418,
+        "mean": 294.169999999649,
+        "min": 46.000000002095476,
+        "n": 100,
+        "p50": 94.00000000096043,
+        "p95": 1413.1999999994148,
+        "p99": 1817.519999994695,
+        "window": "middle"
+      },
+      {
+        "max": 735.0000000005821,
+        "mean": 115.64999999987776,
+        "min": 15.999999995983671,
+        "n": 100,
+        "p50": 78.00000000133878,
+        "p95": 314.5500000016909,
+        "p99": 610.2599999967795,
+        "window": "late"
+      }
+    ],
+    "mixed_50u_r3": [
+      {
+        "max": 203.00000000133878,
+        "mean": 51.86999999990803,
+        "min": 14.999999999417923,
+        "n": 100,
+        "p50": 46.999999998661224,
+        "p95": 63.00000000192085,
+        "p99": 141.61999999603756,
+        "window": "early"
+      },
+      {
+        "max": 313.00000000192085,
+        "mean": 125.7500000003347,
+        "min": 16.00000000325963,
+        "n": 100,
+        "p50": 110.00000000058208,
+        "p95": 219.75000000420548,
+        "p99": 250.63000000001952,
+        "window": "middle"
+      },
+      {
+        "max": 360.0000000005821,
+        "mean": 157.78000000020256,
+        "min": 14.999999999417923,
+        "n": 100,
+        "p50": 140.99999999962165,
+        "p95": 312.04999999827123,
+        "p99": 344.1600000045583,
+        "window": "late"
+      }
+    ]
+  }
+}

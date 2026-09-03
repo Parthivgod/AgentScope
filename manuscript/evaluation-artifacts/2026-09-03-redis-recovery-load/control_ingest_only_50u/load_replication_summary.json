@@ -1,0 +1,162 @@
+{
+  "aggregate": {
+    "event_p95_ms": {
+      "max": 47.00000000593718,
+      "mean": 47.00000000593718,
+      "min": 47.00000000593718,
+      "n": 1,
+      "p50": 47.00000000593718,
+      "p95": 47.00000000593718,
+      "p99": 47.00000000593718
+    },
+    "failure_rate": {
+      "max": 0.0,
+      "mean": 0.0,
+      "min": 0.0,
+      "n": 1,
+      "p50": 0.0,
+      "p95": 0.0,
+      "p99": 0.0
+    },
+    "http_p95_ms": {
+      "max": 120.0,
+      "mean": 120.0,
+      "min": 120.0,
+      "n": 1,
+      "p50": 120.0,
+      "p95": 120.0,
+      "p99": 120.0
+    },
+    "requests_per_second": {
+      "max": 409.3052446242321,
+      "mean": 409.3052446242321,
+      "min": 409.3052446242321,
+      "n": 1,
+      "p50": 409.3052446242321,
+      "p95": 409.3052446242321,
+      "p99": 409.3052446242321
+    }
+  },
+  "design": {
+    "load_duration_seconds": 75,
+    "locustfile": "infra\\loadtest\\locustfile_ingest_only.py",
+    "output_directory": "manuscript\\evaluation-artifacts\\2026-09-03-redis-recovery-load\\control_ingest_only_50u",
+    "probe_delay_seconds": 7,
+    "probe_duration_seconds": 60,
+    "probe_samples": 300,
+    "repetitions": 1,
+    "spawn_rate": 10,
+    "users": 50
+  },
+  "manifest": {
+    "command": "scripts/evaluation/replicate_load.py --repetitions 1 --users 50 --spawn-rate 10 --load-duration-seconds 75 --probe-delay-seconds 7 --probe-duration-seconds 60 --probe-samples 300 --locustfile infra/loadtest/locustfile_ingest_only.py --output-directory manuscript/evaluation-artifacts/2026-09-03-redis-recovery-load/control_ingest_only_50u",
+    "docker": "Docker version 29.3.1, build c2be9cc",
+    "generated_at_utc": "2026-09-03T13:57:30.515820+00:00",
+    "git_branch": "main",
+    "git_commit": "dadf57338eceb43197afa98080e060fcdd6e1469",
+    "git_worktree_dirty": true,
+    "logical_cpu_count": 12,
+    "packages": {
+      "anthropic": "1.0.0",
+      "httpx": "0.28.1",
+      "locust": "2.46.3",
+      "openai": "3.3.1",
+      "pydantic": "2.13.4",
+      "websockets": "15.0.1"
+    },
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel",
+    "python": "3.11.4 (tags/v3.11.4:d2340ef, Jun  7 2023, 05:45:37) [MSC v.1934 64 bit (AMD64)]",
+    "seed": 20260902
+  },
+  "repetitions": [
+    {
+      "event_completed_samples": 300,
+      "event_error_count": 0,
+      "event_latency": {
+        "max": 63.00000000192085,
+        "mean": 47.0766666666168,
+        "min": 30.999999995401595,
+        "p50": 46.999999998661224,
+        "p95": 47.00000000593718,
+        "p99": 62.999999994717655
+      },
+      "fresh_redis_volume": true,
+      "locust": {
+        "average_response_time_ms": 69.19688993526697,
+        "failures": 0,
+        "median_response_time_ms": 61.0,
+        "p95_response_time_ms": 120.0,
+        "p99_response_time_ms": 140.0,
+        "requests": 30284,
+        "requests_per_second": 409.3052446242321
+      },
+      "locust_exit_code": 0,
+      "probe_stdout": "\n=== Event-to-dashboard latency (ingest->WS), n=300 ===\n  p50=47.0ms  p95=47.0ms  p99=63.0ms  min=31.0ms  max=63.0ms  mean=47.1ms\n  JSON: manuscript\\evaluation-artifacts\\2026-09-03-redis-recovery-load\\control_ingest_only_50u\\load_r1_event_latency.json\n",
+      "project": "agentscope-load-r1",
+      "repetition": 1,
+      "resources": {
+        "containers": {
+          "agentscope-load-r1-backend-1": {
+            "cpu_percent": {
+              "max": 127.62,
+              "mean": 83.70291666666668,
+              "min": 0.77,
+              "n": 24,
+              "p50": 88.635,
+              "p95": 117.8645,
+              "p99": 125.55460000000001
+            },
+            "network_rx_delta_bytes": 50197370.0,
+            "network_tx_delta_bytes": 48798300.0,
+            "peak_memory_bytes": 191365120.0
+          },
+          "agentscope-load-r1-nginx-1": {
+            "cpu_percent": {
+              "max": 23.17,
+              "mean": 16.38958333333333,
+              "min": 0.0,
+              "n": 24,
+              "p50": 17.255000000000003,
+              "p95": 22.077,
+              "p99": 22.9607
+            },
+            "network_rx_delta_bytes": 42297280.0,
+            "network_tx_delta_bytes": 43498260.0,
+            "peak_memory_bytes": 4898947.072
+          },
+          "agentscope-load-r1-redis-1": {
+            "cpu_percent": {
+              "max": 27.7,
+              "mean": 19.487916666666667,
+              "min": 0.28,
+              "n": 24,
+              "p50": 21.060000000000002,
+              "p95": 26.538,
+              "p99": 27.4562
+            },
+            "network_rx_delta_bytes": 51394730.0,
+            "network_tx_delta_bytes": 31197560.0,
+            "peak_memory_bytes": 34896609.28
+          },
+          "agentscope-load-r1-worker-1": {
+            "cpu_percent": {
+              "max": 103.34,
+              "mean": 91.71333333333331,
+              "min": 0.11,
+              "n": 24,
+              "p50": 97.185,
+              "p95": 102.76650000000001,
+              "p99": 103.3078
+            },
+            "network_rx_delta_bytes": 7167140.0,
+            "network_tx_delta_bytes": 15497730.0,
+            "peak_memory_bytes": 33114030.08
+          }
+        },
+        "sample_count": 96
+      }
+    }
+  ],
+  "study": "repeated_clean_volume_load"
+}

@@ -1,0 +1,706 @@
+[
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 0.0,
+    "memory_bytes": 2990538.752,
+    "network_rx_bytes": 3330.0,
+    "network_tx_bytes": 2400.0,
+    "timestamp_utc": "2026-09-03T13:51:47.268163+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 1.04,
+    "memory_bytes": 187485388.8,
+    "network_rx_bytes": 2740.0,
+    "network_tx_bytes": 1820.0,
+    "timestamp_utc": "2026-09-03T13:51:47.268163+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 0.07,
+    "memory_bytes": 27787264.0,
+    "network_rx_bytes": 2820.0,
+    "network_tx_bytes": 2270.0,
+    "timestamp_utc": "2026-09-03T13:51:47.268163+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 3.72,
+    "memory_bytes": 4357881.856,
+    "network_rx_bytes": 5500.0,
+    "network_tx_bytes": 2570.0,
+    "timestamp_utc": "2026-09-03T13:51:47.268163+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 12.27,
+    "memory_bytes": 3805282.304,
+    "network_rx_bytes": 1090000.0,
+    "network_tx_bytes": 1110000.0,
+    "timestamp_utc": "2026-09-03T13:51:50.551595+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 65.13,
+    "memory_bytes": 190526259.2,
+    "network_rx_bytes": 1020000.0,
+    "network_tx_bytes": 1150000.0,
+    "timestamp_utc": "2026-09-03T13:51:50.551595+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 22.67,
+    "memory_bytes": 28227665.92,
+    "network_rx_bytes": 265000.0,
+    "network_tx_bytes": 121000.0,
+    "timestamp_utc": "2026-09-03T13:51:50.551595+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 9.43,
+    "memory_bytes": 4456448.0,
+    "network_rx_bytes": 269000.0,
+    "network_tx_bytes": 332000.0,
+    "timestamp_utc": "2026-09-03T13:51:50.551595+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 15.86,
+    "memory_bytes": 4514119.68,
+    "network_rx_bytes": 5410000.0,
+    "network_tx_bytes": 5460000.0,
+    "timestamp_utc": "2026-09-03T13:51:53.891180+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 110.31,
+    "memory_bytes": 191994265.6,
+    "network_rx_bytes": 5540000.0,
+    "network_tx_bytes": 5840000.0,
+    "timestamp_utc": "2026-09-03T13:51:53.891180+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 31.65,
+    "memory_bytes": 28468838.4,
+    "network_rx_bytes": 628000.0,
+    "network_tx_bytes": 397000.0,
+    "timestamp_utc": "2026-09-03T13:51:53.891180+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 18.4,
+    "memory_bytes": 5595201.536,
+    "network_rx_bytes": 2350000.0,
+    "network_tx_bytes": 5110000.0,
+    "timestamp_utc": "2026-09-03T13:51:53.891180+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 17.54,
+    "memory_bytes": 4005560.32,
+    "network_rx_bytes": 9710000.0,
+    "network_tx_bytes": 9790000.0,
+    "timestamp_utc": "2026-09-03T13:51:57.214552+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 142.56,
+    "memory_bytes": 192937984.0,
+    "network_rx_bytes": 13300000.0,
+    "network_tx_bytes": 13400000.0,
+    "timestamp_utc": "2026-09-03T13:51:57.214552+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 42.79,
+    "memory_bytes": 28930211.84,
+    "network_rx_bytes": 1340000.0,
+    "network_tx_bytes": 1170000.0,
+    "timestamp_utc": "2026-09-03T13:51:57.214552+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 26.63,
+    "memory_bytes": 6184501.248,
+    "network_rx_bytes": 4690000.0,
+    "network_tx_bytes": 12500000.0,
+    "timestamp_utc": "2026-09-03T13:51:57.214552+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 17.76,
+    "memory_bytes": 3768582.144,
+    "network_rx_bytes": 18000000.0,
+    "network_tx_bytes": 18100000.0,
+    "timestamp_utc": "2026-09-03T13:52:00.582152+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 136.41,
+    "memory_bytes": 193252556.8,
+    "network_rx_bytes": 23100000.0,
+    "network_tx_bytes": 23000000.0,
+    "timestamp_utc": "2026-09-03T13:52:00.582152+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 43.98,
+    "memory_bytes": 29265756.16,
+    "network_rx_bytes": 1900000.0,
+    "network_tx_bytes": 1870000.0,
+    "timestamp_utc": "2026-09-03T13:52:00.582152+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 24.31,
+    "memory_bytes": 7192182.784,
+    "network_rx_bytes": 6440000.0,
+    "network_tx_bytes": 18800000.0,
+    "timestamp_utc": "2026-09-03T13:52:00.582152+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 18.68,
+    "memory_bytes": 4161798.144,
+    "network_rx_bytes": 33600000.0,
+    "network_tx_bytes": 33800000.0,
+    "timestamp_utc": "2026-09-03T13:52:03.890092+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 166.34,
+    "memory_bytes": 194301132.8,
+    "network_rx_bytes": 37500000.0,
+    "network_tx_bytes": 36900000.0,
+    "timestamp_utc": "2026-09-03T13:52:03.890092+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 49.0,
+    "memory_bytes": 29601300.48,
+    "network_rx_bytes": 2480000.0,
+    "network_tx_bytes": 2640000.0,
+    "timestamp_utc": "2026-09-03T13:52:03.890092+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 28.02,
+    "memory_bytes": 7937720.32,
+    "network_rx_bytes": 9340000.0,
+    "network_tx_bytes": 31500000.0,
+    "timestamp_utc": "2026-09-03T13:52:03.890092+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 19.36,
+    "memory_bytes": 3579838.464,
+    "network_rx_bytes": 48000000.0,
+    "network_tx_bytes": 48300000.0,
+    "timestamp_utc": "2026-09-03T13:52:07.399411+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 201.13,
+    "memory_bytes": 195769139.2,
+    "network_rx_bytes": 49900000.0,
+    "network_tx_bytes": 49000000.0,
+    "timestamp_utc": "2026-09-03T13:52:07.399411+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 43.28,
+    "memory_bytes": 29978787.84,
+    "network_rx_bytes": 2980000.0,
+    "network_tx_bytes": 3270000.0,
+    "timestamp_utc": "2026-09-03T13:52:07.399411+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 34.17,
+    "memory_bytes": 10240393.216,
+    "network_rx_bytes": 13400000.0,
+    "network_tx_bytes": 52000000.0,
+    "timestamp_utc": "2026-09-03T13:52:07.399411+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 17.0,
+    "memory_bytes": 4054843.392,
+    "network_rx_bytes": 51100000.0,
+    "network_tx_bytes": 51400000.0,
+    "timestamp_utc": "2026-09-03T13:52:11.390666+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 90.62,
+    "memory_bytes": 195664281.6,
+    "network_rx_bytes": 57200000.0,
+    "network_tx_bytes": 56200000.0,
+    "timestamp_utc": "2026-09-03T13:52:11.390666+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 23.27,
+    "memory_bytes": 30041702.4,
+    "network_rx_bytes": 3070000.0,
+    "network_tx_bytes": 3360000.0,
+    "timestamp_utc": "2026-09-03T13:52:11.390666+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 12.4,
+    "memory_bytes": 9539944.448,
+    "network_rx_bytes": 13700000.0,
+    "network_tx_bytes": 54300000.0,
+    "timestamp_utc": "2026-09-03T13:52:11.390666+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 12.19,
+    "memory_bytes": 4042260.48,
+    "network_rx_bytes": 54600000.0,
+    "network_tx_bytes": 54900000.0,
+    "timestamp_utc": "2026-09-03T13:52:15.071782+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 96.63,
+    "memory_bytes": 196188569.6,
+    "network_rx_bytes": 61200000.0,
+    "network_tx_bytes": 60100000.0,
+    "timestamp_utc": "2026-09-03T13:52:15.071782+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 19.03,
+    "memory_bytes": 30356275.2,
+    "network_rx_bytes": 3150000.0,
+    "network_tx_bytes": 3420000.0,
+    "timestamp_utc": "2026-09-03T13:52:15.071782+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 21.45,
+    "memory_bytes": 9723445.248,
+    "network_rx_bytes": 14600000.0,
+    "network_tx_bytes": 59300000.0,
+    "timestamp_utc": "2026-09-03T13:52:15.071782+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 8.11,
+    "memory_bytes": 3772776.448,
+    "network_rx_bytes": 57000000.0,
+    "network_tx_bytes": 57300000.0,
+    "timestamp_utc": "2026-09-03T13:52:19.069823+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 54.15,
+    "memory_bytes": 196083712.0,
+    "network_rx_bytes": 63500000.0,
+    "network_tx_bytes": 62300000.0,
+    "timestamp_utc": "2026-09-03T13:52:19.069823+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 14.78,
+    "memory_bytes": 30482104.32,
+    "network_rx_bytes": 3280000.0,
+    "network_tx_bytes": 3520000.0,
+    "timestamp_utc": "2026-09-03T13:52:19.069823+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 9.04,
+    "memory_bytes": 9396289.536,
+    "network_rx_bytes": 15100000.0,
+    "network_tx_bytes": 61900000.0,
+    "timestamp_utc": "2026-09-03T13:52:19.069823+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 11.29,
+    "memory_bytes": 4022337.536,
+    "network_rx_bytes": 58300000.0,
+    "network_tx_bytes": 58600000.0,
+    "timestamp_utc": "2026-09-03T13:52:22.641624+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 62.14,
+    "memory_bytes": 196083712.0,
+    "network_rx_bytes": 65200000.0,
+    "network_tx_bytes": 64099999.99999999,
+    "timestamp_utc": "2026-09-03T13:52:22.641624+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 11.82,
+    "memory_bytes": 30261903.36,
+    "network_rx_bytes": 3330000.0,
+    "network_tx_bytes": 3560000.0,
+    "timestamp_utc": "2026-09-03T13:52:22.641624+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 14.12,
+    "memory_bytes": 9387900.928,
+    "network_rx_bytes": 15300000.0,
+    "network_tx_bytes": 63300000.0,
+    "timestamp_utc": "2026-09-03T13:52:22.641624+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 15.08,
+    "memory_bytes": 4059037.696,
+    "network_rx_bytes": 60200000.0,
+    "network_tx_bytes": 60600000.0,
+    "timestamp_utc": "2026-09-03T13:52:26.470973+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 108.98,
+    "memory_bytes": 196503142.4,
+    "network_rx_bytes": 69000000.0,
+    "network_tx_bytes": 67600000.0,
+    "timestamp_utc": "2026-09-03T13:52:26.470973+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 24.81,
+    "memory_bytes": 30356275.2,
+    "network_rx_bytes": 3430000.0,
+    "network_tx_bytes": 3650000.0,
+    "timestamp_utc": "2026-09-03T13:52:26.470973+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 22.09,
+    "memory_bytes": 9883877.376,
+    "network_rx_bytes": 15700000.0,
+    "network_tx_bytes": 65500000.0,
+    "timestamp_utc": "2026-09-03T13:52:26.470973+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 1.19,
+    "memory_bytes": 3526361.088,
+    "network_rx_bytes": 64200000.0,
+    "network_tx_bytes": 64500000.0,
+    "timestamp_utc": "2026-09-03T13:52:30.416451+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 4.71,
+    "memory_bytes": 196293427.2,
+    "network_rx_bytes": 71900000.0,
+    "network_tx_bytes": 70600000.0,
+    "timestamp_utc": "2026-09-03T13:52:30.416451+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 1.13,
+    "memory_bytes": 30408704.0,
+    "network_rx_bytes": 3490000.0,
+    "network_tx_bytes": 3690000.0,
+    "timestamp_utc": "2026-09-03T13:52:30.416451+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 15.55,
+    "memory_bytes": 9731833.856,
+    "network_rx_bytes": 16300000.0,
+    "network_tx_bytes": 69900000.0,
+    "timestamp_utc": "2026-09-03T13:52:30.416451+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 14.77,
+    "memory_bytes": 4120903.68,
+    "network_rx_bytes": 65800000.0,
+    "network_tx_bytes": 66200000.0,
+    "timestamp_utc": "2026-09-03T13:52:35.428847+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 150.79,
+    "memory_bytes": 196608000.0,
+    "network_rx_bytes": 74000000.0,
+    "network_tx_bytes": 72400000.0,
+    "timestamp_utc": "2026-09-03T13:52:35.428847+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 30.77,
+    "memory_bytes": 30513561.6,
+    "network_rx_bytes": 3570000.0,
+    "network_tx_bytes": 3760000.0,
+    "timestamp_utc": "2026-09-03T13:52:35.428847+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 13.58,
+    "memory_bytes": 9903800.32,
+    "network_rx_bytes": 16700000.0,
+    "network_tx_bytes": 71900000.0,
+    "timestamp_utc": "2026-09-03T13:52:35.428847+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 16.07,
+    "memory_bytes": 4046454.784,
+    "network_rx_bytes": 81600000.0,
+    "network_tx_bytes": 82000000.0,
+    "timestamp_utc": "2026-09-03T13:52:38.848036+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 177.61,
+    "memory_bytes": 197866291.2,
+    "network_rx_bytes": 84200000.0,
+    "network_tx_bytes": 82500000.0,
+    "timestamp_utc": "2026-09-03T13:52:38.848036+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 34.91,
+    "memory_bytes": 30838620.16,
+    "network_rx_bytes": 3930000.0,
+    "network_tx_bytes": 4070000.0000000005,
+    "timestamp_utc": "2026-09-03T13:52:38.848036+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 22.64,
+    "memory_bytes": 11366563.84,
+    "network_rx_bytes": 19200000.0,
+    "network_tx_bytes": 89300000.0,
+    "timestamp_utc": "2026-09-03T13:52:38.848036+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 10.57,
+    "memory_bytes": 3784310.784,
+    "network_rx_bytes": 92600000.0,
+    "network_tx_bytes": 93000000.0,
+    "timestamp_utc": "2026-09-03T13:52:41.906251+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 85.04,
+    "memory_bytes": 199334297.6,
+    "network_rx_bytes": 104000000.0,
+    "network_tx_bytes": 102000000.0,
+    "timestamp_utc": "2026-09-03T13:52:41.906251+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 15.09,
+    "memory_bytes": 31058821.12,
+    "network_rx_bytes": 4210000.0,
+    "network_tx_bytes": 4320000.0,
+    "timestamp_utc": "2026-09-03T13:52:41.906251+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 10.27,
+    "memory_bytes": 11324620.8,
+    "network_rx_bytes": 21000000.0,
+    "network_tx_bytes": 101000000.0,
+    "timestamp_utc": "2026-09-03T13:52:41.906251+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 15.34,
+    "memory_bytes": 4288675.84,
+    "network_rx_bytes": 108000000.0,
+    "network_tx_bytes": 108000000.0,
+    "timestamp_utc": "2026-09-03T13:52:45.303054+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 159.81,
+    "memory_bytes": 200068300.8,
+    "network_rx_bytes": 120000000.0,
+    "network_tx_bytes": 118000000.0,
+    "timestamp_utc": "2026-09-03T13:52:45.303054+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 35.72,
+    "memory_bytes": 31279022.08,
+    "network_rx_bytes": 4480000.0,
+    "network_tx_bytes": 4560000.0,
+    "timestamp_utc": "2026-09-03T13:52:45.303054+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 24.73,
+    "memory_bytes": 11953766.4,
+    "network_rx_bytes": 22800000.0,
+    "network_tx_bytes": 114000000.0,
+    "timestamp_utc": "2026-09-03T13:52:45.303054+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 11.01,
+    "memory_bytes": 4297064.448,
+    "network_rx_bytes": 111000000.0,
+    "network_tx_bytes": 111000000.0,
+    "timestamp_utc": "2026-09-03T13:52:49.294958+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 90.27,
+    "memory_bytes": 199753728.0,
+    "network_rx_bytes": 124000000.0,
+    "network_tx_bytes": 121000000.0,
+    "timestamp_utc": "2026-09-03T13:52:49.294958+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 28.54,
+    "memory_bytes": 31415336.96,
+    "network_rx_bytes": 4680000.0,
+    "network_tx_bytes": 4730000.0,
+    "timestamp_utc": "2026-09-03T13:52:49.294958+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 18.44,
+    "memory_bytes": 11890851.84,
+    "network_rx_bytes": 23900000.0,
+    "network_tx_bytes": 121000000.0,
+    "timestamp_utc": "2026-09-03T13:52:49.294958+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 9.16,
+    "memory_bytes": 4301258.752,
+    "network_rx_bytes": 114000000.0,
+    "network_tx_bytes": 114000000.0,
+    "timestamp_utc": "2026-09-03T13:52:53.653836+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 102.4,
+    "memory_bytes": 200278016.0,
+    "network_rx_bytes": 127000000.0,
+    "network_tx_bytes": 124000000.0,
+    "timestamp_utc": "2026-09-03T13:52:53.653836+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 17.48,
+    "memory_bytes": 31719424.0,
+    "network_rx_bytes": 4740000.0,
+    "network_tx_bytes": 4770000.0,
+    "timestamp_utc": "2026-09-03T13:52:53.653836+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 13.92,
+    "memory_bytes": 11754536.96,
+    "network_rx_bytes": 24400000.0,
+    "network_tx_bytes": 124000000.0,
+    "timestamp_utc": "2026-09-03T13:52:53.653836+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 12.43,
+    "memory_bytes": 4509925.376,
+    "network_rx_bytes": 116000000.0,
+    "network_tx_bytes": 117000000.0,
+    "timestamp_utc": "2026-09-03T13:52:58.176281+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 131.28,
+    "memory_bytes": 199963443.2,
+    "network_rx_bytes": 131000000.0,
+    "network_tx_bytes": 128000000.0,
+    "timestamp_utc": "2026-09-03T13:52:58.176281+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 30.92,
+    "memory_bytes": 31467765.76,
+    "network_rx_bytes": 4800000.0,
+    "network_tx_bytes": 4810000.0,
+    "timestamp_utc": "2026-09-03T13:52:58.176281+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 16.29,
+    "memory_bytes": 12048138.24,
+    "network_rx_bytes": 24900000.0,
+    "network_tx_bytes": 128000000.0,
+    "timestamp_utc": "2026-09-03T13:52:58.176281+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 12.98,
+    "memory_bytes": 4346347.52,
+    "network_rx_bytes": 128000000.0,
+    "network_tx_bytes": 129000000.0,
+    "timestamp_utc": "2026-09-03T13:53:01.358291+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 200.08,
+    "memory_bytes": 203109171.2,
+    "network_rx_bytes": 143000000.0,
+    "network_tx_bytes": 140000000.0,
+    "timestamp_utc": "2026-09-03T13:53:01.358291+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 29.19,
+    "memory_bytes": 31761367.04,
+    "network_rx_bytes": 5030000.0,
+    "network_tx_bytes": 5020000.0,
+    "timestamp_utc": "2026-09-03T13:53:01.358291+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 17.93,
+    "memory_bytes": 12928942.08,
+    "network_rx_bytes": 26600000.0,
+    "network_tx_bytes": 140000000.0,
+    "timestamp_utc": "2026-09-03T13:53:01.358291+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-nginx-1",
+    "cpu_percent": 0.0,
+    "memory_bytes": 4116709.376,
+    "network_rx_bytes": 134000000.0,
+    "network_tx_bytes": 135000000.0,
+    "timestamp_utc": "2026-09-03T13:53:04.663478+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-backend-1",
+    "cpu_percent": 1.18,
+    "memory_bytes": 203843174.4,
+    "network_rx_bytes": 150000000.0,
+    "network_tx_bytes": 147000000.0,
+    "timestamp_utc": "2026-09-03T13:53:04.663478+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-worker-1",
+    "cpu_percent": 0.07,
+    "memory_bytes": 31509708.8,
+    "network_rx_bytes": 5150000.0,
+    "network_tx_bytes": 5120000.0,
+    "timestamp_utc": "2026-09-03T13:53:04.663478+00:00"
+  },
+  {
+    "container": "agentscope-load-r2-redis-1",
+    "cpu_percent": 0.53,
+    "memory_bytes": 12939427.84,
+    "network_rx_bytes": 27500000.0,
+    "network_tx_bytes": 147000000.0,
+    "timestamp_utc": "2026-09-03T13:53:04.663478+00:00"
+  }
+]

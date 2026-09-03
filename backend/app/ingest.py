@@ -13,7 +13,11 @@ INGEST_AND_INDEX_SCRIPT = """
 local message_id = redis.call('XADD', KEYS[1], '*', 'payload', ARGV[1])
 local timestamp_ms = string.match(message_id, '^(%d+)%-')
 redis.call('ZADD', KEYS[2], timestamp_ms, ARGV[2])
+local payload_index_complete = redis.call('LLEN', KEYS[3]) == redis.call('LLEN', KEYS[4])
 redis.call('RPUSH', KEYS[3], message_id)
+if payload_index_complete then
+    redis.call('RPUSH', KEYS[4], ARGV[1])
+end
 return message_id
 """
 
@@ -34,16 +38,21 @@ async def verify_api_key(request: Request):
 @app.post("/ingest", dependencies=[Depends(verify_api_key)])
 async def ingest_span(span: Span):
     # Validates incoming payloads against the Span schema from sdk/agentscope/schema.py
-    # Append the durable event and both read-index entries as one Redis-side
+    # Append the durable event and read-index entries as one Redis-side
     # operation. Redis serializes scripts, so the per-trace list has exactly
-    # the authoritative stream order even with multiple backend workers.
+    # the authoritative stream order even with multiple backend workers. New
+    # traces also keep an ordered payload list so history needs one LRANGE
+    # instead of one XRANGE command per event. If an upgraded deployment has a
+    # legacy ID list without matching payloads, the script deliberately leaves
+    # that trace on the compatible ID path rather than creating a partial index.
     payload = span.model_dump_json()
     await get_redis().eval(
         INGEST_AND_INDEX_SCRIPT,
-        3,
+        4,
         "agentscope:events",
         "agentscope:traces",
         f"agentscope:trace:{span.trace_id}",
+        f"agentscope:trace-payload:{span.trace_id}",
         payload,
         span.trace_id,
     )

@@ -10,6 +10,7 @@ EVENTS_STREAM = "agentscope:events"
 ANOMALIES_STREAM = "agentscope:anomalies"
 TRACES_ZSET = "agentscope:traces"
 TRACE_LIST_PREFIX = "agentscope:trace:"
+TRACE_PAYLOAD_LIST_PREFIX = "agentscope:trace-payload:"
 ANOMALY_TRACE_PREFIX = "agentscope:anomaly-trace:"
 ANOMALY_INDEX_READY = "agentscope:index:anomalies:v1"
 
@@ -70,6 +71,24 @@ async def _indexed_message_ids(trace_id: str) -> list[str]:
     """
     ids = await get_redis().lrange(f"{TRACE_LIST_PREFIX}{trace_id}", 0, -1)
     return sorted((str(i) for i in ids), key=_stream_id_key)
+
+
+async def _indexed_payloads(trace_id: str) -> list[str]:
+    """Return the O(trace-size), single-round-trip payload index when complete.
+
+    Comparing the legacy ID-list length with the payload-list length keeps
+    upgrades safe: a trace written before this index existed remains on the
+    message-ID fallback instead of returning only its newly appended suffix.
+    MULTI gives both reads one Redis snapshot while concurrent ingest scripts
+    continue to append the two lists atomically.
+    """
+    pipe = get_redis().pipeline(transaction=True)
+    pipe.llen(f"{TRACE_LIST_PREFIX}{trace_id}")
+    pipe.lrange(f"{TRACE_PAYLOAD_LIST_PREFIX}{trace_id}", 0, -1)
+    indexed_count, payloads = await pipe.execute()
+    if indexed_count and indexed_count == len(payloads):
+        return list(payloads)
+    return []
 
 
 def _stream_id_key(message_id: str) -> tuple[int, int]:
@@ -137,17 +156,23 @@ async def get_trace_history(
 ):
     span_payloads: list[str] = []
 
-    # Fast path: per-trace index (O(trace size), Week 9 load-test optimization)
-    message_ids = await _indexed_message_ids(trace_id)
-    if message_ids:
-        pipe = get_redis().pipeline(transaction=False)
-        for mid in message_ids:
-            pipe.xrange(EVENTS_STREAM, min=mid, max=mid)
-        for rows in await pipe.execute():
-            for _mid, message in rows:
-                payload = message.get(b"payload") or message.get("payload")
-                if payload:
-                    span_payloads.append(payload)
+    # Fast path: a complete per-trace payload list requires one LRANGE rather
+    # than one XRANGE command per event. This is still O(trace size) in bytes,
+    # but avoids command amplification on long traces.
+    span_payloads = await _indexed_payloads(trace_id)
+
+    if not span_payloads:
+        # Compatibility path for traces created before the payload index.
+        message_ids = await _indexed_message_ids(trace_id)
+        if message_ids:
+            pipe = get_redis().pipeline(transaction=False)
+            for mid in message_ids:
+                pipe.xrange(EVENTS_STREAM, min=mid, max=mid)
+            for rows in await pipe.execute():
+                for _mid, message in rows:
+                    payload = message.get(b"payload") or message.get("payload")
+                    if payload:
+                        span_payloads.append(payload)
 
     if not span_payloads:
         # No index entries, or the index outlived the stream (e.g. events were

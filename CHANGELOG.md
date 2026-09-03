@@ -1,5 +1,29 @@
 # AgentScope Changelog
 
+## [2026-09-03 19:36] — Latency Profile and Constant-Round-Trip History Index — Track B/Shared — Codex
+
+**What changed:**
+- Added an ingest-only load-control option to `scripts/evaluation/replicate_load.py` and a reproducible latency-profile aggregator with raw summaries, a CSV table, PNG/PDF figure, and SHA-256 manifest under `manuscript/evaluation-artifacts/2026-09-03-redis-recovery-load/`.
+- Profiled three fresh-volume 50-user mixed-load repetitions from frozen commit `dadf573`, plus 10-user, 25-user, and 50-user ingest-only controls. Per-second container resources, endpoint statistics, and paced probe records were retained.
+- Added an atomically maintained `agentscope:trace-payload:{trace_id}` list for new traces. `/history` now reads a complete trace in one Redis `LRANGE` round trip instead of issuing one `XRANGE` command per event. Legacy and partially indexed traces continue through the authoritative message-ID fallback.
+
+**Why:**
+- The replicated 50-user event p95 miss required profiling before another acceptance run. The control matrix isolated the degradation to mixed dashboard read pressure, and endpoint/container evidence identified growing history command amplification as the dominant actionable hot path.
+
+**Assumptions made (if any):**
+- Storing an ordered payload copy trades Redis memory for predictable read latency. The global stream remains the durable ordered log, the canonical span schema is unchanged, and legacy traces remain readable without migration.
+- The one-run 10-user, 25-user, and ingest-only controls are diagnostic conditions, not independent estimates. Only the three 50-user mixed repetitions support a process-level interval.
+
+**Open questions / follow-ups (if any):**
+- Run the unchanged three-repetition 50-user protocol on the payload-index candidate. A target claim is not accepted until those post-optimization artifacts exist.
+
+**Tests added/run:**
+- Pre-optimization mixed 50-user event p95 values were 219.75, 656.80, and 250.75ms (mean 375.77ms; all above the 200ms target), with zero recorded request/probe failures. The retained second run showed substantial environment/runtime variability.
+- The 50-user ingest-only control completed 30,284 requests with zero failures, HTTP p95 120ms, and event p95 47ms. Mixed-load event p95 was 78ms at 10 users and 125ms at 25 users.
+- Backend 18/18, custom demo 1/1, and LangGraph demo 1/1 passed after the payload-index change. New coverage verifies atomic payload order and protects upgraded traces from partial-index truncation.
+
+---
+
 ## [2026-09-03 14:35] — Authoritative CI and Redis Restart Recovery — Track Shared — Codex
 
 **What changed:**

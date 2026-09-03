@@ -123,6 +123,12 @@ def main() -> int:
     parser.add_argument("--probe-delay-seconds", type=int, default=7)
     parser.add_argument("--probe-duration-seconds", type=int, default=60)
     parser.add_argument("--probe-samples", type=int, default=300)
+    parser.add_argument(
+        "--locustfile",
+        type=Path,
+        default=REPO / "infra" / "loadtest" / "locustfile.py",
+        help="Load profile to run; defaults to the mixed ingest/traces/history workload.",
+    )
     parser.add_argument("--output-directory", type=Path, required=True)
     args = parser.parse_args()
     args.output_directory.mkdir(parents=True, exist_ok=True)
@@ -145,7 +151,7 @@ def main() -> int:
             with Path(str(prefix) + "_locust.log").open("w", encoding="utf-8") as locust_log:
                 locust = subprocess.Popen(
                     [
-                        sys.executable, "-m", "locust", "-f", str(REPO / "infra" / "loadtest" / "locustfile.py"),
+                        sys.executable, "-m", "locust", "-f", str(args.locustfile),
                         "--headless", "-u", str(args.users), "-r", str(args.spawn_rate),
                         "-t", f"{args.load_duration_seconds}s", "--csv", str(prefix),
                         "--host", "http://localhost",
@@ -192,7 +198,7 @@ def main() -> int:
             compose(project, "down", "--volumes", "--remove-orphans", check=False)
 
     payload = {
-        "study": "repeated_50_user_clean_volume_load",
+        "study": "repeated_clean_volume_load",
         "manifest": environment_manifest(20260902, " ".join(sys.argv)),
         "design": vars(args),
         "repetitions": summaries,

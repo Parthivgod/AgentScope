@@ -1,0 +1,162 @@
+{
+  "aggregate": {
+    "event_p95_ms": {
+      "max": 78.00000000133878,
+      "mean": 78.00000000133878,
+      "min": 78.00000000133878,
+      "n": 1,
+      "p50": 78.00000000133878,
+      "p95": 78.00000000133878,
+      "p99": 78.00000000133878
+    },
+    "failure_rate": {
+      "max": 0.0,
+      "mean": 0.0,
+      "min": 0.0,
+      "n": 1,
+      "p50": 0.0,
+      "p95": 0.0,
+      "p99": 0.0
+    },
+    "http_p95_ms": {
+      "max": 100.0,
+      "mean": 100.0,
+      "min": 100.0,
+      "n": 1,
+      "p50": 100.0,
+      "p95": 100.0,
+      "p99": 100.0
+    },
+    "requests_per_second": {
+      "max": 112.36798743983411,
+      "mean": 112.36798743983411,
+      "min": 112.36798743983411,
+      "n": 1,
+      "p50": 112.36798743983411,
+      "p95": 112.36798743983411,
+      "p99": 112.36798743983411
+    }
+  },
+  "design": {
+    "load_duration_seconds": 45,
+    "locustfile": "C:\\Users\\Parthiv\\OneDrive\\Desktop\\College\\AgentScope\\infra\\loadtest\\locustfile.py",
+    "output_directory": "manuscript\\evaluation-artifacts\\2026-09-03-redis-recovery-load\\matrix_mixed_10u",
+    "probe_delay_seconds": 5,
+    "probe_duration_seconds": 35,
+    "probe_samples": 180,
+    "repetitions": 1,
+    "spawn_rate": 10,
+    "users": 10
+  },
+  "manifest": {
+    "command": "scripts/evaluation/replicate_load.py --repetitions 1 --users 10 --spawn-rate 10 --load-duration-seconds 45 --probe-delay-seconds 5 --probe-duration-seconds 35 --probe-samples 180 --output-directory manuscript/evaluation-artifacts/2026-09-03-redis-recovery-load/matrix_mixed_10u",
+    "docker": "Docker version 29.3.1, build c2be9cc",
+    "generated_at_utc": "2026-09-03T13:58:39.427010+00:00",
+    "git_branch": "main",
+    "git_commit": "dadf57338eceb43197afa98080e060fcdd6e1469",
+    "git_worktree_dirty": true,
+    "logical_cpu_count": 12,
+    "packages": {
+      "anthropic": "1.0.0",
+      "httpx": "0.28.1",
+      "locust": "2.46.3",
+      "openai": "3.3.1",
+      "pydantic": "2.13.4",
+      "websockets": "15.0.1"
+    },
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel",
+    "python": "3.11.4 (tags/v3.11.4:d2340ef, Jun  7 2023, 05:45:37) [MSC v.1934 64 bit (AMD64)]",
+    "seed": 20260902
+  },
+  "repetitions": [
+    {
+      "event_completed_samples": 180,
+      "event_error_count": 0,
+      "event_latency": {
+        "max": 125.0,
+        "mean": 53.85555555541133,
+        "min": 16.00000000325963,
+        "p50": 46.999999998661224,
+        "p95": 78.00000000133878,
+        "p99": 93.9999999988504
+      },
+      "fresh_redis_volume": true,
+      "locust": {
+        "average_response_time_ms": 45.71293956767996,
+        "failures": 0,
+        "median_response_time_ms": 48.0,
+        "p95_response_time_ms": 100.0,
+        "p99_response_time_ms": 160.0,
+        "requests": 5320,
+        "requests_per_second": 112.36798743983411
+      },
+      "locust_exit_code": 0,
+      "probe_stdout": "\n=== Event-to-dashboard latency (ingest->WS), n=180 ===\n  p50=47.0ms  p95=78.0ms  p99=94.0ms  min=16.0ms  max=125.0ms  mean=53.9ms\n  JSON: manuscript\\evaluation-artifacts\\2026-09-03-redis-recovery-load\\matrix_mixed_10u\\load_r1_event_latency.json\n",
+      "project": "agentscope-load-r1",
+      "repetition": 1,
+      "resources": {
+        "containers": {
+          "agentscope-load-r1-backend-1": {
+            "cpu_percent": {
+              "max": 137.09,
+              "mean": 62.06937500000001,
+              "min": 0.85,
+              "n": 16,
+              "p50": 58.105000000000004,
+              "p95": 129.9125,
+              "p99": 135.6545
+            },
+            "network_rx_delta_bytes": 143997330.0,
+            "network_tx_delta_bytes": 139998300.0,
+            "peak_memory_bytes": 201326592.0
+          },
+          "agentscope-load-r1-nginx-1": {
+            "cpu_percent": {
+              "max": 14.04,
+              "mean": 7.116249999999999,
+              "min": 0.0,
+              "n": 16,
+              "p50": 7.619999999999999,
+              "p95": 13.5,
+              "p99": 13.931999999999999
+            },
+            "network_rx_delta_bytes": 127997280.0,
+            "network_tx_delta_bytes": 128998260.0,
+            "peak_memory_bytes": 4194304.0
+          },
+          "agentscope-load-r1-redis-1": {
+            "cpu_percent": {
+              "max": 31.13,
+              "mean": 11.128750000000002,
+              "min": 0.28,
+              "n": 16,
+              "p50": 10.899999999999999,
+              "p95": 20.8775,
+              "p99": 29.079499999999996
+            },
+            "network_rx_delta_bytes": 20094730.0,
+            "network_tx_delta_bytes": 141997560.0,
+            "peak_memory_bytes": 9416212.48
+          },
+          "agentscope-load-r1-worker-1": {
+            "cpu_percent": {
+              "max": 32.78,
+              "mean": 16.143749999999997,
+              "min": 0.05,
+              "n": 16,
+              "p50": 16.520000000000003,
+              "p95": 30.005,
+              "p99": 32.225
+            },
+            "network_rx_delta_bytes": 2527180.0,
+            "network_tx_delta_bytes": 3607730.0,
+            "peak_memory_bytes": 29800529.92
+          }
+        },
+        "sample_count": 64
+      }
+    }
+  ],
+  "study": "repeated_clean_volume_load"
+}

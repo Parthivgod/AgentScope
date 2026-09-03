@@ -29,6 +29,7 @@ def _clean_redis():
         "agentscope:index:anomalies:v1",
     ]
     keys += r.keys("agentscope:trace:*")
+    keys += r.keys("agentscope:trace-payload:*")
     keys += r.keys("agentscope:anomaly-trace:*")
     if keys:
         r.delete(*keys)

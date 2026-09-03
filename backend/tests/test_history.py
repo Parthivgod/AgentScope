@@ -59,6 +59,12 @@ def test_history_endpoint():
     # Check strict arrival order
     assert spans[0]["span_id"] == "s1"
     assert spans[1]["span_id"] == "s2"
+
+    import redis
+    r = redis.Redis.from_url(os.environ["REDIS_URL"], decode_responses=True)
+    payloads = r.lrange("agentscope:trace-payload:history-trace-1", 0, -1)
+    r.close()
+    assert [json.loads(payload)["span_id"] for payload in payloads] == ["s1", "s2"]
     
 def test_history_not_found():
     response = client.get("/history/unknown-trace")
@@ -163,6 +169,37 @@ def test_history_sorts_legacy_trace_index_by_authoritative_stream_id():
     response = client.get("/history/tr-legacy-order")
     assert response.status_code == 200
     assert [span["span_id"] for span in response.json()["spans"]] == ["ordered-1", "ordered-2"]
+
+
+def test_partial_payload_index_never_hides_legacy_events():
+    """An upgraded trace must use the ID fallback until its payload index is complete."""
+    import asyncio
+    from app.redis_client import get_redis
+
+    first = get_valid_span_payload("legacy-first")
+    first["trace_id"] = "tr-partial-payload"
+    second = get_valid_span_payload("new-second")
+    second["trace_id"] = "tr-partial-payload"
+
+    async def _write_legacy_then_new():
+        r = get_redis()
+        first_id = await r.xadd("agentscope:events", {"payload": json.dumps(first)})
+        await r.rpush("agentscope:trace:tr-partial-payload", first_id)
+
+    asyncio.run(_write_legacy_then_new())
+    response = client.post(
+        "/ingest",
+        json=second,
+        headers={"Authorization": "Bearer test-secret-key"},
+    )
+    assert response.status_code == 200
+
+    response = client.get("/history/tr-partial-payload")
+    assert response.status_code == 200
+    assert [span["span_id"] for span in response.json()["spans"]] == [
+        "legacy-first",
+        "new-second",
+    ]
 
 def test_concurrent_ingest_index_matches_authoritative_stream_order():
     headers = {"Authorization": "Bearer test-secret-key"}
