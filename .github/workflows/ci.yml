@@ -34,7 +34,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e "./sdk[langgraph,dev]"
         pip install -r backend/requirements.txt -r worker/requirements.txt
-        pip install openai websockets langgraph langchain-aws boto3
+        pip install -r examples/support_triage_demo/requirements.txt
+        pip install openai websockets
         
     - name: Run SDK Tests
       run: |

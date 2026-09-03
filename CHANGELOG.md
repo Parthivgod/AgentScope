@@ -1,5 +1,18 @@
 # AgentScope Changelog
 
+## [2026-09-03 20:32] — CI Demo Dependency Closure — Shared — Codex
+
+**What changed:**
+- Added `tiktoken` to the support-triage demo's declared requirements and made GitHub Actions install that requirements file instead of maintaining a second incomplete package list.
+
+**Why:**
+- The first pushed CI run on `b86f470` proved SDK 30/30, backend 18/18, worker 4/4, both lightweight demos, and dashboard build/lint passed on clean Linux, but the support-triage token-sizing test failed because its directly imported tokenizer was available locally but undeclared in CI.
+
+**Tests added/run:**
+- The exact support-triage suite remained 6/6 locally. A new GitHub Actions run is required to verify the clean-runner dependency correction before declaring CI green.
+
+---
+
 ## [2026-09-03 20:10] — Replicated History Acceptance, Evidence Synchronization, and Study Pack — Shared — Codex
 
 **What changed:**
